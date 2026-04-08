@@ -30,16 +30,24 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protect the dashboard: If no user, redirect to login
-  if (!user && !request.nextUrl.pathname.startsWith('/login')) {
+  const pathname = request.nextUrl.pathname;
+
+  // 1. Define the specific routes that require authentication
+  const protectedPaths = ['/dashboard', '/chat'];
+  const isProtectedPath = protectedPaths.some(path => pathname.startsWith(path));
+
+  // 2. If no user and trying to access a protected route, bounce to login
+  if (!user && isProtectedPath) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
   
-  // If user is logged in but tries to access login, send them to dashboard
-  if (user && request.nextUrl.pathname.startsWith('/login')) {
-    return NextResponse.redirect(new URL('/', request.url))
+  // 3. If user is logged in and tries to access login, send them to the dashboard
+  if (user && pathname.startsWith('/login')) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
+  // The root path ('/') is now completely ignored by these redirects, 
+  // allowing your Landing Page to show perfectly on website load.
   return response
 }
 
