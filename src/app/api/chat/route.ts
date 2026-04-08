@@ -185,7 +185,7 @@ Your only job now: decide if a web search would add meaningful value.
 
         if (webCall) {
           controller.enqueue(sse({ type: "tool", name: "search_web", status: "running" }))
-          const webResult = await searchWeb(webCall.functionCall.args.query)
+          const webResult = await searchWeb((webCall.functionCall!.args as { query: string }).query)
           if (webResult) gatheredContext.push(webResult)
           controller.enqueue(sse({ type: "tool", name: "search_web", status: "done" }))
         }
