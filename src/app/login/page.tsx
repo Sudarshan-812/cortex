@@ -95,10 +95,14 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10 flex flex-col h-full">
-          {/* Header */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <BrainCircuit className="size-8 text-zinc-950" strokeWidth={2.5} />
+          {/* Header with Bigger Custom Logo */}
+          <div className="flex items-center justify-between mb-20">
+            <div className="flex items-center gap-4">
+              <img 
+                src="/CortexLogo.png" 
+                alt="Cortex Logo" 
+                className="h-10 w-auto object-contain" // Increased to 40px height for Left Panel
+              />
               <span className="text-2xl font-extrabold tracking-tighter text-zinc-950">Cortex</span>
             </div>
             <div className="text-xs font-mono uppercase tracking-widest text-zinc-500 font-semibold">
@@ -118,7 +122,7 @@ export default function LoginPage() {
           </div>
 
           {/* Footer Specs */}
-          <div className="text-[11px] font-mono text-zinc-500 flex items-center justify-between font-bold uppercase tracking-wider">
+          <div className="text-[11px] font-mono text-zinc-500 flex items-center justify-between font-bold uppercase tracking-wider mt-auto">
             <div>pgvector • Gemini • Supabase</div>
             <div className="flex items-center gap-2">
               <div className="size-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
@@ -142,8 +146,13 @@ export default function LoginPage() {
           transition={{ duration: 0.4 }}
           className="w-full max-w-[400px]"
         >
-          {/* Form Header */}
+          {/* Form Header with Bigger Crisp Logo */}
           <div className="text-center mb-10">
+            <img 
+              src="/CortexLogo.png" 
+              alt="Cortex Logo" 
+              className="h-12 w-auto object-contain mx-auto mb-6" // Increased to 48px height for Form focus
+            />
             <h2 className="text-3xl font-bold tracking-tight text-zinc-950 mb-3">
               {isSignUp ? "Create your workspace" : "Welcome back"}
             </h2>

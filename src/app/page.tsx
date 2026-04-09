@@ -37,14 +37,20 @@ export default function LandingPage() {
         />
       </div>
 
-      {/* Ultra-Premium Twine Navbar */}
+      {/* Ultra-Premium Twine Navbar with Custom Logo */}
       <header className="absolute top-0 inset-x-0 z-50">
-        <div className="max-w-[1200px] mx-auto px-6 h-20 flex items-center justify-between">
+        <div className="max-w-[1200px] mx-auto px-6 h-24 flex items-center justify-between">
           
-          {/* Left: Logo */}
-          <div className="flex items-center gap-2 flex-1">
-            <BrainCircuit className="size-5 text-zinc-950" strokeWidth={2.5} />
-            <span className="text-[17px] font-bold tracking-tight text-zinc-950">Cortex</span>
+          {/* Left: Custom PNG Logo & Adjusted Text (Dialed back to font-semibold) */}
+          <div className="flex items-center gap-3 md:gap-4 flex-1">
+            <img 
+              src="/CortexLogo.png" 
+              alt="Cortex Logo" 
+              className="h-8 md:h-14 w-auto object-contain" 
+            />
+            <span className="text-xl md:text-2xl font-semibold tracking-tight text-zinc-950">
+              Cortex
+            </span>
           </div>
 
           {/* Center: Links (Sleek, 14px, medium weight) */}
@@ -130,7 +136,7 @@ export default function LandingPage() {
         </motion.div>
       </main>
 
-      {/* Refined Uiverse Expanding Feature Cards with Slower Transitions */}
+      {/* Refined Uiverse Expanding Feature Cards */}
       <section id="features" className="relative z-10 max-w-7xl mx-auto px-6 pb-32 pt-10">
         <motion.div
           initial={{ opacity: 0, y: 40 }}
@@ -141,14 +147,12 @@ export default function LandingPage() {
         >
           {/* Card 1 (Wide) */}
           <div className="md:col-span-2 relative block overflow-hidden rounded-[2rem] p-8 md:p-10 bg-white/40 backdrop-blur-2xl border border-zinc-200/60 z-0 group transition-all duration-300 hover:shadow-xl hover:shadow-zinc-900/5">
-            {/* Slower duration-[1200ms] and ease-in-out for a heavy, deliberate fill */}
             <div className="absolute z-[-1] -top-8 -right-8 h-16 w-16 rounded-full bg-zinc-950 transform scale-100 origin-center transition-transform duration-[1200ms] ease-in-out group-hover:scale-[80]" />
             <div className="absolute top-0 right-0 w-12 h-12 flex items-center justify-center bg-zinc-950 rounded-bl-[2rem] overflow-hidden z-10 border-b border-l border-zinc-800">
               <ArrowUpRight className="size-5 text-white mr-[-2px] mt-[-2px]" />
             </div>
             
             <div className="relative z-10">
-              {/* Text/Icons color transition matched with duration-[800ms] */}
               <div className="size-14 rounded-2xl bg-white shadow-sm flex items-center justify-center mb-8 border border-zinc-200/80 group-hover:bg-zinc-800 group-hover:border-zinc-700 transition-colors duration-[800ms]">
                 <Database className="size-7 text-zinc-950 group-hover:text-white transition-colors duration-[800ms]" />
               </div>
