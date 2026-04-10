@@ -123,3 +123,83 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ── Cortex Page Loader ─────────────────────────────────────────── */
+.cortex-loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  --color: #a855f7;
+  --animation: 2s ease-in-out infinite;
+}
+
+.cortex-loader .circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border: solid 2px var(--color);
+  border-radius: 50%;
+  margin: 0 8px;
+  background-color: transparent;
+  animation: cortex-circle var(--animation);
+}
+
+.cortex-loader .circle .dot {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: var(--color);
+  animation: cortex-dot var(--animation);
+}
+
+.cortex-loader .circle .outline {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  animation: cortex-outline var(--animation);
+}
+
+.cortex-loader .circle:nth-child(2) { animation-delay: 0.3s; }
+.cortex-loader .circle:nth-child(3) { animation-delay: 0.6s; }
+.cortex-loader .circle:nth-child(4) { animation-delay: 0.9s; }
+
+.cortex-loader .circle:nth-child(2) .dot { animation-delay: 0.3s; }
+.cortex-loader .circle:nth-child(3) .dot { animation-delay: 0.6s; }
+.cortex-loader .circle:nth-child(4) .dot { animation-delay: 0.9s; }
+
+.cortex-loader .circle:nth-child(1) .outline { animation-delay: 0.9s; }
+.cortex-loader .circle:nth-child(2) .outline { animation-delay: 1.2s; }
+.cortex-loader .circle:nth-child(3) .outline { animation-delay: 1.5s; }
+.cortex-loader .circle:nth-child(4) .outline { animation-delay: 1.8s; }
+
+@keyframes cortex-circle {
+  0%   { transform: scale(1);   opacity: 1; }
+  50%  { transform: scale(1.5); opacity: 0.5; }
+  100% { transform: scale(1);   opacity: 1; }
+}
+
+@keyframes cortex-dot {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(0); }
+  100% { transform: scale(1); }
+}
+
+@keyframes cortex-outline {
+  0% {
+    transform: scale(0);
+    outline: solid 20px var(--color);
+    outline-offset: 0;
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    outline: solid 0 transparent;
+    outline-offset: 20px;
+    opacity: 0;
+  }
+}
