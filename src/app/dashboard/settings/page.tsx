@@ -41,7 +41,7 @@ export default async function SettingsPage() {
       description: "Details about your knowledge base workspace.",
       items: [
         { label: "Workspace name", value: workspace?.name ?? "—" },
-        { label: "Workspace ID", value: workspace?.id?.slice(0, 8) + "…" ?? "—" },
+        { label: "Workspace ID", value: workspace?.id ? workspace.id.slice(0, 8) + "…" : "—" },
         { label: "Created", value: workspace?.created_at ? new Date(workspace.created_at).toLocaleDateString() : "—" },
       ],
     },
