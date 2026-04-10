@@ -1,76 +1,86 @@
-import { createClient } from "@/utils/supabase/server";
-import { redirect } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { UploadZone } from "@/components/upload-zone";
-import { Navbar } from "@/components/landing/Navbar";
+import { createClient } from "@/utils/supabase/server"
+import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
+import Link from "next/link"
+import Image from "next/image"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { UploadZone } from "@/components/upload-zone"
+import { Navbar } from "@/components/landing/Navbar"
+import { WorkspaceSwitcher } from "@/components/WorkspaceSwitcher"
+import { DocumentList } from "@/components/DocumentList"
 import {
   FileText, Layers, Search, ChevronRight,
-  Database, Zap, Clock,
-} from "lucide-react";
+  Database, Zap,
+} from "lucide-react"
 
 function formatBytes(bytes: number) {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function timeAgo(dateStr: string) {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 export default async function Dashboard() {
-  const supabase = await createClient();
+  const supabase = await createClient()
 
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect("/login")
 
-  const avatarUrl = user.user_metadata?.avatar_url || undefined;
+  const avatarUrl = user.user_metadata?.avatar_url || undefined
   const userName =
     user.user_metadata?.full_name ||
     user.user_metadata?.name ||
     user.email?.split("@")[0] ||
-    "User";
+    "User"
 
-  const { data: workspace } = await supabase
+  // ── Fetch ALL workspaces (not just one) ──────────────────────────
+  const { data: workspaces } = await supabase
     .from("workspaces")
     .select("*")
     .eq("owner_id", user.id)
-    .single();
+    .order("created_at", { ascending: true })
 
-  async function createWorkspace(formData: FormData) {
-    "use server";
-    const name = formData.get("workspaceName") as string;
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+  // ── Determine active workspace from cookie ───────────────────────
+  const cookieStore = await cookies()
+  const activeId = cookieStore.get("cortex_active_workspace")?.value
+  const workspace =
+    workspaces?.find(w => w.id === activeId) ?? workspaces?.[0] ?? null
 
-    const { data: newWorkspace, error } = await supabase
-      .from("workspaces")
-      .insert({ name, owner_id: user.id })
-      .select()
-      .single();
+  // ── No workspaces yet → setup screen ────────────────────────────
+  if (!workspace || !workspaces || workspaces.length === 0) {
+    async function initWorkspace(formData: FormData) {
+      "use server"
+      const name = formData.get("workspaceName") as string
+      const supabase = await createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
 
-    if (error) return;
+      const { data: newWorkspace, error } = await supabase
+        .from("workspaces")
+        .insert({ name, owner_id: user.id })
+        .select()
+        .single()
 
-    await supabase.from("workspace_members").insert({
-      workspace_id: newWorkspace.id,
-      user_id: user.id,
-      role: "admin",
-    });
+      if (error) return
 
-    redirect("/dashboard");
-  }
+      await supabase.from("workspace_members").insert({
+        workspace_id: newWorkspace.id,
+        user_id: user.id,
+        role: "admin",
+      })
 
-  if (!workspace) {
+      const { cookies } = await import("next/headers")
+      const cookieStore = await cookies()
+      cookieStore.set("cortex_active_workspace", newWorkspace.id, {
+        maxAge: 60 * 60 * 24 * 30,
+        path: "/",
+        sameSite: "lax",
+      })
+
+      redirect("/dashboard")
+    }
+
     return (
       <>
         <Navbar isLoggedIn avatarUrl={avatarUrl} userName={userName} />
@@ -85,7 +95,7 @@ export default async function Dashboard() {
               <h1 className="text-2xl font-bold tracking-tight text-zinc-950 mb-1">Initialize Cortex</h1>
               <p className="text-zinc-500 text-sm mb-8">Set up your secure enterprise knowledge base.</p>
 
-              <form action={createWorkspace} className="space-y-5">
+              <form action={initWorkspace} className="space-y-5">
                 <div className="space-y-2">
                   <Label htmlFor="workspaceName" className="text-sm font-medium text-zinc-700">
                     Workspace Name
@@ -109,26 +119,25 @@ export default async function Dashboard() {
           </div>
         </div>
       </>
-    );
+    )
   }
 
-  const [{ data: documents, count: docCount }] = await Promise.all([
-    supabase
-      .from("documents")
-      .select("id, name, size_bytes, created_at", { count: "exact" })
-      .eq("workspace_id", workspace.id)
-      .order("created_at", { ascending: false }),
-  ]);
+  // ── Fetch documents for active workspace ─────────────────────────
+  const { data: documents, count: docCount } = await supabase
+    .from("documents")
+    .select("id, name, size_bytes, created_at", { count: "exact" })
+    .eq("workspace_id", workspace.id)
+    .order("created_at", { ascending: false })
 
-  const docIds = documents?.map(d => d.id) ?? [];
+  const docIds = documents?.map(d => d.id) ?? []
   const { count: chunkCount } = docIds.length > 0
     ? await supabase
         .from("document_chunks")
         .select("*", { count: "exact", head: true })
         .in("document_id", docIds)
-    : { count: 0 };
+    : { count: 0 }
 
-  const totalSize = documents?.reduce((sum, d) => sum + (d.size_bytes ?? 0), 0) ?? 0;
+  const totalSize = documents?.reduce((sum, d) => sum + (d.size_bytes ?? 0), 0) ?? 0
 
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-950 font-sans selection:bg-fuchsia-200">
@@ -141,8 +150,8 @@ export default async function Dashboard() {
 
       <div className="relative z-10 max-w-6xl mx-auto px-6 pt-28 pb-16">
 
-        {/* ── Page Header ─────────────────────────────────────────── */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-5 mb-10">
+        {/* ── Page header ──────────────────────────────────────────── */}
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-5 mb-8">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/70 backdrop-blur-md border border-zinc-200/70 shadow-sm mb-3">
               <span className="flex size-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -163,7 +172,10 @@ export default async function Dashboard() {
           </Button>
         </div>
 
-        {/* ── Stat Strip ──────────────────────────────────────────── */}
+        {/* ── Workspace switcher ────────────────────────────────────── */}
+        <WorkspaceSwitcher workspaces={workspaces} activeId={workspace.id} />
+
+        {/* ── Stat strip ───────────────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {[
             {
@@ -216,10 +228,10 @@ export default async function Dashboard() {
           ))}
         </div>
 
-        {/* ── Main bento: Upload + recent docs ────────────────────── */}
+        {/* ── Bento: upload + actions ───────────────────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-5">
 
-          {/* Upload zone — wide */}
+          {/* Upload zone */}
           <div className="lg:col-span-2">
             <div className="h-full bg-white/60 backdrop-blur-xl border border-zinc-200/60 rounded-2xl flex flex-col overflow-hidden">
               <div className="px-6 pt-5 pb-4 border-b border-zinc-100">
@@ -271,57 +283,19 @@ export default async function Dashboard() {
           </div>
         </div>
 
-        {/* ── Document List ────────────────────────────────────────── */}
+        {/* ── Document list with delete ─────────────────────────────── */}
         {documents && documents.length > 0 && (
-          <div className="bg-white/60 backdrop-blur-xl border border-zinc-200/60 rounded-2xl overflow-hidden">
+          <DocumentList documents={documents} />
+        )}
 
-            <div className="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
-              <div>
-                <h2 className="text-[14px] font-bold text-zinc-950">Data Repository</h2>
-                <p className="text-[12px] text-zinc-400 mt-0.5">{docCount} file{docCount !== 1 ? "s" : ""} indexed</p>
-              </div>
-              <Link
-                href="/chat"
-                className="h-8 px-4 inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-zinc-600 hover:text-zinc-950 bg-zinc-100 hover:bg-zinc-200 rounded-full transition-colors"
-              >
-                <Search className="size-3.5" />
-                Query All
-              </Link>
-            </div>
-
-            <div className="divide-y divide-zinc-100">
-              {documents.map((doc) => (
-                <div
-                  key={doc.id}
-                  className="flex items-center justify-between px-6 py-3.5 hover:bg-zinc-50/60 transition-colors group cursor-default"
-                >
-                  <div className="flex items-center gap-4 min-w-0">
-                    <div className="size-9 rounded-xl bg-white border border-zinc-200/60 flex items-center justify-center flex-shrink-0 group-hover:border-fuchsia-200 group-hover:bg-fuchsia-50 transition-all">
-                      <FileText className="size-4 text-zinc-400 group-hover:text-fuchsia-500 transition-colors" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[13.5px] font-semibold text-zinc-900 truncate">{doc.name}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[11.5px] text-zinc-400">{formatBytes(doc.size_bytes)}</span>
-                        <span className="size-0.5 rounded-full bg-zinc-300" />
-                        <Clock className="size-2.5 text-zinc-300" />
-                        <span className="text-[11.5px] text-zinc-400">{timeAgo(doc.created_at)}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-4">
-                    <span className="text-[10.5px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100 uppercase tracking-wider">
-                      Indexed
-                    </span>
-                    <ChevronRight className="size-4 text-zinc-300" />
-                  </div>
-                </div>
-              ))}
-            </div>
+        {documents?.length === 0 && (
+          <div className="bg-white/60 backdrop-blur-xl border border-zinc-200/60 rounded-2xl p-12 text-center">
+            <FileText className="size-8 text-zinc-300 mx-auto mb-3" />
+            <p className="text-[14px] font-semibold text-zinc-500">No documents yet</p>
+            <p className="text-[12.5px] text-zinc-400 mt-1">Upload files above to start building your knowledge base.</p>
           </div>
         )}
       </div>
     </div>
-  );
+  )
 }

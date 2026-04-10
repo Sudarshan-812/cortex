@@ -1,11 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { createChatSession, deleteChatSession } from '@/app/session-actions'
+import { switchWorkspace } from '@/app/actions'
 import {
   Plus, MessageSquare, Trash2, LayoutDashboard,
-  Loader2, PanelLeftClose, PanelLeftOpen,
+  Loader2, PanelLeftClose, PanelLeftOpen, ChevronDown,
+  Check, FolderOpen,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -15,14 +17,21 @@ type Session = {
   updated_at: string
 }
 
+type Workspace = {
+  id: string
+  name: string
+}
+
 export function ChatSidebar({
   sessions: initialSessions,
   workspaceId,
   workspaceName,
+  workspaces = [],
 }: {
   sessions: Session[]
   workspaceId: string
   workspaceName: string
+  workspaces?: Workspace[]
 }) {
   const router = useRouter()
   const params = useParams()
@@ -32,6 +41,20 @@ export function ChatSidebar({
   const [creating, setCreating] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [collapsed, setCollapsed] = useState(false)
+  const [wsOpen, setWsOpen] = useState(false)
+  const [switchingWs, setSwitchingWs] = useState<string | null>(null)
+  const wsRef = useRef<HTMLDivElement>(null)
+
+  // Close workspace dropdown on outside click
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (wsRef.current && !wsRef.current.contains(e.target as Node)) {
+        setWsOpen(false)
+      }
+    }
+    if (wsOpen) document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [wsOpen])
 
   async function handleNewChat() {
     setCreating(true)
@@ -53,6 +76,18 @@ export function ChatSidebar({
     setDeletingId(null)
   }
 
+  async function handleSwitchWorkspace(wsId: string) {
+    if (wsId === workspaceId || switchingWs) return
+    setSwitchingWs(wsId)
+    setWsOpen(false)
+    await switchWorkspace(wsId)
+    router.refresh()
+    router.push('/chat')
+    setSwitchingWs(null)
+  }
+
+  const hasMultipleWorkspaces = workspaces.length > 1
+
   return (
     <aside
       className={`
@@ -64,11 +99,67 @@ export function ChatSidebar({
       {/* ── Top bar ── */}
       <div className={`flex items-center h-14 px-3 border-b border-zinc-200/60 flex-shrink-0 ${collapsed ? 'justify-center' : 'justify-between'}`}>
         {!collapsed && (
-          <div className="min-w-0">
-            <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest leading-none">Workspace</p>
-            <p className="text-[13px] font-semibold text-zinc-800 truncate mt-0.5">{workspaceName}</p>
+          <div ref={wsRef} className="relative min-w-0 flex-1 mr-2">
+            {hasMultipleWorkspaces ? (
+              <button
+                onClick={() => setWsOpen(v => !v)}
+                className="w-full text-left group"
+              >
+                <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest leading-none">Workspace</p>
+                <div className="flex items-center gap-1 mt-0.5">
+                  <p className="text-[13px] font-semibold text-zinc-800 truncate">{workspaceName}</p>
+                  <ChevronDown className={`size-3 text-zinc-400 flex-shrink-0 transition-transform ${wsOpen ? 'rotate-180' : ''}`} />
+                </div>
+              </button>
+            ) : (
+              <div>
+                <p className="text-[11px] font-bold text-zinc-400 uppercase tracking-widest leading-none">Workspace</p>
+                <p className="text-[13px] font-semibold text-zinc-800 truncate mt-0.5">{workspaceName}</p>
+              </div>
+            )}
+
+            {/* Workspace dropdown */}
+            {wsOpen && hasMultipleWorkspaces && (
+              <div className="absolute top-full left-0 mt-2 w-52 bg-white border border-zinc-200 rounded-2xl shadow-xl overflow-hidden z-50 py-1">
+                {workspaces.map(ws => {
+                  const isActive = ws.id === workspaceId
+                  const isSwitching = switchingWs === ws.id
+                  return (
+                    <button
+                      key={ws.id}
+                      onClick={() => handleSwitchWorkspace(ws.id)}
+                      disabled={isActive || !!switchingWs}
+                      className={`
+                        w-full flex items-center gap-2.5 px-3.5 py-2.5 text-[13px] font-medium transition-colors
+                        ${isActive ? 'bg-zinc-50 text-zinc-900' : 'text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900'}
+                      `}
+                    >
+                      {isSwitching ? (
+                        <Loader2 className="size-3.5 animate-spin text-fuchsia-500 flex-shrink-0" />
+                      ) : isActive ? (
+                        <Check className="size-3.5 text-fuchsia-500 flex-shrink-0" />
+                      ) : (
+                        <FolderOpen className="size-3.5 text-zinc-400 flex-shrink-0" />
+                      )}
+                      <span className="truncate">{ws.name}</span>
+                    </button>
+                  )
+                })}
+                <div className="border-t border-zinc-100 mt-1 pt-1">
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setWsOpen(false)}
+                    className="flex items-center gap-2.5 px-3.5 py-2.5 text-[12.5px] font-medium text-zinc-400 hover:text-zinc-700 hover:bg-zinc-50 transition-colors"
+                  >
+                    <Plus className="size-3.5" />
+                    Manage workspaces
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
         )}
+
         <button
           onClick={() => setCollapsed(v => !v)}
           className="flex-shrink-0 size-8 rounded-xl flex items-center justify-center text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/60 transition-all"

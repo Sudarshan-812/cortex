@@ -1,4 +1,5 @@
 import { createClient } from "@/utils/supabase/server"
+import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { ChatSidebar } from "@/components/chat-sidebar"
 import { Navbar } from "@/components/landing/Navbar"
@@ -16,14 +17,22 @@ export default async function ChatLayout({ children }: { children: React.ReactNo
     user.email?.split("@")[0] ||
     "User"
 
-  const { data: workspace } = await supabase
+  // ── Fetch all workspaces ───────────────────────────────────────────
+  const { data: workspaces } = await supabase
     .from("workspaces")
     .select("id, name")
     .eq("owner_id", user.id)
-    .single()
+    .order("created_at", { ascending: true })
 
-  if (!workspace) redirect("/")
+  if (!workspaces || workspaces.length === 0) redirect("/dashboard")
 
+  // ── Resolve active workspace from cookie ───────────────────────────
+  const cookieStore = await cookies()
+  const activeId = cookieStore.get("cortex_active_workspace")?.value
+  const workspace =
+    workspaces.find(w => w.id === activeId) ?? workspaces[0]
+
+  // ── Sessions for active workspace ─────────────────────────────────
   const { data: sessions } = await supabase
     .from("chat_sessions")
     .select("id, title, updated_at")
@@ -42,6 +51,7 @@ export default async function ChatLayout({ children }: { children: React.ReactNo
           sessions={sessions ?? []}
           workspaceId={workspace.id}
           workspaceName={workspace.name}
+          workspaces={workspaces}
         />
         <main className="flex-1 overflow-hidden">
           {children}

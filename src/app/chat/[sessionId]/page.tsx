@@ -1,4 +1,5 @@
 import { createClient } from "@/utils/supabase/server"
+import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { ChatWindow } from "@/components/chat-window"
 
@@ -14,11 +15,21 @@ export default async function SessionPage({
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/login")
 
-  const { data: workspace } = await supabase
+  // Resolve active workspace from cookie (supports multiple workspaces)
+  const cookieStore = await cookies()
+  const activeId = cookieStore.get("cortex_active_workspace")?.value
+
+  const { data: workspaces } = await supabase
     .from("workspaces")
     .select("id")
     .eq("owner_id", user.id)
-    .single()
+    .order("created_at", { ascending: true })
+
+  if (!workspaces || workspaces.length === 0) redirect("/dashboard")
+
+  // The session itself tells us which workspace it belongs to — use that
+  // as the source of truth so switching workspace doesn't break open tabs.
+  const workspace = workspaces.find(w => w.id === activeId) ?? workspaces[0]
 
   if (!workspace) redirect("/")
 

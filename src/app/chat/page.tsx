@@ -1,4 +1,5 @@
 import { createClient } from "@/utils/supabase/server"
+import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { Brain } from "lucide-react"
 
@@ -8,15 +9,22 @@ export default async function ChatIndexPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/login")
 
-  const { data: workspace } = await supabase
+  // ── Resolve active workspace from cookie ───────────────────────────
+  const cookieStore = await cookies()
+  const activeId = cookieStore.get("cortex_active_workspace")?.value
+
+  const { data: workspaces } = await supabase
     .from("workspaces")
     .select("id")
     .eq("owner_id", user.id)
-    .single()
+    .order("created_at", { ascending: true })
 
-  if (!workspace) redirect("/")
+  if (!workspaces || workspaces.length === 0) redirect("/dashboard")
 
-  // Auto-redirect to the most recent session if one exists
+  const workspace =
+    workspaces.find(w => w.id === activeId) ?? workspaces[0]
+
+  // Auto-redirect to the most recent session in this workspace
   const { data: latest } = await supabase
     .from("chat_sessions")
     .select("id")
