@@ -7,6 +7,7 @@ import {
   Loader2, User, FileText, Globe, Search,
   Sparkles, ArrowUp, Plus, Mic,
 } from 'lucide-react'
+import { DynamicGreeting } from '@/components/DynamicGreeting'
 
 type Source = {
   chunk_id: string
@@ -324,11 +325,12 @@ export function ChatWindow({
               >
                 {/* Hero logo */}
                 <motion.div
-                  initial={{ scale: 0.85, opacity: 0 }}
+                  initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.5, delay: 0.1 }}
-                  className="flex flex-col items-center gap-3"
+                  className="flex flex-col items-center gap-4"
                 >
+                  {/* Spinning logo */}
                   <div className="relative size-20 rounded-3xl bg-gradient-to-br from-fuchsia-50 to-purple-50 border border-fuchsia-100 shadow-[0_8px_32px_rgba(192,38,211,0.12)] flex items-center justify-center">
                     <Image src="/CortexLogo.png" alt="Cortex" width={40} height={40} className="object-contain" />
                     <motion.div
@@ -338,17 +340,9 @@ export function ChatWindow({
                       style={{ borderStyle: 'dashed' }}
                     />
                   </div>
-                  <div className="text-center">
-                    <h2 className="text-2xl font-bold tracking-tight text-zinc-950">
-                      Hello, I&apos;m{' '}
-                      <span className="bg-gradient-to-r from-fuchsia-500 to-violet-500 bg-clip-text text-transparent">
-                        Cortex
-                      </span>
-                    </h2>
-                    <p className="text-zinc-400 text-sm mt-1.5 font-medium">
-                      Ask me anything about your documents
-                    </p>
-                  </div>
+
+                  {/* Time-aware greeting */}
+                  <DynamicGreeting />
                 </motion.div>
 
                 {/* Suggestion chips */}
