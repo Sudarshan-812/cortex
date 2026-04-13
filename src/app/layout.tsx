@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
 import { ProgressBar } from "@/components/ProgressBar";
 import "./globals.css";
 
@@ -93,6 +94,7 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ProgressBar />
         {children}
+        <Analytics />
         {/* JSON-LD structured data — placed in body, valid per spec and Next.js recommendation */}
         <Script
           id="json-ld"
