@@ -108,7 +108,7 @@ export default function DocsPage() {
               Create Free Account
             </Link>
             <a
-              href="https://github.com"
+              href="https://github.com/Sudarshan-812"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-1.5 px-6 py-2.5 bg-zinc-800 text-zinc-300 rounded-full text-[14px] font-semibold hover:bg-zinc-700 transition-colors"

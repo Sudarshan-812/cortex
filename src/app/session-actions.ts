@@ -18,6 +18,18 @@ export async function createChatSession(workspaceId: string) {
 
 export async function deleteChatSession(sessionId: string) {
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Not authenticated" }
+
+  // Verify the session belongs to this user's workspace before deleting
+  const { data: session } = await supabase
+    .from("chat_sessions")
+    .select("workspace_id, workspaces!inner(owner_id)")
+    .eq("id", sessionId)
+    .single()
+
+  if (!session || (session.workspaces as any)?.owner_id !== user.id) return { error: "Not found" }
+
   await supabase.from("chat_sessions").delete().eq("id", sessionId)
   revalidatePath("/chat")
 }

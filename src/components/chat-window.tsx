@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Image from 'next/image'
 import {
-  FileText, Globe, Search, ArrowUp, Plus,
+  FileText, Search, ArrowUp, Plus,
   ChevronDown, Sparkles, CheckCircle2,
 } from 'lucide-react'
 import { DynamicGreeting } from '@/components/DynamicGreeting'

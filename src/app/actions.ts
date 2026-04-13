@@ -185,6 +185,6 @@ export async function uploadDocument(formData: FormData) {
     return { error: `Processing error: ${err.message ?? String(err)}` }
   }
 
-  revalidatePath("/")
+  revalidatePath("/dashboard")
   return { success: true }
 }

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Navbar } from "@/components/landing/Navbar";
-import { ArrowLeft, User, Bell, Shield, Trash2, Mail, Building2 } from "lucide-react";
+import { ArrowLeft, User, Shield, Trash2, Building2 } from "lucide-react";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -22,7 +22,9 @@ export default async function SettingsPage() {
     .from("workspaces")
     .select("id, name, created_at")
     .eq("owner_id", user.id)
-    .single();
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
 
   const sections = [
     {

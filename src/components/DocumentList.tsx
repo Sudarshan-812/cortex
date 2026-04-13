@@ -21,6 +21,7 @@ function formatBytes(bytes: number) {
 function timeAgo(dateStr: string) {
   const diff = Date.now() - new Date(dateStr).getTime()
   const mins = Math.floor(diff / 60000)
+  if (mins < 1) return 'just now'
   if (mins < 60) return `${mins}m ago`
   const hrs = Math.floor(mins / 60)
   if (hrs < 24) return `${hrs}h ago`
@@ -35,12 +36,13 @@ export function DocumentList({ documents: initial }: { documents: Doc[] }) {
   async function handleDelete(id: string) {
     setDeletingId(id)
     setConfirmId(null)
+    const snapshot = docs
     // Optimistic remove
     setDocs(prev => prev.filter(d => d.id !== id))
     const result = await deleteDocument(id)
     if (result?.error) {
-      // Restore on failure
-      setDocs(initial)
+      // Restore current state on failure
+      setDocs(snapshot)
     }
     setDeletingId(null)
   }

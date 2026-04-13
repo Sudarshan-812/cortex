@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Navbar } from "@/components/landing/Navbar";
 import { Hero } from "@/components/landing/Hero";
 import { Features } from "@/components/landing/Features";
+import { CTA } from "@/components/landing/CTA";
 import { Footer } from "@/components/landing/Footer";
 // Client wrapper that defers WebGL init via next/dynamic ssr:false
 // (ssr:false cannot be used directly in a Server Component)
@@ -56,6 +57,7 @@ export default async function LandingPage({
       <Navbar isLoggedIn={isLoggedIn} avatarUrl={avatarUrl} userName={userName} />
       <Hero isLoggedIn={isLoggedIn} />
       <Features />
+      <CTA isLoggedIn={isLoggedIn} />
       <Footer />
 
     </div>

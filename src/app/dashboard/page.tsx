@@ -70,7 +70,6 @@ export default async function Dashboard() {
         role: "admin",
       })
 
-      const { cookies } = await import("next/headers")
       const cookieStore = await cookies()
       cookieStore.set("cortex_active_workspace", newWorkspace.id, {
         maxAge: 60 * 60 * 24 * 30,
