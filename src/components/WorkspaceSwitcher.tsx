@@ -61,8 +61,6 @@ export function WorkspaceSwitcher({
 
   return (
     <div className="flex flex-col gap-3 mb-8">
-
-      {/* ── Workspace tabs ── */}
       <div className="flex items-center gap-2 flex-wrap">
         {workspaces.map(ws => {
           const isActive = ws.id === activeId
@@ -91,7 +89,6 @@ export function WorkspaceSwitcher({
                 )}
                 <span className="max-w-[160px] truncate">{ws.name}</span>
 
-                {/* Delete button — only on inactive tabs, 2+ workspaces */}
                 {!isActive && workspaces.length > 1 && (
                   <span
                     role="button"
@@ -104,7 +101,6 @@ export function WorkspaceSwitcher({
                 )}
               </button>
 
-              {/* Confirm delete popover */}
               {isConfirming && (
                 <div className="absolute top-full left-0 mt-2 z-50 bg-white border border-red-100 rounded-2xl shadow-xl p-4 w-64">
                   <div className="flex items-start gap-3 mb-3">
@@ -138,7 +134,6 @@ export function WorkspaceSwitcher({
           )
         })}
 
-        {/* New workspace button */}
         {!showCreate && (
           <button
             onClick={() => setShowCreate(true)}
@@ -150,7 +145,6 @@ export function WorkspaceSwitcher({
         )}
       </div>
 
-      {/* ── Inline create form ── */}
       {showCreate && (
         <div className="flex flex-col gap-1.5 max-w-sm">
           <div className="flex items-center gap-2 bg-white border border-zinc-200 rounded-2xl px-4 py-2.5 shadow-sm focus-within:border-fuchsia-300 focus-within:ring-2 focus-within:ring-fuchsia-100 transition-all">

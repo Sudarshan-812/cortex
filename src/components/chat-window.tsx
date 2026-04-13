@@ -37,7 +37,6 @@ const SUGGESTED = [
   "Find specific information",
 ]
 
-// ── Markdown renderer ──────────────────────────────────────────────────────────
 function renderMarkdown(text: string) {
   const lines = text.split('\n')
   const elements: React.ReactNode[] = []
@@ -117,7 +116,6 @@ function inlineFormat(text: string): React.ReactNode {
   })
 }
 
-// ── Thinking indicator ─────────────────────────────────────────────────────────
 function ThinkingIndicator({ tools }: { tools: ToolEvent[] }) {
   const running = tools.find(t => t.status === 'running')
   const done = tools.filter(t => t.status === 'done')
@@ -139,7 +137,6 @@ function ThinkingIndicator({ tools }: { tools: ToolEvent[] }) {
       animate={{ opacity: 1, y: 0 }}
       className="flex items-center gap-3 py-1"
     >
-      {/* Animated icon */}
       <div className="relative flex-shrink-0">
         {isSearching ? (
           <motion.div
@@ -154,7 +151,6 @@ function ThinkingIndicator({ tools }: { tools: ToolEvent[] }) {
             <CheckCircle2 className="size-5 text-emerald-500" />
           </motion.div>
         ) : (
-          /* Pulsing brain/spark for "Thinking" */
           <motion.div
             animate={{ scale: [1, 1.2, 1], opacity: [0.7, 1, 0.7] }}
             transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
@@ -163,7 +159,6 @@ function ThinkingIndicator({ tools }: { tools: ToolEvent[] }) {
           </motion.div>
         )}
 
-        {/* Ripple ring when searching */}
         {isSearching && (
           <motion.div
             className="absolute inset-0 rounded-full border border-fuchsia-300"
@@ -173,7 +168,6 @@ function ThinkingIndicator({ tools }: { tools: ToolEvent[] }) {
         )}
       </div>
 
-      {/* Label with shimmer when thinking */}
       <div className="relative overflow-hidden">
         <span className="text-[13.5px] font-medium text-zinc-500">{label}</span>
         {!isDone && (
@@ -185,8 +179,6 @@ function ThinkingIndicator({ tools }: { tools: ToolEvent[] }) {
         )}
       </div>
 
-      {/* Animated dots when thinking (no tools yet) */}
-      {/* Only animate transform (y) — backgroundColor removed to avoid paint on every rAF tick */}
       {!isSearching && !isDone && (
         <div className="flex gap-1 items-center">
           {[0, 1, 2].map(j => (
@@ -203,7 +195,6 @@ function ThinkingIndicator({ tools }: { tools: ToolEvent[] }) {
   )
 }
 
-// ── Main component ─────────────────────────────────────────────────────────────
 export function ChatWindow({
   sessionId,
   workspaceId,
@@ -319,11 +310,7 @@ export function ChatWindow({
 
   return (
     <div className="flex flex-col h-full bg-white">
-
-      {/* ── Messages area ── */}
       <div className="flex-1 overflow-y-auto scroll-smooth">
-
-        {/* ── Empty / Welcome ── */}
         <AnimatePresence>
           {isEmpty && (
             <motion.div
@@ -333,14 +320,12 @@ export function ChatWindow({
               transition={{ duration: 0.5 }}
               className="flex flex-col items-center justify-center min-h-full px-6 py-20 gap-10"
             >
-              {/* Dynamic greeting */}
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
                 className="flex flex-col items-center gap-5"
               >
-                {/* Spinning logo */}
                 <div className="relative size-16 rounded-2xl bg-gradient-to-br from-fuchsia-50 to-purple-50 border border-fuchsia-100/80 shadow-[0_4px_24px_rgba(192,38,211,0.1)] flex items-center justify-center">
                   <Image src="/CortexLogo.png" alt="Cortex" width={34} height={34} className="object-contain" />
                   <motion.div
@@ -353,7 +338,6 @@ export function ChatWindow({
                 <DynamicGreeting />
               </motion.div>
 
-              {/* Suggestion chips */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -380,7 +364,6 @@ export function ChatWindow({
           )}
         </AnimatePresence>
 
-        {/* ── Conversation ── */}
         {!isEmpty && (
           <div className="max-w-[760px] mx-auto px-6 py-8 space-y-8">
             <AnimatePresence initial={false}>
@@ -396,7 +379,6 @@ export function ChatWindow({
                       transition={{ duration: 0.25 }}
                       className="flex justify-end"
                     >
-                      {/* Gemini-style user bubble — subtle pill, no heavy shadow */}
                       <div className="max-w-[75%] bg-zinc-100 rounded-3xl rounded-tr-lg px-5 py-3.5 text-[15px] text-zinc-900 leading-relaxed font-normal">
                         {msg.content}
                       </div>
@@ -404,7 +386,6 @@ export function ChatWindow({
                   )
                 }
 
-                // ── Assistant message ──
                 return (
                   <motion.div
                     key={i}
@@ -413,7 +394,6 @@ export function ChatWindow({
                     transition={{ duration: 0.3 }}
                     className="flex gap-4 items-start"
                   >
-                    {/* Avatar */}
                     <div className={`
                       flex-shrink-0 size-8 rounded-full border flex items-center justify-center mt-0.5
                       ${isLastAssistant
@@ -433,19 +413,13 @@ export function ChatWindow({
                       )}
                     </div>
 
-                    {/* Content */}
                     <div className="flex-1 min-w-0 space-y-3 pt-0.5">
-
-                      {/* Thinking / tool indicator */}
                       <AnimatePresence>
                         {isLastAssistant && msg.content === '' && (
                           <ThinkingIndicator tools={activeTools} />
                         )}
                       </AnimatePresence>
 
-                      {/* Tool done chips (while streaming) */}
-                      {/* height animation removed — animating height forces layout reflow.
-                          opacity-only is GPU-composited (no layout, no paint). */}
                       <AnimatePresence>
                         {isLastAssistant && activeTools.some(t => t.status === 'done') && msg.content !== '' && (
                           <motion.div
@@ -465,7 +439,6 @@ export function ChatWindow({
                         )}
                       </AnimatePresence>
 
-                      {/* Markdown content */}
                       {msg.content && (
                         <div className="text-[15px] leading-[1.8]">
                           {renderMarkdown(msg.content)}
@@ -479,7 +452,6 @@ export function ChatWindow({
                         </div>
                       )}
 
-                      {/* Sources */}
                       {!loading && msg.sources && msg.sources.length > 0 && (
                         <SourceCitations sources={msg.sources} />
                       )}
@@ -494,13 +466,8 @@ export function ChatWindow({
         <div ref={bottomRef} className="h-4" />
       </div>
 
-      {/* ── Input bar — Gemini style ── */}
       <div className="flex-shrink-0 px-6 pb-6 pt-2">
         <div className="max-w-[760px] mx-auto">
-          {/* CSS transition instead of Framer Motion boxShadow animation —
-               box-shadow is a paint operation; animating it via JS (rAF) on every
-               frame causes unnecessary paint work. CSS transitions let the browser
-               handle it efficiently off the critical path. */}
           <div
             className={`
               relative bg-zinc-50 border rounded-3xl overflow-hidden
@@ -572,7 +539,6 @@ export function ChatWindow({
   )
 }
 
-// ── Source citations ───────────────────────────────────────────────────────────
 function SourceCitations({ sources }: { sources: Source[] }) {
   const [open, setOpen] = useState(false)
 
@@ -598,8 +564,6 @@ function SourceCitations({ sources }: { sources: Source[] }) {
         </motion.span>
       </button>
 
-      {/* scaleY instead of height/marginTop — height:auto forces layout recalculation
-           on every animation frame. scaleY is a transform and is GPU-composited. */}
       <AnimatePresence>
         {open && (
           <motion.div

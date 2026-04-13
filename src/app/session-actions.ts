@@ -21,7 +21,6 @@ export async function deleteChatSession(sessionId: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: "Not authenticated" }
 
-  // Verify the session belongs to this user's workspace before deleting
   const { data: session } = await supabase
     .from("chat_sessions")
     .select("workspace_id, workspaces!inner(owner_id)")

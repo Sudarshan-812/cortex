@@ -5,8 +5,6 @@ import { Hero } from "@/components/landing/Hero";
 import { Features } from "@/components/landing/Features";
 import { CTA } from "@/components/landing/CTA";
 import { Footer } from "@/components/landing/Footer";
-// Client wrapper that defers WebGL init via next/dynamic ssr:false
-// (ssr:false cannot be used directly in a Server Component)
 import { AuroraBackground } from "@/components/AuroraBackground";
 
 export default async function LandingPage({
@@ -14,14 +12,11 @@ export default async function LandingPage({
 }: {
   searchParams: Promise<{ code?: string; error?: string }>;
 }) {
-  // If Supabase redirected the OAuth code here instead of /auth/callback,
-  // forward it so the session gets properly exchanged.
   const params = await searchParams;
   if (params.code) {
     redirect(`/auth/callback?code=${params.code}`);
   }
 
-  // 1. Fetch Auth State Server-Side
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -35,8 +30,6 @@ export default async function LandingPage({
 
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-950 overflow-hidden font-sans relative selection:bg-fuchsia-200">
-
-      {/* Aurora: loaded after hydration — zero TBT contribution */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <AuroraBackground
           speed={0.5}
@@ -59,7 +52,6 @@ export default async function LandingPage({
       <Features />
       <CTA isLoggedIn={isLoggedIn} />
       <Footer />
-
     </div>
   );
 }

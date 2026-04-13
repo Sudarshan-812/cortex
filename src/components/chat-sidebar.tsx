@@ -45,7 +45,6 @@ export function ChatSidebar({
   const [switchingWs, setSwitchingWs] = useState<string | null>(null)
   const wsRef = useRef<HTMLDivElement>(null)
 
-  // Close workspace dropdown on outside click
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       if (wsRef.current && !wsRef.current.contains(e.target as Node)) {
@@ -96,15 +95,11 @@ export function ChatSidebar({
         ${collapsed ? 'w-[60px]' : 'w-[260px]'}
       `}
     >
-      {/* ── Top bar ── */}
       <div className={`flex items-center h-14 px-3 border-b border-zinc-200/60 flex-shrink-0 ${collapsed ? 'justify-center' : 'justify-between'}`}>
         {!collapsed && (
           <div ref={wsRef} className="relative min-w-0 flex-1 mr-2">
             {hasMultipleWorkspaces ? (
-              <button
-                onClick={() => setWsOpen(v => !v)}
-                className="w-full text-left group"
-              >
+              <button onClick={() => setWsOpen(v => !v)} className="w-full text-left group">
                 <p className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest leading-none">Workspace</p>
                 <div className="flex items-center gap-1 mt-0.5">
                   <p className="text-[13px] font-semibold text-zinc-800 truncate">{workspaceName}</p>
@@ -118,7 +113,6 @@ export function ChatSidebar({
               </div>
             )}
 
-            {/* Workspace dropdown */}
             {wsOpen && hasMultipleWorkspaces && (
               <div className="absolute top-full left-0 mt-2 w-52 bg-white border border-zinc-200 rounded-2xl shadow-xl overflow-hidden z-50 py-1">
                 {workspaces.map(ws => {
@@ -165,14 +159,10 @@ export function ChatSidebar({
           className="flex-shrink-0 size-8 rounded-xl flex items-center justify-center text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200/60 transition-all"
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
-          {collapsed
-            ? <PanelLeftOpen className="size-4" />
-            : <PanelLeftClose className="size-4" />
-          }
+          {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
         </button>
       </div>
 
-      {/* ── New Chat button ── */}
       <div className={`px-2 pt-3 pb-2 flex-shrink-0 ${collapsed ? 'flex justify-center' : ''}`}>
         {collapsed ? (
           <button
@@ -201,7 +191,6 @@ export function ChatSidebar({
         )}
       </div>
 
-      {/* ── Session list ── */}
       <div className="flex-1 overflow-y-auto px-2 py-1 space-y-0.5">
         {!collapsed && sessions.length === 0 && (
           <p className="text-[11.5px] text-zinc-400 text-center py-8 px-4 leading-relaxed">
@@ -225,7 +214,6 @@ export function ChatSidebar({
             `}
           >
             <MessageSquare className={`size-3.5 flex-shrink-0 ${activeId === session.id ? 'text-zinc-300' : 'text-zinc-400'}`} />
-
             {!collapsed && (
               <>
                 <span className="flex-1 text-[13px] font-medium truncate">{session.title}</span>
@@ -247,7 +235,6 @@ export function ChatSidebar({
         ))}
       </div>
 
-      {/* ── Footer ── */}
       <div className={`p-2 border-t border-zinc-200/60 flex-shrink-0 ${collapsed ? 'flex justify-center' : ''}`}>
         <Link
           href="/dashboard"

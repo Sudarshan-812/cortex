@@ -15,8 +15,6 @@ export function ProgressBar() {
   function startProgress() {
     setVisible(true)
     setProgress(0)
-
-    // Simulate crawling progress up to ~85%
     let current = 0
     intervalRef.current = setInterval(() => {
       current += Math.random() * 12
@@ -37,7 +35,6 @@ export function ProgressBar() {
     }, 400)
   }
 
-  // Complete when pathname changes (navigation done)
   useEffect(() => {
     if (prevPathname.current !== pathname) {
       completeProgress()
@@ -45,13 +42,11 @@ export function ProgressBar() {
     }
   }, [pathname])
 
-  // Intercept link clicks to start the bar
   useEffect(() => {
     function handleClick(e: MouseEvent) {
       const anchor = (e.target as Element).closest('a')
       if (!anchor) return
       const href = anchor.getAttribute('href')
-      // Only internal, non-hash, non-external links
       if (
         href &&
         href.startsWith('/') &&
@@ -65,7 +60,6 @@ export function ProgressBar() {
     return () => document.removeEventListener('click', handleClick)
   }, [])
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current)
@@ -92,7 +86,6 @@ export function ProgressBar() {
           exit={{ opacity: 0, transition: { duration: 0.3 } }}
           transition={{ width: { duration: 0.3, ease: 'easeOut' } }}
         >
-          {/* Glowing tip */}
           <div className="absolute right-0 top-1/2 -translate-y-1/2 w-24 h-[3.5px] bg-gradient-to-l from-white/60 to-transparent blur-[1px]" />
         </motion.div>
       )}

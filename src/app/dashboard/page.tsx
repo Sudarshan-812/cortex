@@ -34,20 +34,17 @@ export default async function Dashboard() {
     user.email?.split("@")[0] ||
     "User"
 
-  // ── Fetch ALL workspaces (not just one) ──────────────────────────
   const { data: workspaces } = await supabase
     .from("workspaces")
     .select("*")
     .eq("owner_id", user.id)
     .order("created_at", { ascending: true })
 
-  // ── Determine active workspace from cookie ───────────────────────
   const cookieStore = await cookies()
   const activeId = cookieStore.get("cortex_active_workspace")?.value
   const workspace =
     workspaces?.find(w => w.id === activeId) ?? workspaces?.[0] ?? null
 
-  // ── No workspaces yet → setup screen ────────────────────────────
   if (!workspace || !workspaces || workspaces.length === 0) {
     async function initWorkspace(formData: FormData) {
       "use server"
@@ -85,7 +82,6 @@ export default async function Dashboard() {
         <Navbar isLoggedIn avatarUrl={avatarUrl} userName={userName} />
         <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans selection:bg-fuchsia-200 relative overflow-hidden pt-16">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-[radial-gradient(ellipse_at_top,_#fdf4ff_0%,_transparent_70%)] pointer-events-none" />
-
           <div className="relative z-10 w-full max-w-md px-4">
             <div className="bg-white/70 backdrop-blur-xl border border-zinc-200/60 rounded-[2rem] p-10 shadow-[0_8px_40px_rgba(0,0,0,0.06)]">
               <div className="mb-6">
@@ -93,7 +89,6 @@ export default async function Dashboard() {
               </div>
               <h1 className="text-2xl font-bold tracking-tight text-zinc-950 mb-1">Initialize Cortex</h1>
               <p className="text-zinc-500 text-sm mb-8">Set up your secure enterprise knowledge base.</p>
-
               <form action={initWorkspace} className="space-y-5">
                 <div className="space-y-2">
                   <Label htmlFor="workspaceName" className="text-sm font-medium text-zinc-700">
@@ -121,7 +116,6 @@ export default async function Dashboard() {
     )
   }
 
-  // ── Fetch documents for active workspace ─────────────────────────
   const { data: documents, count: docCount } = await supabase
     .from("documents")
     .select("id, name, size_bytes, created_at", { count: "exact" })
@@ -140,16 +134,10 @@ export default async function Dashboard() {
 
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-950 font-sans selection:bg-fuchsia-200">
-
-      {/* Fixed Navbar */}
       <Navbar isLoggedIn avatarUrl={avatarUrl} userName={userName} />
-
-      {/* Subtle top gradient */}
       <div className="fixed top-0 inset-x-0 h-[360px] bg-[radial-gradient(ellipse_80%_60%_at_50%_-10%,_#fdf4ff_0%,_transparent_100%)] pointer-events-none z-0" />
 
       <div className="relative z-10 max-w-6xl mx-auto px-6 pt-28 pb-16">
-
-        {/* ── Page header ──────────────────────────────────────────── */}
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-5 mb-8">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/70 backdrop-blur-md border border-zinc-200/70 shadow-sm mb-3">
@@ -159,7 +147,6 @@ export default async function Dashboard() {
             <h1 className="text-3xl font-bold tracking-tight text-zinc-950">{workspace.name}</h1>
             <p className="mt-1.5 text-sm text-zinc-500 font-mono">{user.email}</p>
           </div>
-
           <Button
             asChild
             className="h-10 bg-zinc-950 hover:bg-zinc-800 text-white rounded-full px-5 text-[13.5px] font-semibold shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md self-start md:self-auto"
@@ -171,10 +158,8 @@ export default async function Dashboard() {
           </Button>
         </div>
 
-        {/* ── Workspace switcher ────────────────────────────────────── */}
         <WorkspaceSwitcher workspaces={workspaces} activeId={workspace.id} />
 
-        {/* ── Stat strip ───────────────────────────────────────────── */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           {[
             {
@@ -227,10 +212,7 @@ export default async function Dashboard() {
           ))}
         </div>
 
-        {/* ── Bento: upload + actions ───────────────────────────────── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-5">
-
-          {/* Upload zone */}
           <div className="lg:col-span-2">
             <div className="h-full bg-white/60 backdrop-blur-xl border border-zinc-200/60 rounded-2xl flex flex-col overflow-hidden">
               <div className="px-6 pt-5 pb-4 border-b border-zinc-100">
@@ -245,7 +227,6 @@ export default async function Dashboard() {
             </div>
           </div>
 
-          {/* Quick actions */}
           <div className="space-y-4">
             <div className="bg-zinc-950 text-white rounded-2xl p-6 flex flex-col gap-4">
               <div className="size-10 rounded-xl bg-white/10 flex items-center justify-center">
@@ -282,7 +263,6 @@ export default async function Dashboard() {
           </div>
         </div>
 
-        {/* ── Document list with delete ─────────────────────────────── */}
         {documents && documents.length > 0 && (
           <DocumentList documents={documents} />
         )}

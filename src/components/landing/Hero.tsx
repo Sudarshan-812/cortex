@@ -44,7 +44,6 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
         </div>
       </motion.div>
 
-      {/* CTA Buttons */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -57,7 +56,6 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
               href="/dashboard"
               className="group relative overflow-hidden flex items-center justify-center gap-2 bg-zinc-950 hover:bg-black text-white px-8 py-4 rounded-full font-bold text-lg transition-all duration-300 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.3)] hover:shadow-[0_12px_24px_-6px_rgba(0,0,0,0.4)] hover:-translate-y-0.5"
             >
-              {/* Shimmer overlay */}
               <span aria-hidden className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-[-15deg]" />
               Open Dashboard
               <ArrowRight className="size-5 group-hover:translate-x-1 transition-transform" />
@@ -76,7 +74,6 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
               href="/login"
               className="group relative overflow-hidden flex items-center justify-center gap-2 bg-zinc-950 hover:bg-black text-white px-8 py-4 rounded-full font-bold text-lg transition-all duration-300 shadow-[0_8px_20px_-6px_rgba(0,0,0,0.3)] hover:shadow-[0_12px_24px_-6px_rgba(0,0,0,0.4)] hover:-translate-y-0.5"
             >
-              {/* Shimmer overlay */}
               <span aria-hidden className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 ease-in-out bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-[-15deg]" />
               Start Analyzing Documents
               <ArrowRight className="size-5 group-hover:translate-x-1 transition-transform" />
@@ -91,17 +88,13 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
         )}
       </motion.div>
 
-      {/* Product Screenshot Mockup */}
       <motion.div
         initial={{ opacity: 0, y: 48 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.9, delay: 0.75, ease: [0.22, 1, 0.36, 1] }}
         className="mt-16 mx-auto max-w-4xl"
       >
-        {/* Browser chrome */}
         <div className="rounded-2xl border border-zinc-200/70 bg-white/50 backdrop-blur-xl shadow-[0_32px_80px_-8px_rgba(0,0,0,0.18),0_0_0_1px_rgba(0,0,0,0.04)] overflow-hidden">
-
-          {/* Browser toolbar */}
           <div className="flex items-center gap-3 px-4 py-3 bg-zinc-50/90 border-b border-zinc-200/60">
             <div className="flex gap-1.5">
               <div className="h-3 w-3 rounded-full bg-red-400/80" />
@@ -113,10 +106,7 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
             </div>
           </div>
 
-          {/* App UI */}
           <div className="flex h-[340px] sm:h-[400px] text-left">
-
-            {/* Left sidebar — document list */}
             <div className="w-[180px] sm:w-[220px] flex-shrink-0 border-r border-zinc-100 bg-zinc-50/60 p-3 flex flex-col gap-1">
               <p className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider px-2 mb-1">Workspace</p>
               {[
@@ -138,7 +128,6 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
                 </div>
               ))}
               <div className="mt-auto pt-2 border-t border-zinc-100">
-                {/* text-zinc-500 — passes WCAG AA contrast against white/zinc-50 bg */}
                 <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-zinc-500 cursor-default">
                   <Plus className="size-3.5" />
                   <span className="text-[11px] font-medium">Upload document</span>
@@ -146,26 +135,19 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
               </div>
             </div>
 
-            {/* Right — chat interface */}
             <div className="flex-1 flex flex-col min-w-0">
-
-              {/* Chat header */}
               <div className="flex items-center gap-2 px-4 py-2.5 border-b border-zinc-100 bg-white/40">
                 <MessageSquare className="size-3.5 text-zinc-400" />
                 <span className="text-[12px] font-semibold text-zinc-700">Ask your documents</span>
               </div>
 
-              {/* Messages */}
               <div className="flex-1 overflow-hidden p-4 flex flex-col gap-3">
-
-                {/* User message */}
                 <div className="flex justify-end">
                   <div className="max-w-[65%] bg-zinc-950 text-white px-3.5 py-2 rounded-2xl rounded-tr-sm text-[12px] leading-relaxed">
                     What was our Q3 revenue and how does it compare to last year?
                   </div>
                 </div>
 
-                {/* AI response */}
                 <div className="flex justify-start">
                   <div className="max-w-[78%] flex flex-col gap-2">
                     <div className="bg-white border border-zinc-200/70 shadow-sm px-3.5 py-2.5 rounded-2xl rounded-tl-sm text-[12px] leading-relaxed text-zinc-700">
@@ -173,7 +155,6 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
                       <span className="font-semibold text-zinc-900">$4.2M</span> — up{" "}
                       <span className="text-emerald-600 font-semibold">23% YoY</span> from $3.4M in Q3 2023, driven primarily by enterprise contract growth in APAC.
                     </div>
-                    {/* Citation chips */}
                     <div className="flex flex-wrap gap-1.5">
                       {["Q3_Results.pdf · p.12", "Annual_Report_2024.pdf · p.4"].map((cite) => (
                         <div key={cite} className="inline-flex items-center gap-1 px-2 py-0.5 bg-zinc-100 border border-zinc-200/60 rounded-full text-[10px] font-medium text-zinc-500">
@@ -186,7 +167,6 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
                 </div>
               </div>
 
-              {/* Input bar */}
               <div className="px-4 pb-4">
                 <div className="flex items-center gap-2 px-3.5 py-2.5 bg-white border border-zinc-200/80 rounded-xl shadow-sm">
                   <span className="flex-1 text-[12px] text-zinc-500">Ask a question about your documents…</span>
@@ -199,7 +179,6 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
           </div>
         </div>
 
-        {/* Subtle reflection / depth gradient */}
         <div className="h-8 mx-6 rounded-b-2xl bg-gradient-to-b from-zinc-200/30 to-transparent blur-sm -mt-1" />
       </motion.div>
     </main>

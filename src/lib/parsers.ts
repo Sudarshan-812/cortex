@@ -42,9 +42,7 @@ export async function extractText(file: File): Promise<string> {
 async function parsePdf(buffer: Buffer): Promise<string> {
   const parser = new PDFParser(undefined, true)
   return new Promise((resolve, reject) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     parser.on("pdfParser_dataError", (e: any) => reject(new Error(e?.parserError ?? String(e))))
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     parser.on("pdfParser_dataReady", () => resolve((parser as any).getRawTextContent()))
     parser.parseBuffer(buffer)
   })

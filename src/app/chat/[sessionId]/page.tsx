@@ -15,7 +15,6 @@ export default async function SessionPage({
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/login")
 
-  // Resolve active workspace from cookie (supports multiple workspaces)
   const cookieStore = await cookies()
   const activeId = cookieStore.get("cortex_active_workspace")?.value
 
@@ -27,13 +26,10 @@ export default async function SessionPage({
 
   if (!workspaces || workspaces.length === 0) redirect("/dashboard")
 
-  // The session itself tells us which workspace it belongs to — use that
-  // as the source of truth so switching workspace doesn't break open tabs.
   const workspace = workspaces.find(w => w.id === activeId) ?? workspaces[0]
 
   if (!workspace) redirect("/")
 
-  // Verify this session belongs to the user's workspace
   const { data: session } = await supabase
     .from("chat_sessions")
     .select("id, title")
@@ -43,7 +39,6 @@ export default async function SessionPage({
 
   if (!session) redirect("/chat")
 
-  // Load persisted messages
   const { data: messages } = await supabase
     .from("chat_messages")
     .select("id, role, content, sources")

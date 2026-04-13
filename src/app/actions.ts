@@ -9,8 +9,6 @@ import { cookies } from "next/headers"
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY!)
 
-// ── Workspace actions ──────────────────────────────────────────────────────────
-
 export async function createNewWorkspace(name: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -58,7 +56,6 @@ export async function deleteWorkspace(workspaceId: string) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Not authenticated' }
 
-  // Verify ownership
   const { data: ws } = await supabase
     .from('workspaces')
     .select('id')
@@ -67,7 +64,6 @@ export async function deleteWorkspace(workspaceId: string) {
     .single()
   if (!ws) return { error: 'Workspace not found' }
 
-  // Delete all document chunks + storage files
   const { data: docs } = await supabase
     .from('documents')
     .select('id, storage_path')
@@ -81,14 +77,10 @@ export async function deleteWorkspace(workspaceId: string) {
     if (paths.length > 0) await supabase.storage.from('synapse-uploads').remove(paths)
   }
 
-  // Delete chat sessions (messages cascade via FK)
   await supabase.from('chat_sessions').delete().eq('workspace_id', workspaceId)
-
-  // Delete workspace members + workspace
   await supabase.from('workspace_members').delete().eq('workspace_id', workspaceId)
   await supabase.from('workspaces').delete().eq('id', workspaceId).eq('owner_id', user.id)
 
-  // Clear cookie if it pointed to deleted workspace
   const cookieStore = await cookies()
   if (cookieStore.get('cortex_active_workspace')?.value === workspaceId) {
     cookieStore.delete('cortex_active_workspace')
@@ -98,8 +90,6 @@ export async function deleteWorkspace(workspaceId: string) {
   revalidatePath('/chat')
   return { success: true }
 }
-
-// ── Document actions ───────────────────────────────────────────────────────────
 
 export async function deleteDocument(documentId: string) {
   const supabase = await createClient()

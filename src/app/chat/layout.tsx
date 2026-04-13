@@ -17,7 +17,6 @@ export default async function ChatLayout({ children }: { children: React.ReactNo
     user.email?.split("@")[0] ||
     "User"
 
-  // ── Fetch all workspaces ───────────────────────────────────────────
   const { data: workspaces } = await supabase
     .from("workspaces")
     .select("id, name")
@@ -26,13 +25,10 @@ export default async function ChatLayout({ children }: { children: React.ReactNo
 
   if (!workspaces || workspaces.length === 0) redirect("/dashboard")
 
-  // ── Resolve active workspace from cookie ───────────────────────────
   const cookieStore = await cookies()
   const activeId = cookieStore.get("cortex_active_workspace")?.value
-  const workspace =
-    workspaces.find(w => w.id === activeId) ?? workspaces[0]
+  const workspace = workspaces.find(w => w.id === activeId) ?? workspaces[0]
 
-  // ── Sessions for active workspace ─────────────────────────────────
   const { data: sessions } = await supabase
     .from("chat_sessions")
     .select("id, title, updated_at")
@@ -41,11 +37,7 @@ export default async function ChatLayout({ children }: { children: React.ReactNo
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-zinc-50 font-sans selection:bg-fuchsia-200">
-
-      {/* Top Navbar — full width, fixed */}
       <Navbar isLoggedIn avatarUrl={avatarUrl} userName={userName} />
-
-      {/* Sidebar + main below the navbar */}
       <div className="flex flex-1 overflow-hidden mt-16">
         <ChatSidebar
           sessions={sessions ?? []}

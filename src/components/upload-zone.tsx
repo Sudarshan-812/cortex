@@ -47,7 +47,6 @@ export function UploadZone({ workspaceId }: { workspaceId: string }) {
         disabled={uploading}
       />
 
-      {/* Icon */}
       <div className="size-14 rounded-2xl bg-white border border-zinc-200/80 flex items-center justify-center mb-5 shadow-sm group-hover:border-fuchsia-200 group-hover:bg-fuchsia-50 transition-all duration-300">
         {uploading ? (
           <Loader2 className="h-6 w-6 text-fuchsia-500 animate-spin" />
@@ -67,16 +66,13 @@ export function UploadZone({ workspaceId }: { workspaceId: string }) {
       </p>
 
       <p className="text-xs text-zinc-400 max-w-[260px] leading-relaxed">
-        {status === 'error'
-          ? errorMsg
-          : `Supports ${ACCEPTED_LABEL}`}
+        {status === 'error' ? errorMsg : `Supports ${ACCEPTED_LABEL}`}
       </p>
 
       {status === 'error' && (
         <p className="text-xs text-red-500 mt-2 font-medium">{errorMsg}</p>
       )}
 
-      {/* Select button */}
       <button
         type="button"
         disabled={uploading}

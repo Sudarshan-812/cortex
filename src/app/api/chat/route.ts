@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest } from "next/server"
 import { createClient } from "@/utils/supabase/server"
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai"
@@ -10,7 +9,6 @@ function sse(data: object) {
   return enc.encode(`data: ${JSON.stringify(data)}\n\n`)
 }
 
-// Always called — hybrid search + re-ranking (1 Gemini call inside)
 async function searchDocuments(
   query: string,
   workspaceId: string,
@@ -30,7 +28,6 @@ async function searchDocuments(
 
   if (error || !chunks || chunks.length === 0) return { text: "", sources: [] }
 
-  // Re-rank: Gemini scores top-10 → keeps best 3 (Gemini call #1)
   let topChunks: any[] = chunks
   if (chunks.length > 3) {
     try {
@@ -109,14 +106,12 @@ export async function POST(req: NextRequest) {
   const stream = new ReadableStream({
     async start(controller) {
       try {
-        // Persist user message
         await supabase.from("chat_messages").insert({
           session_id: sessionId,
           role: "user",
           content: query,
         })
 
-        // Fetch conversation history for memory
         const { data: history } = await supabase
           .from("chat_messages")
           .select("role, content")
@@ -136,7 +131,6 @@ export async function POST(req: NextRequest) {
         const allSources: any[] = []
         const gatheredContext: string[] = []
 
-        // ── STEP 1: Always search documents (mandatory, no agent decision) ──
         controller.enqueue(sse({ type: "tool", name: "search_documents", status: "running" }))
         const docResults = await searchDocuments(query, workspaceId, supabase)
         allSources.push(...docResults.sources)
@@ -148,7 +142,6 @@ export async function POST(req: NextRequest) {
           count: docResults.sources.length,
         }))
 
-        // ── STEP 2: Agent decides if web search adds value (Gemini call #2) ──
         const agentModel = genAI.getGenerativeModel({
           model: "gemini-3.1-flash-lite-preview",
           systemInstruction: `You are Cortex, a document intelligence assistant.
@@ -192,9 +185,7 @@ Your only job now: decide if a web search would add meaningful value.
           controller.enqueue(sse({ type: "tool", name: "search_web", status: "done" }))
         }
 
-        // ── STEP 3: Stream the final answer (Gemini call #3) ──
         const context = gatheredContext.join("\n\n")
-
         const finalPrompt = context
           ? `Use the context below to answer the question accurately and concisely. Cite specifics from the context where possible.\n\nContext:\n${context}\n\nQuestion: ${query}\n\nAnswer:`
           : `Answer this question as helpfully as possible: ${query}`
@@ -211,7 +202,6 @@ Your only job now: decide if a web search would add meaningful value.
           }
         }
 
-        // Persist assistant message with sources
         await supabase.from("chat_messages").insert({
           session_id: sessionId,
           role: "assistant",
@@ -219,7 +209,6 @@ Your only job now: decide if a web search would add meaningful value.
           sources: allSources,
         })
 
-        // Auto-title session on first exchange
         const { count } = await supabase
           .from("chat_messages")
           .select("*", { count: "exact", head: true })
