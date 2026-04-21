@@ -137,13 +137,13 @@ export default async function Dashboard() {
             </p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
-            <button
-              onClick={() => document.getElementById('upload-zone')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+            <a
+              href="#upload-zone"
               className="cx-btn-ghost h-9 px-4 rounded-full text-[12.5px] font-medium flex items-center gap-1.5"
               style={{ color: "var(--cx-ink-2)" }}
             >
               <UploadCloud size={13} /> Upload
-            </button>
+            </a>
             <Link href="/chat" className="cx-btn-ink h-9 px-4 rounded-full text-[12.5px] font-medium flex items-center gap-1.5">
               <Search size={13} /> Query knowledge base
             </Link>
