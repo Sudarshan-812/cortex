@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useRef } from "react";
+import { motion, useScroll, useTransform } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight, Plus, FileText, MessageSquare, ExternalLink } from "lucide-react";
 
@@ -11,8 +12,16 @@ interface HeroProps {
 }
 
 export function Hero({ isLoggedIn = false }: HeroProps) {
+  const heroRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const textY = useTransform(scrollYProgress, [0, 1], ["0%", "-22%"]);
+  const textOpacity = useTransform(scrollYProgress, [0, 0.55], [1, 0]);
+
   return (
-    <main className="relative z-10 max-w-5xl mx-auto px-6 pt-32 pb-20 text-center">
+    <main ref={heroRef} className="relative z-10 max-w-5xl mx-auto px-6 pt-32 pb-20 text-center" style={{ position: 'relative' }}>
+
+      {/* Parallax wrapper — text drifts up slower than scroll */}
+      <motion.div style={{ y: textY, opacity: textOpacity }}>
 
       {/* Badge */}
       <motion.div
@@ -23,7 +32,7 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
         style={{ background: 'var(--cx-surface)', borderColor: 'var(--cx-line)' }}
       >
         <span className="size-1.5 rounded-full cx-pulse-dot flex-shrink-0" style={{ background: 'var(--cx-ok)' }} />
-        <span className="text-[11px] font-semibold tracking-[.1em] uppercase cx-num" style={{ color: 'var(--cx-mute-1)' }}>
+        <span className="text-[11px] font-semibold tracking-[.1em] uppercase cx-num" style={{ color: 'var(--cx-ink-2)' }}>
           Production RAG — Live
         </span>
       </motion.div>
@@ -34,10 +43,11 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.08, duration: 0.55, ease }}
       >
-        <h1 className="text-5xl md:text-7xl lg:text-[6rem] font-semibold tracking-[-0.03em] leading-[1.05] mb-6">
+        <h1 className="text-5xl md:text-7xl lg:text-[6rem] font-semibold tracking-[-0.03em] leading-[1.05] mb-6"
+          style={{ textShadow: '0 1px 24px rgba(246,245,242,0.6)' }}>
           <span style={{ color: 'var(--cx-ink)' }}>Your documents.</span>
           <br />
-          <span style={{ color: 'var(--cx-mute-1)' }}>Finally intelligent.</span>
+          <span style={{ color: 'var(--cx-ink-2)' }}>Finally intelligent.</span>
         </h1>
       </motion.div>
 
@@ -47,7 +57,7 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.18, duration: 0.5, ease }}
         className="text-[17px] md:text-[19px] leading-relaxed max-w-2xl mx-auto mb-10"
-        style={{ color: 'var(--cx-mute-1)' }}
+        style={{ color: 'var(--cx-ink-2)' }}
       >
         Cortex turns your PDFs, documents, and notes into a smart, conversational knowledge base using hybrid search, AI re-ranking, and source citations.
       </motion.p>
@@ -101,12 +111,14 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
         )}
       </motion.div>
 
-      {/* Product UI mockup */}
+      </motion.div>{/* end parallax wrapper */}
+
+      {/* Product UI mockup — outside parallax, sits deeper */}
       <motion.div
-        initial={{ opacity: 0, y: 48 }}
+        initial={{ opacity: 0, y: 64 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.9, delay: 0.55, ease: [0.22, 1, 0.36, 1] }}
-        className="mt-16 mx-auto max-w-4xl"
+        transition={{ duration: 1.0, delay: 0.65, ease: [0.22, 1, 0.36, 1] }}
+        className="mt-40 mx-auto max-w-4xl"
       >
         <div className="rounded-2xl border overflow-hidden"
           style={{

@@ -66,9 +66,11 @@ export function Features() {
               transition={{ delay: i * 0.07, duration: 0.5, ease }}
               className={`relative overflow-hidden rounded-[2rem] p-8 md:p-10 border z-0 group transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-xl ${card.wide ? "md:col-span-2" : ""}`}
               style={{
-                background: 'var(--cx-surface)',
-                borderColor: 'var(--cx-line)',
-                boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+                background: 'rgba(255,255,255,0.14)',
+                backdropFilter: 'blur(24px) saturate(150%)',
+                WebkitBackdropFilter: 'blur(24px) saturate(150%)',
+                borderColor: 'rgba(255,255,255,0.3)',
+                boxShadow: '0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.45)',
               }}
             >
               {/* Expanding ink circle on hover */}

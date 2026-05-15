@@ -136,7 +136,7 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
 
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
-            <Image src="/CortexLogo.png" alt="Cortex logo" width={26} height={26} className="object-contain" />
+            <Image src="/CortexLogo.png" alt="Cortex logo" width={26} height={26} className="object-contain" style={{ width: '26px', height: '26px' }} />
             <span className="text-[16px] font-semibold tracking-tight" style={{ color: 'var(--cx-ink)' }}>Cortex</span>
           </Link>
 

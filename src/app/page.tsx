@@ -29,13 +29,16 @@ export default async function LandingPage({
     "User";
 
   return (
-    <div className="min-h-screen font-sans overflow-hidden" style={{ background: 'var(--cx-paper)', color: 'var(--cx-ink)' }}>
+    <>
+      {/* Outside the stacking context so fixed bg + backdrop-filter work correctly */}
       <LandingBackground />
-      <Navbar isLoggedIn={isLoggedIn} avatarUrl={avatarUrl} userName={userName} />
-      <Hero isLoggedIn={isLoggedIn} />
-      <Features />
-      <CTA isLoggedIn={isLoggedIn} />
-      <Footer />
-    </div>
+      <div className="relative min-h-screen font-sans pb-14" style={{ color: 'var(--cx-ink)' }}>
+        <Navbar isLoggedIn={isLoggedIn} avatarUrl={avatarUrl} userName={userName} />
+        <Hero isLoggedIn={isLoggedIn} />
+        <Features />
+        <CTA isLoggedIn={isLoggedIn} />
+        <Footer />
+      </div>
+    </>
   );
 }
