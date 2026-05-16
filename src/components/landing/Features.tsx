@@ -1,36 +1,132 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Database, FileSearch, BrainCircuit, Zap, ArrowUpRight } from "lucide-react";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { Database, FileSearch, BrainCircuit, Zap } from "lucide-react";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const cards = [
   {
     icon: Database,
+    label: "01",
     title: "Enterprise RAG Pipeline",
     description: "Documents are chunked and embedded using Matryoshka Representation Learning (768-dim) and stored securely in pgvector via Supabase.",
     wide: true,
   },
   {
     icon: FileSearch,
+    label: "02",
     title: "Hybrid Search",
     description: "Merging vector cosine similarity with BM25 keyword search via Reciprocal Rank Fusion for best-in-class retrieval.",
     wide: false,
   },
   {
     icon: BrainCircuit,
+    label: "03",
     title: "Gemini Re-ranking",
     description: "Top 10 chunks are dynamically re-ranked by Gemini before being fed into the agentic reasoning engine.",
     wide: false,
   },
   {
     icon: Zap,
+    label: "04",
     title: "Zero-Latency SSE",
     description: "Agentic decisions and final answers are streamed back instantly using Server-Sent Events, ensuring a liquid-smooth user experience.",
     wide: true,
   },
 ];
+
+function FeatureCard({ card, i }: { card: typeof cards[0]; i: number }) {
+  const Icon = card.icon;
+
+  const mouseX = useMotionValue(0);
+  const mouseY = useMotionValue(0);
+  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [3, -3]), { stiffness: 200, damping: 30 });
+  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-4, 4]), { stiffness: 200, damping: 30 });
+
+  const handleMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    mouseX.set((e.clientX - rect.left) / rect.width - 0.5);
+    mouseY.set((e.clientY - rect.top) / rect.height - 0.5);
+  };
+
+  const handleLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+    mouseX.set(0);
+    mouseY.set(0);
+    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.3)';
+    (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.45)';
+  };
+
+  const handleEnter = (e: React.MouseEvent<HTMLDivElement>) => {
+    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.5)';
+    (e.currentTarget as HTMLElement).style.boxShadow = '0 12px 40px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.6)';
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ delay: i * 0.07, duration: 0.5, ease }}
+      className={card.wide ? "md:col-span-2" : ""}
+      style={{ perspective: '900px' }}
+    >
+      <motion.div
+        style={{
+          rotateX,
+          rotateY,
+          background: 'rgba(255,255,255,0.14)',
+          backdropFilter: 'blur(24px) saturate(160%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(160%)',
+          borderColor: 'rgba(255,255,255,0.3)',
+          boxShadow: '0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.45)',
+        }}
+        onMouseMove={handleMove}
+        onMouseEnter={handleEnter}
+        onMouseLeave={handleLeave}
+        className="relative overflow-hidden rounded-[2rem] p-8 md:p-10 border group h-full transition-[border-color,box-shadow] duration-300"
+      >
+        {/* Faint step label */}
+        <span
+          className="absolute top-7 right-8 text-[11px] font-semibold tracking-widest cx-num select-none"
+          style={{ color: 'var(--cx-mute-2)' }}
+        >
+          {card.label}
+        </span>
+
+        {/* Icon with spring hover */}
+        <motion.div
+          whileHover={{ scale: 1.12, rotate: 4 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 18 }}
+          className="size-12 rounded-2xl flex items-center justify-center mb-7 border w-fit"
+          style={{ background: 'var(--cx-accent-wash)', borderColor: 'var(--cx-accent-line)' }}
+        >
+          <Icon size={22} style={{ color: 'var(--cx-accent)' }} />
+        </motion.div>
+
+        <h3
+          className={`font-semibold tracking-tight mb-3 ${card.wide ? "text-2xl md:text-[1.7rem]" : "text-xl md:text-2xl"}`}
+          style={{ color: 'var(--cx-ink)' }}
+        >
+          {card.title}
+        </h3>
+
+        <p
+          className={`leading-relaxed ${card.wide ? "text-[15px] max-w-lg" : "text-[14.5px]"}`}
+          style={{ color: 'var(--cx-mute-1)' }}
+        >
+          {card.description}
+        </p>
+
+        {/* Accent bottom rule */}
+        <div
+          className="absolute bottom-0 left-8 right-8 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+          style={{ background: 'linear-gradient(90deg, transparent, var(--cx-accent-line), transparent)' }}
+        />
+      </motion.div>
+    </motion.div>
+  );
+}
 
 export function Features() {
   return (
@@ -53,58 +149,10 @@ export function Features() {
         </p>
       </motion.div>
 
-      {/* Feature cards bento grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {cards.map((card, i) => {
-          const Icon = card.icon;
-          return (
-            <motion.div
-              key={card.title}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
-              transition={{ delay: i * 0.07, duration: 0.5, ease }}
-              className={`relative overflow-hidden rounded-[2rem] p-8 md:p-10 border z-0 group transition-[transform,box-shadow] duration-300 hover:-translate-y-1 hover:shadow-xl ${card.wide ? "md:col-span-2" : ""}`}
-              style={{
-                background: 'rgba(255,255,255,0.14)',
-                backdropFilter: 'blur(24px) saturate(150%)',
-                WebkitBackdropFilter: 'blur(24px) saturate(150%)',
-                borderColor: 'rgba(255,255,255,0.3)',
-                boxShadow: '0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.45)',
-              }}
-            >
-              {/* Expanding ink circle on hover */}
-              <div className="absolute z-[-1] -top-8 -right-8 h-16 w-16 rounded-full transform scale-100 origin-center transition-transform duration-[1100ms] ease-in-out group-hover:scale-[80]"
-                style={{ background: 'var(--cx-ink)' }} />
-
-              {/* Arrow badge */}
-              <div className="absolute top-0 right-0 w-11 h-11 flex items-center justify-center rounded-bl-[2rem] overflow-hidden z-10 border-b border-l"
-                style={{ background: 'var(--cx-ink)', borderColor: 'rgba(255,255,255,0.1)' }}>
-                <ArrowUpRight size={18} className="text-white -mr-0.5 -mt-0.5" />
-              </div>
-
-              <div className="relative z-10">
-                {/* Icon */}
-                <div className="size-12 rounded-2xl flex items-center justify-center mb-7 border transition-colors duration-[800ms]"
-                  style={{ background: 'var(--cx-accent-wash)', borderColor: 'var(--cx-accent-line)' }}
-                  onMouseEnter={() => {}}
-                >
-                  <Icon size={22} style={{ color: 'var(--cx-accent)' }}
-                    className="group-hover:!text-white transition-colors duration-[800ms]" />
-                </div>
-
-                <h3 className={`font-semibold tracking-tight mb-3 transition-colors duration-[800ms] group-hover:text-white ${card.wide ? "text-2xl md:text-[1.7rem]" : "text-xl md:text-2xl"}`}
-                  style={{ color: 'var(--cx-ink)' }}>
-                  {card.title}
-                </h3>
-                <p className={`leading-relaxed transition-colors duration-[800ms] group-hover:text-zinc-300 ${card.wide ? "text-[15px] max-w-lg" : "text-[14.5px]"}`}
-                  style={{ color: 'var(--cx-mute-1)' }}>
-                  {card.description}
-                </p>
-              </div>
-            </motion.div>
-          );
-        })}
+        {cards.map((card, i) => (
+          <FeatureCard key={card.title} card={card} i={i} />
+        ))}
       </div>
     </section>
   );

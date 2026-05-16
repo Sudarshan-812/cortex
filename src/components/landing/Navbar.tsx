@@ -94,8 +94,8 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
   const initials = userName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
   const linkHover = {
-    onMouseEnter: (e: React.MouseEvent<HTMLElement>) => (e.currentTarget.style.color = 'var(--cx-ink)'),
-    onMouseLeave: (e: React.MouseEvent<HTMLElement>) => (e.currentTarget.style.color = 'var(--cx-mute-1)'),
+    onMouseEnter: (e: React.MouseEvent<HTMLElement>) => (e.currentTarget.style.opacity = '0.6'),
+    onMouseLeave: (e: React.MouseEvent<HTMLElement>) => (e.currentTarget.style.opacity = '1'),
   };
 
   const rowHover = {
@@ -126,26 +126,28 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
       <header
         className="fixed top-0 inset-x-0 z-50 transition-all duration-300"
         style={{
-          background:    scrolled ? 'rgba(246,245,242,0.9)'        : 'transparent',
+          background:    scrolled ? 'rgba(246,245,242,0.42)'       : 'transparent',
           borderBottom:  scrolled ? '1px solid var(--cx-line)'     : '1px solid transparent',
-          backdropFilter:scrolled ? 'blur(20px) saturate(180%)'    : 'none',
-          boxShadow:     scrolled ? '0 1px 24px rgba(0,0,0,0.055)' : 'none',
+          backdropFilter:scrolled ? 'blur(24px) saturate(200%)'    : 'none',
+          boxShadow:     scrolled ? '0 1px 20px rgba(0,0,0,0.04)' : 'none',
         }}
       >
         <div className="max-w-[1200px] mx-auto px-6 h-16 flex items-center justify-between gap-6">
 
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
-            <Image src="/CortexLogo.png" alt="Cortex logo" width={26} height={26} className="object-contain" style={{ width: '26px', height: '26px' }} />
-            <span className="text-[16px] font-semibold tracking-tight" style={{ color: 'var(--cx-ink)' }}>Cortex</span>
-          </Link>
+          <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
+            <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
+              <Image src="/CortexLogo.png" alt="Cortex logo" width={26} height={26} className="object-contain" style={{ width: '26px', height: '26px' }} />
+              <span className="text-[16px] font-semibold tracking-tight" style={{ color: '#000' }}>Cortex</span>
+            </Link>
+          </motion.div>
 
           {/* Desktop nav */}
           <nav ref={navRef} className="hidden md:flex items-center gap-0.5 relative">
 
             <Link href="#features"
               className="px-3.5 py-2 text-[13.5px] font-medium rounded-xl transition-colors outline-none"
-              style={{ color: 'var(--cx-mute-1)' }} {...linkHover}>
+              style={{ color: '#000' }} {...linkHover}>
               Product
             </Link>
 
@@ -153,7 +155,7 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
             <div className="relative">
               <button onClick={() => toggle("features")}
                 className="flex items-center gap-1 px-3.5 py-2 text-[13.5px] font-medium rounded-xl transition-colors outline-none"
-                style={{ color: open === 'features' ? 'var(--cx-ink)' : 'var(--cx-mute-1)' }}>
+                style={{ color: '#000' }}>
                 Features
                 <motion.span animate={{ rotate: open === "features" ? 180 : 0 }} transition={{ duration: 0.2 }} className="flex">
                   <ChevronDown size={13} />
@@ -199,7 +201,7 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
             <div className="relative">
               <button onClick={() => toggle("usecases")}
                 className="flex items-center gap-1 px-3.5 py-2 text-[13.5px] font-medium rounded-xl transition-colors outline-none"
-                style={{ color: open === 'usecases' ? 'var(--cx-ink)' : 'var(--cx-mute-1)' }}>
+                style={{ color: '#000' }}>
                 Use Cases
                 <motion.span animate={{ rotate: open === "usecases" ? 180 : 0 }} transition={{ duration: 0.2 }} className="flex">
                   <ChevronDown size={13} />
@@ -234,7 +236,7 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
 
             <Link href="/docs"
               className="px-3.5 py-2 text-[13.5px] font-medium rounded-xl transition-colors outline-none"
-              style={{ color: 'var(--cx-mute-1)' }} {...linkHover}>
+              style={{ color: '#000' }} {...linkHover}>
               Docs
             </Link>
           </nav>
@@ -248,7 +250,7 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
                   {...rowHover}>
                   <AvatarBubble size={28} />
                   <motion.span animate={{ rotate: open === "avatar" ? 180 : 0 }} transition={{ duration: 0.2 }} className="flex">
-                    <ChevronDown size={13} style={{ color: 'var(--cx-mute-2)' }} />
+                    <ChevronDown size={13} style={{ color: '#000' }} />
                   </motion.span>
                 </button>
                 <AnimatePresence>
@@ -290,21 +292,23 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
               <>
                 <Link href="/login"
                   className="hidden sm:block px-3.5 py-2 text-[13px] font-medium rounded-xl transition-colors outline-none"
-                  style={{ color: 'var(--cx-mute-1)' }} {...linkHover}>
+                  style={{ color: '#000' }} {...linkHover}>
                   Log in
                 </Link>
-                <Link href="/login" className="h-8 px-4 inline-flex items-center justify-center rounded-full text-[13px] font-semibold cx-btn-ink">
-                  Get Started
-                </Link>
+                <motion.div whileHover={{ scale: 1.05, y: -1 }} whileTap={{ scale: 0.96 }} transition={{ type: 'spring', stiffness: 420, damping: 20 }}>
+                  <Link href="/login" className="h-8 px-4 inline-flex items-center justify-center rounded-full text-[13px] font-semibold cx-btn-ink">
+                    Get Started
+                  </Link>
+                </motion.div>
               </>
             )}
 
             <button onClick={() => setMobileOpen(v => !v)}
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
-              className="md:hidden flex items-center justify-center h-8 w-8 rounded-xl transition-colors ml-1 outline-none"
-              style={{ color: 'var(--cx-mute-1)' }}
-              onMouseEnter={e => (e.currentTarget.style.color = 'var(--cx-ink)')}
-              onMouseLeave={e => (e.currentTarget.style.color = 'var(--cx-mute-1)')}>
+              className="md:hidden flex items-center justify-center h-8 w-8 rounded-xl transition-opacity ml-1 outline-none"
+              style={{ color: '#000' }}
+              onMouseEnter={e => (e.currentTarget.style.opacity = '0.6')}
+              onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
               {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
             </button>
           </div>
