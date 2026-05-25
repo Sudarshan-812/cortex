@@ -49,7 +49,7 @@ export function DocumentTable({
   return (
     <motion.div
       id="documents"
-      className="cx-panel overflow-hidden"
+      className="cx-panel"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
@@ -72,7 +72,7 @@ export function DocumentTable({
       {/* Column headers */}
       <div
         className="grid gap-4 px-6 py-2.5 cx-rule-label"
-        style={{ gridTemplateColumns: '1fr 100px 120px 80px', background: 'var(--cx-paper)' }}
+        style={{ gridTemplateColumns: '1fr 80px 110px 180px', background: 'var(--cx-paper)' }}
       >
         <span>Name</span>
         <span>Size</span>
@@ -96,7 +96,7 @@ export function DocumentTable({
                 exit={{ opacity: 0, height: 0, paddingTop: 0, paddingBottom: 0, overflow: 'hidden', transition: { duration: 0.22, ease: 'easeInOut' } }}
                 transition={{ duration: 0.3, delay: idx * 0.04, ease: [0.16, 1, 0.3, 1] }}
                 className="grid gap-4 items-center px-6 py-3.5 group cursor-default transition-colors duration-150"
-                style={{ gridTemplateColumns: '1fr 100px 120px 80px' }}
+                style={{ gridTemplateColumns: '1fr 80px 110px 180px' }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'var(--cx-paper)')}
                 onMouseLeave={e => (e.currentTarget.style.background = '')}
               >

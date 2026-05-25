@@ -9,28 +9,28 @@ const cards = [
   {
     icon: Database,
     label: "01",
-    title: "Enterprise RAG Pipeline",
+    title: "Answers Grounded in Your Documents",
     description: "Documents are chunked and embedded using Matryoshka Representation Learning (768-dim) and stored securely in pgvector via Supabase.",
     wide: true,
   },
   {
     icon: FileSearch,
     label: "02",
-    title: "Hybrid Search",
+    title: "Finds What You Mean, Not Just What You Type",
     description: "Merging vector cosine similarity with BM25 keyword search via Reciprocal Rank Fusion for best-in-class retrieval.",
     wide: false,
   },
   {
     icon: BrainCircuit,
     label: "03",
-    title: "Gemini Re-ranking",
+    title: "AI Picks the Most Relevant Sources",
     description: "Top 10 chunks are dynamically re-ranked by Gemini before being fed into the agentic reasoning engine.",
     wide: false,
   },
   {
     icon: Zap,
     label: "04",
-    title: "Zero-Latency SSE",
+    title: "Answers Stream Instantly, No Waiting",
     description: "Agentic decisions and final answers are streamed back instantly using Server-Sent Events, ensuring a liquid-smooth user experience.",
     wide: true,
   },
@@ -53,13 +53,13 @@ function FeatureCard({ card, i }: { card: typeof cards[0]; i: number }) {
   const handleLeave = (e: React.MouseEvent<HTMLDivElement>) => {
     mouseX.set(0);
     mouseY.set(0);
-    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.3)';
-    (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.45)';
+    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.5)';
+    (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.7)';
   };
 
   const handleEnter = (e: React.MouseEvent<HTMLDivElement>) => {
-    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.5)';
-    (e.currentTarget as HTMLElement).style.boxShadow = '0 12px 40px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.6)';
+    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(122,31,90,0.25)';
+    (e.currentTarget as HTMLElement).style.boxShadow = '0 16px 48px rgba(0,0,0,0.12), 0 0 0 1px rgba(122,31,90,0.12), inset 0 1px 0 rgba(255,255,255,0.8)';
   };
 
   return (
@@ -75,11 +75,11 @@ function FeatureCard({ card, i }: { card: typeof cards[0]; i: number }) {
         style={{
           rotateX,
           rotateY,
-          background: 'rgba(255,255,255,0.14)',
-          backdropFilter: 'blur(24px) saturate(160%)',
-          WebkitBackdropFilter: 'blur(24px) saturate(160%)',
-          borderColor: 'rgba(255,255,255,0.3)',
-          boxShadow: '0 4px 24px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.45)',
+          background: 'rgba(255,255,255,0.55)',
+          backdropFilter: 'blur(32px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(32px) saturate(180%)',
+          borderColor: 'rgba(255,255,255,0.5)',
+          boxShadow: '0 4px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.7)',
         }}
         onMouseMove={handleMove}
         onMouseEnter={handleEnter}
@@ -89,7 +89,7 @@ function FeatureCard({ card, i }: { card: typeof cards[0]; i: number }) {
         {/* Faint step label */}
         <span
           className="absolute top-7 right-8 text-[11px] font-semibold tracking-widest cx-num select-none"
-          style={{ color: 'var(--cx-mute-2)' }}
+          style={{ color: 'rgba(10,10,10,0.3)' }}
         >
           {card.label}
         </span>
@@ -98,22 +98,22 @@ function FeatureCard({ card, i }: { card: typeof cards[0]; i: number }) {
         <motion.div
           whileHover={{ scale: 1.12, rotate: 4 }}
           transition={{ type: 'spring', stiffness: 400, damping: 18 }}
-          className="size-12 rounded-2xl flex items-center justify-center mb-7 border w-fit"
-          style={{ background: 'var(--cx-accent-wash)', borderColor: 'var(--cx-accent-line)' }}
+          className="size-12 rounded-2xl flex items-center justify-center mb-7 w-fit"
+          style={{ background: 'rgba(122,31,90,0.15)', border: '1.5px solid rgba(122,31,90,0.28)' }}
         >
-          <Icon size={22} style={{ color: 'var(--cx-accent)' }} />
+          <Icon size={22} style={{ color: '#7a1f5a' }} />
         </motion.div>
 
         <h3
           className={`font-semibold tracking-tight mb-3 ${card.wide ? "text-2xl md:text-[1.7rem]" : "text-xl md:text-2xl"}`}
-          style={{ color: 'var(--cx-ink)' }}
+          style={{ color: 'rgba(10,10,10,0.92)' }}
         >
           {card.title}
         </h3>
 
         <p
           className={`leading-relaxed ${card.wide ? "text-[15px] max-w-lg" : "text-[14.5px]"}`}
-          style={{ color: 'var(--cx-mute-1)' }}
+          style={{ color: 'rgba(10,10,10,0.65)' }}
         >
           {card.description}
         </p>

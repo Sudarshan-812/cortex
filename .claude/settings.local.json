@@ -21,7 +21,8 @@
       "Bash(ls src/app/dashboard/)",
       "Bash(cat src/app/dashboard/layout.tsx)",
       "Bash(ls src/app/auth/)",
-      "Bash(cat src/app/auth/signout/route.ts)"
+      "Bash(cat src/app/auth/signout/route.ts)",
+      "Bash(python *)"
     ]
   }
 }

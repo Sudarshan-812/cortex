@@ -65,16 +65,6 @@ export function CTA({ isLoggedIn = false }: CTAProps) {
           variants={stagger}
           className="relative z-10 flex flex-col items-center gap-5"
         >
-          {/* Badge */}
-          <motion.div variants={item}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border cx-num"
-            style={{ background: 'rgba(255,255,255,0.25)', borderColor: 'rgba(255,255,255,0.45)' }}>
-            <span className="size-1.5 rounded-full cx-pulse-dot" style={{ background: 'var(--cx-ok)' }} />
-            <span className="text-[10.5px] font-semibold tracking-[.12em] uppercase" style={{ color: 'var(--cx-ink)' }}>
-              Free to get started
-            </span>
-          </motion.div>
-
           <motion.h2 variants={item}
             className="text-3xl md:text-[2.6rem] font-semibold tracking-tight leading-[1.1] max-w-lg"
             style={{ color: 'var(--cx-ink)' }}>
@@ -87,30 +77,31 @@ export function CTA({ isLoggedIn = false }: CTAProps) {
             Drop in your PDFs and start asking questions in seconds. No setup, no config — just answers.
           </motion.p>
 
-          <motion.div variants={item} className="mt-2">
+          <motion.div variants={item} className="mt-2 flex flex-col sm:flex-row items-center gap-3">
             <motion.div
-              whileHover={{ scale: 1.04, y: -3 }}
+              whileHover={{ scale: 1.03, y: -2 }}
               whileTap={{ scale: 0.97 }}
               transition={spring}
             >
               <Link
                 href={isLoggedIn ? "/dashboard" : "/login"}
-                className="group inline-flex items-center gap-2 px-8 py-3.5 rounded-full font-semibold text-[15px] transition-colors"
+                className="group inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full font-semibold text-[15px] transition-all"
                 style={{
-                  background: 'rgba(255,255,255,0.55)',
-                  color: 'var(--cx-ink)',
-                  backdropFilter: 'blur(8px)',
-                  WebkitBackdropFilter: 'blur(8px)',
-                  border: '1px solid rgba(255,255,255,0.6)',
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                  background: 'var(--cx-ink)',
+                  color: '#f9f8f5',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  boxShadow: '0 8px 28px rgba(10,10,10,0.28), 0 1px 0 rgba(255,255,255,0.06) inset',
                 }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.78)')}
-                onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.55)')}
+                onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 14px 36px rgba(10,10,10,0.38), 0 1px 0 rgba(255,255,255,0.06) inset')}
+                onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 8px 28px rgba(10,10,10,0.28), 0 1px 0 rgba(255,255,255,0.06) inset')}
               >
-                {isLoggedIn ? "Go to Dashboard" : "Start for Free"}
-                <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-200" />
+                {isLoggedIn ? "Open Dashboard" : "Get Started — It's Free"}
+                <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform duration-200" />
               </Link>
             </motion.div>
+            <span className="text-[12px]" style={{ color: 'rgba(10,10,10,0.4)' }}>
+              No setup · No config · Just upload and ask
+            </span>
           </motion.div>
         </motion.div>
       </motion.div>

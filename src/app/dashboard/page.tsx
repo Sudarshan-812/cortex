@@ -8,14 +8,15 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Search, UploadCloud, ChevronRight, Sparkles } from "lucide-react"
 
-import { DashboardNavbar } from "@/components/dashboard/DashboardNavbar"
-import { MetricsGrid }     from "@/components/dashboard/MetricsGrid"
-import { PipelineViz }     from "@/components/dashboard/PipelineViz"
-import { ChatDemo }        from "@/components/dashboard/ChatDemo"
-import { UploadZoneNew }   from "@/components/dashboard/UploadZoneNew"
-import { SystemStatus }    from "@/components/dashboard/SystemStatus"
-import { AgentsCard }      from "@/components/dashboard/AgentsCard"
-import { DocumentTable }   from "@/components/dashboard/DocumentTable"
+import { DashboardNavbar }  from "@/components/dashboard/DashboardNavbar"
+import { MetricsGrid }      from "@/components/dashboard/MetricsGrid"
+import { PipelineViz }      from "@/components/dashboard/PipelineViz"
+import { ChatDemo }         from "@/components/dashboard/ChatDemo"
+import { UploadZoneNew }    from "@/components/dashboard/UploadZoneNew"
+import { SystemStatus }     from "@/components/dashboard/SystemStatus"
+import { AgentsCard }       from "@/components/dashboard/AgentsCard"
+import { DocumentTable }    from "@/components/dashboard/DocumentTable"
+import { DevModeWrapper, UserModeWrapper } from "@/components/dashboard/DevModeWrapper"
 
 export default async function Dashboard() {
   const supabase = await createClient()
@@ -131,10 +132,14 @@ export default async function Dashboard() {
               <span className="cx-serif italic font-normal" style={{ color: "var(--cx-mute-1)" }}>.</span>
             </h1>
             <p className="mt-3 text-[14px] leading-relaxed" style={{ color: "var(--cx-mute-1)" }}>
-              <span className="cx-num" style={{ color: "var(--cx-ink-2)" }}>{docCount ?? 0}</span>{" "}documents,{" "}
-              <span className="cx-num" style={{ color: "var(--cx-ink-2)" }}>{(chunkCount ?? 0).toLocaleString()}</span>{" "}embeddings,{" "}
-              and <span className="cx-num" style={{ color: "var(--cx-ink-2)" }}>{sessionCount ?? 0}</span> sessions.
+              <span className="cx-num" style={{ color: "var(--cx-ink-2)" }}>{docCount ?? 0}</span>{" "}document{(docCount ?? 0) !== 1 ? 's' : ''} in your knowledge base.
             </p>
+            <DevModeWrapper>
+              <p className="mt-1 text-[13px] leading-relaxed" style={{ color: "var(--cx-mute-2)" }}>
+                <span className="cx-num" style={{ color: "var(--cx-ink-2)" }}>{(chunkCount ?? 0).toLocaleString()}</span>{" "}embeddings ·{" "}
+                <span className="cx-num" style={{ color: "var(--cx-ink-2)" }}>{sessionCount ?? 0}</span> sessions
+              </p>
+            </DevModeWrapper>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <a
@@ -150,27 +155,41 @@ export default async function Dashboard() {
           </div>
         </div>
 
-        {/* Metrics grid */}
-        <MetricsGrid docs={docCount ?? 0} embeddings={chunkCount ?? 0} storageMB={storageMB} sessions={sessionCount ?? 0} />
+        {/* Metrics grid — DEV ONLY */}
+        <DevModeWrapper>
+          <MetricsGrid docs={docCount ?? 0} embeddings={chunkCount ?? 0} storageMB={storageMB} sessions={sessionCount ?? 0} />
+        </DevModeWrapper>
 
-        {/* RAG pipeline visualization */}
-        <PipelineViz />
+        {/* RAG pipeline visualization — DEV ONLY */}
+        <DevModeWrapper>
+          <PipelineViz />
+        </DevModeWrapper>
 
-        {/* Chat demo + Upload + System status */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6">
-          <div className="lg:col-span-2">
-            <ChatDemo />
-          </div>
-          <div className="flex flex-col gap-5">
-            <div id="upload-zone">
-              <UploadZoneNew workspaceId={workspace.id} />
+        {/* Chat demo + Upload + System status — DEV ONLY */}
+        <DevModeWrapper>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6">
+            <div className="lg:col-span-2">
+              <ChatDemo />
             </div>
-            <SystemStatus />
+            <div className="flex flex-col gap-5">
+              <div id="upload-zone">
+                <UploadZoneNew workspaceId={workspace.id} />
+              </div>
+              <SystemStatus />
+            </div>
           </div>
-        </div>
+        </DevModeWrapper>
 
-        {/* Agents + Recent queries + CTA */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6">
+        {/* Upload zone — USER MODE ONLY */}
+        <UserModeWrapper>
+          <div className="mb-6" id="upload-zone">
+            <UploadZoneNew workspaceId={workspace.id} />
+          </div>
+        </UserModeWrapper>
+
+        {/* Agents + Recent queries + CTA — DEV ONLY */}
+        <DevModeWrapper>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6">
           <AgentsCard />
 
           <div className="cx-panel p-5">
@@ -239,6 +258,7 @@ export default async function Dashboard() {
             </Link>
           </div>
         </div>
+        </DevModeWrapper>
 
         {/* Document table */}
         {documents && documents.length > 0 && (
@@ -263,15 +283,17 @@ export default async function Dashboard() {
             <span className="text-[12px] font-semibold" style={{ color: "var(--cx-ink-2)" }}>Cortex</span>
             <span className="cx-num text-[10.5px]" style={{ color: "var(--cx-mute-2)" }}>v2.0</span>
           </div>
-          <div className="flex items-center gap-5 text-[10.5px] font-mono" style={{ color: "var(--cx-mute-2)" }}>
-            <span>pgvector</span>
-            <span>Gemini</span>
-            <span>Supabase</span>
-            <span className="flex items-center gap-1.5">
-              <span className="cx-dot cx-pulse-dot" style={{ background: "var(--cx-ok)" }} />
-              <span>production</span>
-            </span>
-          </div>
+          <DevModeWrapper>
+            <div className="flex items-center gap-5 text-[10.5px] font-mono" style={{ color: "var(--cx-mute-2)" }}>
+              <span>pgvector</span>
+              <span>Gemini</span>
+              <span>Supabase</span>
+              <span className="flex items-center gap-1.5">
+                <span className="cx-dot cx-pulse-dot" style={{ background: "var(--cx-ok)" }} />
+                <span>production</span>
+              </span>
+            </div>
+          </DevModeWrapper>
         </footer>
       </div>
     </div>

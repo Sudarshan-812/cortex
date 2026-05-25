@@ -30,6 +30,7 @@ export function DashboardNavbar({
   const [showCreate, setShowCreate] = useState(false)
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')
+  const [devMode, setDevMode] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const bellRef = useRef<HTMLDivElement>(null)
 
@@ -47,6 +48,22 @@ export function DashboardNavbar({
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [])
+
+  useEffect(() => {
+    setDevMode(localStorage.getItem('cortex_dev_mode') === 'true')
+    function onCustom(e: Event) {
+      setDevMode((e as CustomEvent<string>).detail === 'true')
+    }
+    window.addEventListener('cortex-dev-mode-change', onCustom)
+    return () => window.removeEventListener('cortex-dev-mode-change', onCustom)
+  }, [])
+
+  function toggleDevMode() {
+    const next = !devMode
+    setDevMode(next)
+    localStorage.setItem('cortex_dev_mode', String(next))
+    window.dispatchEvent(new CustomEvent('cortex-dev-mode-change', { detail: String(next) }))
+  }
 
   useEffect(() => {
     function handleCmdK(e: KeyboardEvent) {
@@ -108,8 +125,34 @@ export function DashboardNavbar({
           </nav>
         </div>
 
-        {/* Right: search + bell + avatar */}
+        {/* Right: dev-toggle + search + bell + avatar */}
         <div className="flex items-center gap-2 flex-shrink-0">
+
+          {/* Dev mode badge */}
+          {devMode && (
+            <span
+              className="hidden sm:flex items-center h-6 px-2.5 rounded-full text-[10px] font-semibold uppercase tracking-wide flex-shrink-0"
+              style={{ background: 'rgba(234,179,8,0.15)', color: '#92400e' }}
+            >
+              DEV MODE ACTIVE
+            </span>
+          )}
+
+          {/* Dev mode toggle */}
+          <button
+            onClick={toggleDevMode}
+            className="hidden sm:flex items-center gap-1.5 h-8 px-2.5 rounded-lg border text-[12px] font-medium transition-all duration-200 flex-shrink-0"
+            style={{
+              borderColor: devMode ? 'rgba(234,179,8,0.6)' : 'var(--cx-line)',
+              background: devMode ? 'rgba(234,179,8,0.1)' : 'transparent',
+              color: devMode ? '#92400e' : 'var(--cx-mute-1)',
+            }}
+            title={devMode ? 'Switch to User View' : 'Switch to Dev Mode'}
+          >
+            <Settings size={13} />
+            {devMode ? 'Dev Mode' : 'User View'}
+          </button>
+
           <Link
             href="/chat"
             className="hidden sm:flex items-center gap-2 h-8 pl-2.5 pr-2 rounded-lg border transition-colors text-[12px]"

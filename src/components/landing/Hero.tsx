@@ -45,14 +45,19 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          whileHover={{ scale: 1.04 }}
+          whileHover={{ scale: 1.03 }}
           transition={{ duration: 0.4, ease, ...spring }}
           className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border mb-8 cursor-default"
-          style={{ background: 'var(--cx-surface)', borderColor: 'var(--cx-line)' }}
+          style={{
+            background: 'rgba(255,255,255,0.55)',
+            backdropFilter: 'blur(12px)',
+            borderColor: 'rgba(255,255,255,0.5)',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+          }}
         >
           <span className="size-1.5 rounded-full cx-pulse-dot flex-shrink-0" style={{ background: 'var(--cx-ok)' }} />
-          <span className="text-[11px] font-semibold tracking-[.1em] uppercase cx-num" style={{ color: 'var(--cx-ink-2)' }}>
-            Production RAG — Live
+          <span className="text-[11px] font-semibold tracking-[.1em] uppercase cx-num" style={{ color: 'rgba(10,10,10,0.65)' }}>
+            AI · Document Intelligence
           </span>
         </motion.div>
 
@@ -93,40 +98,72 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
         >
           {isLoggedIn ? (
             <>
-              <motion.div whileHover={{ y: -3 }} whileTap={{ scale: 0.97 }} transition={spring}>
+              <motion.div whileHover={{ y: -2, scale: 1.02 }} whileTap={{ scale: 0.97 }} transition={spring}>
                 <Link href="/dashboard"
-                  className="group inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full font-semibold text-[15px] transition-all cx-btn-ink">
+                  className="group inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-full font-semibold text-[15px] transition-all"
+                  style={{
+                    background: 'var(--cx-ink)',
+                    color: '#f9f8f5',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    boxShadow: '0 8px 28px rgba(10,10,10,0.28), 0 1px 0 rgba(255,255,255,0.06) inset',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 12px 36px rgba(10,10,10,0.35), 0 1px 0 rgba(255,255,255,0.06) inset')}
+                  onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 8px 28px rgba(10,10,10,0.28), 0 1px 0 rgba(255,255,255,0.06) inset')}
+                >
                   Open Dashboard
-                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-200" />
+                  <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform duration-200" />
                 </Link>
               </motion.div>
-              <motion.div whileHover={{ y: -3 }} whileTap={{ scale: 0.97 }} transition={spring}>
+              <motion.div whileHover={{ y: -2, scale: 1.02 }} whileTap={{ scale: 0.97 }} transition={spring}>
                 <Link href="/dashboard"
-                  className="group inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full font-semibold text-[15px] border transition-all cx-panel"
-                  style={{ color: 'var(--cx-ink-2)' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--cx-surface)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = '')}>
-                  <Plus size={16} style={{ color: 'var(--cx-mute-2)' }} />
-                  Create Workspace
+                  className="group inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-full font-semibold text-[15px] transition-all"
+                  style={{
+                    background: 'rgba(255,255,255,0.55)',
+                    backdropFilter: 'blur(12px)',
+                    color: 'rgba(10,10,10,0.8)',
+                    border: '1px solid rgba(255,255,255,0.55)',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.78)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.55)')}
+                >
+                  <Plus size={15} />
+                  New Workspace
                 </Link>
               </motion.div>
             </>
           ) : (
             <>
-              <motion.div whileHover={{ y: -3 }} whileTap={{ scale: 0.97 }} transition={spring}>
+              <motion.div whileHover={{ y: -2, scale: 1.02 }} whileTap={{ scale: 0.97 }} transition={spring}>
                 <Link href="/login"
-                  className="group inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full font-semibold text-[15px] transition-all cx-btn-ink">
-                  Start Analyzing Documents
-                  <ArrowRight size={16} className="group-hover:translate-x-1 transition-transform duration-200" />
+                  className="group inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-full font-semibold text-[15px] transition-all"
+                  style={{
+                    background: 'var(--cx-ink)',
+                    color: '#f9f8f5',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    boxShadow: '0 8px 28px rgba(10,10,10,0.28), 0 1px 0 rgba(255,255,255,0.06) inset',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 12px 36px rgba(10,10,10,0.38), 0 1px 0 rgba(255,255,255,0.06) inset')}
+                  onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 8px 28px rgba(10,10,10,0.28), 0 1px 0 rgba(255,255,255,0.06) inset')}
+                >
+                  Start for Free
+                  <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform duration-200" />
                 </Link>
               </motion.div>
-              <motion.div whileHover={{ y: -3 }} whileTap={{ scale: 0.97 }} transition={spring}>
+              <motion.div whileHover={{ y: -2, scale: 1.02 }} whileTap={{ scale: 0.97 }} transition={spring}>
                 <Link href="#features"
-                  className="inline-flex items-center justify-center px-7 py-3.5 rounded-full font-semibold text-[15px] border transition-all cx-panel"
-                  style={{ color: 'var(--cx-ink-2)' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--cx-surface)')}
-                  onMouseLeave={e => (e.currentTarget.style.background = '')}>
-                  Learn How It Works
+                  className="inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-full font-semibold text-[15px] transition-all"
+                  style={{
+                    background: 'rgba(255,255,255,0.55)',
+                    backdropFilter: 'blur(12px)',
+                    color: 'rgba(10,10,10,0.8)',
+                    border: '1px solid rgba(255,255,255,0.55)',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.78)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.55)')}
+                >
+                  See How It Works
                 </Link>
               </motion.div>
             </>

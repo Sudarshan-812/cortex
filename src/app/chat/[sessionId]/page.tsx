@@ -45,11 +45,17 @@ export default async function SessionPage({
     .eq("session_id", session.id)
     .order("created_at", { ascending: true })
 
+  const { count: docCount } = await supabase
+    .from("documents")
+    .select("*", { count: "exact", head: true })
+    .eq("workspace_id", workspace.id)
+
   return (
     <ChatWindow
       sessionId={session.id}
       workspaceId={workspace.id}
       initialMessages={(messages ?? []) as any}
+      hasDocuments={(docCount ?? 0) > 0}
     />
   )
 }

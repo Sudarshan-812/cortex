@@ -5,9 +5,10 @@ import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from
 import Image from 'next/image'
 import {
   FileText, ArrowUp, Plus,
-  ChevronDown, Sparkles, CheckCircle2,
+  ChevronDown, Sparkles, CheckCircle2, UploadCloud,
 } from 'lucide-react'
 import { DynamicGreeting } from '@/components/DynamicGreeting'
+import { uploadDocument } from '@/app/actions'
 
 /* ── Types ──────────────────────────────────────────────────────── */
 type Source = {
@@ -389,18 +390,22 @@ export function ChatWindow({
   sessionId,
   workspaceId,
   initialMessages,
+  hasDocuments = true,
 }: {
   sessionId: string
   workspaceId: string
   initialMessages: Message[]
+  hasDocuments?: boolean
 }) {
   const [messages,    setMessages]    = useState<Message[]>(initialMessages)
   const [input,       setInput]       = useState('')
   const [loading,     setLoading]     = useState(false)
   const [activeTools, setActiveTools] = useState<ToolEvent[]>([])
   const [focused,     setFocused]     = useState(false)
-  const bottomRef = useRef<HTMLDivElement>(null)
-  const inputRef  = useRef<HTMLTextAreaElement>(null)
+  const [uploading,   setUploading]   = useState(false)
+  const bottomRef   = useRef<HTMLDivElement>(null)
+  const inputRef    = useRef<HTMLTextAreaElement>(null)
+  const emptyUploadRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -414,6 +419,18 @@ export function ChatWindow({
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit() }
+  }
+
+  async function handleEmptyUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('workspaceId', workspaceId)
+    await uploadDocument(fd)
+    setUploading(false)
+    if (emptyUploadRef.current) emptyUploadRef.current.value = ''
   }
 
   async function handleSubmit(overrideInput?: string) {
@@ -505,12 +522,109 @@ export function ChatWindow({
   return (
     <div className="flex flex-col h-full" style={{ background: 'var(--cx-paper)' }}>
 
+      {/* ── Top bar ───────────────────────────────────────────────── */}
+      <div
+        className="flex-shrink-0 flex items-center justify-between h-[50px] px-5 border-b"
+        style={{ background: 'var(--cx-paper)', borderColor: 'var(--cx-line)' }}
+      >
+        <div className="flex items-center gap-2.5">
+          <div
+            className="size-6 rounded-lg flex items-center justify-center border flex-shrink-0"
+            style={{ background: 'var(--cx-accent-wash)', borderColor: 'var(--cx-accent-line)' }}
+          >
+            <Sparkles size={12} style={{ color: 'var(--cx-accent)' }} />
+          </div>
+          <span className="text-[13px] font-semibold" style={{ color: 'var(--cx-ink)' }}>Cortex</span>
+          <span className="text-[11px]" style={{ color: 'var(--cx-mute-2)' }}>·</span>
+          <span className="text-[12px]" style={{ color: 'var(--cx-mute-1)' }}>Document Chat</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="size-1.5 rounded-full flex-shrink-0" style={{ background: 'var(--cx-ok)' }} />
+          <span className="text-[11.5px] cx-num" style={{ color: 'var(--cx-mute-1)' }}>Gemini Flash</span>
+          <span
+            className="hidden sm:block text-[11px] px-1.5 py-0.5 rounded border cx-num"
+            style={{ color: 'var(--cx-mute-2)', borderColor: 'var(--cx-line)', background: 'var(--cx-paper-2)' }}
+          >
+            Hybrid RAG
+          </span>
+        </div>
+      </div>
+
       {/* ── Message area ──────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto cx-scroll-thin scroll-smooth">
 
         {/* Empty state */}
         <AnimatePresence>
-          {isEmpty && (
+          {isEmpty && !hasDocuments && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.4 }}
+              className="relative flex flex-col items-center justify-center min-h-full px-6 py-20 gap-6"
+            >
+              <div
+                className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[480px] h-[480px] pointer-events-none"
+                style={{ background: 'radial-gradient(ellipse, rgba(122,31,90,0.05) 0%, transparent 65%)' }}
+              />
+              <input
+                ref={emptyUploadRef}
+                type="file"
+                className="hidden"
+                accept=".pdf,.docx,.doc,.txt,.md,.csv"
+                onChange={handleEmptyUpload}
+              />
+              <div className="relative z-10 flex flex-col items-center gap-5 text-center">
+                <motion.div
+                  animate={{ y: [0, -8, 0] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                  className="size-20 rounded-[1.6rem] border flex items-center justify-center"
+                  style={{
+                    background: 'var(--cx-accent-wash)',
+                    borderColor: 'var(--cx-accent-line)',
+                    boxShadow: '0 8px 32px rgba(122,31,90,0.1)',
+                  }}
+                >
+                  <UploadCloud size={32} style={{ color: 'var(--cx-accent)' }} />
+                </motion.div>
+                <div>
+                  <p className="text-[18px] font-semibold tracking-tight" style={{ color: 'var(--cx-ink)' }}>
+                    Upload your first document to get started
+                  </p>
+                  <p className="mt-2 text-[13.5px]" style={{ color: 'var(--cx-mute-1)' }}>
+                    Cortex will read and understand your documents so you can ask questions about them.
+                  </p>
+                </div>
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: 1.02 }}
+                  onClick={() => emptyUploadRef.current?.click()}
+                  disabled={uploading}
+                  className="flex items-center gap-2 h-10 px-6 rounded-full text-[13.5px] font-semibold border-2 transition-all duration-200 disabled:opacity-60"
+                  style={{
+                    borderColor: 'var(--cx-accent)',
+                    color: 'var(--cx-accent)',
+                    background: 'var(--cx-accent-wash)',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--cx-accent)', e.currentTarget.style.color = '#fff')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'var(--cx-accent-wash)', e.currentTarget.style.color = 'var(--cx-accent)')}
+                >
+                  {uploading
+                    ? <><span className="size-4 border-2 border-current border-t-transparent rounded-full animate-spin" />Uploading…</>
+                    : <><UploadCloud size={15} />Upload Document</>}
+                </motion.button>
+                <p className="text-[11px] font-mono" style={{ color: 'var(--cx-mute-2)' }}>
+                  PDF · DOCX · TXT · MD · CSV · up to 50 MB
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Empty state — has documents, no messages yet */}
+        <AnimatePresence>
+          {isEmpty && hasDocuments && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -774,7 +888,7 @@ export function ChatWindow({
                 onKeyDown={handleKeyDown}
                 onFocus={() => setFocused(true)}
                 onBlur={() => setFocused(false)}
-                placeholder="Ask Cortex anything about your documents\u2026"
+                placeholder="Ask Cortex anything about your documents…"
                 disabled={loading}
                 autoFocus
                 className="w-full resize-none bg-transparent text-[14.5px] outline-none leading-relaxed px-5 pt-4 pb-3 disabled:opacity-60 max-h-[180px] font-[inherit]"
@@ -819,7 +933,7 @@ export function ChatWindow({
             </motion.div>
 
             <p className="text-center text-[11px] mt-2.5 cx-num" style={{ color: 'var(--cx-mute-2)' }}>
-              Gemini Flash · hybrid retrieval · verify before relying on answers
+              Always verify important information from source documents
             </p>
           </div>
         </div>

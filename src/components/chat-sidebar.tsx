@@ -8,10 +8,11 @@ import { switchWorkspace } from '@/app/actions'
 import {
   Plus, MessageSquare, Trash2, LayoutDashboard,
   Loader2, PanelLeftClose, PanelLeftOpen,
-  ChevronDown, Check, Building2,
+  ChevronDown, Check, Building2, UploadCloud,
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { uploadDocument } from '@/app/actions'
 
 type Session  = { id: string; title: string; updated_at: string }
 type Workspace = { id: string; name: string }
@@ -37,7 +38,9 @@ export function ChatSidebar({
   const [collapsed,   setCollapsed]   = useState(false)
   const [wsOpen,      setWsOpen]      = useState(false)
   const [switchingWs, setSwitchingWs] = useState<string | null>(null)
-  const wsRef = useRef<HTMLDivElement>(null)
+  const [uploading,   setUploading]   = useState(false)
+  const wsRef     = useRef<HTMLDivElement>(null)
+  const uploadRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     function onClickOutside(e: MouseEvent) {
@@ -64,6 +67,18 @@ export function ChatSidebar({
     await deleteChatSession(sessionId)
     if (activeId === sessionId) router.push('/chat')
     setDeletingId(null)
+  }
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploading(true)
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('workspaceId', workspaceId)
+    await uploadDocument(fd)
+    setUploading(false)
+    if (uploadRef.current) uploadRef.current.value = ''
   }
 
   async function handleSwitchWorkspace(wsId: string) {
@@ -173,8 +188,63 @@ export function ChatSidebar({
         </motion.button>
       </div>
 
+      {/* ── Upload Document ──────────────────────────────────── */}
+      <div className={`px-2 pt-3 pb-1 flex-shrink-0 ${collapsed ? 'flex justify-center' : ''}`}>
+        <input
+          ref={uploadRef}
+          type="file"
+          className="hidden"
+          accept=".pdf,.docx,.doc,.txt,.md,.csv"
+          onChange={handleUpload}
+        />
+        {collapsed ? (
+          <button
+            onClick={() => uploadRef.current?.click()}
+            disabled={uploading}
+            title="Upload Document"
+            className="size-9 rounded-lg border flex items-center justify-center transition-colors"
+            style={{ borderColor: 'var(--cx-line)', background: 'var(--cx-surface)', color: 'var(--cx-mute-1)' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--cx-accent-wash)'; e.currentTarget.style.borderColor = 'var(--cx-accent-line)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = 'var(--cx-surface)'; e.currentTarget.style.borderColor = 'var(--cx-line)' }}
+          >
+            {uploading
+              ? <Loader2 size={13} className="cx-spin" style={{ color: 'var(--cx-accent)' }} />
+              : <UploadCloud size={13} />}
+          </button>
+        ) : (
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            onClick={() => uploadRef.current?.click()}
+            disabled={uploading}
+            className="w-full flex items-center gap-2 rounded-full h-9 px-4 text-[12.5px] font-medium border transition-all duration-200 disabled:opacity-50"
+            style={{
+              borderColor: 'var(--cx-line)',
+              background: 'transparent',
+              color: 'var(--cx-mute-1)',
+            }}
+            onMouseEnter={e => {
+              const el = e.currentTarget
+              el.style.background = 'var(--cx-accent-wash)'
+              el.style.borderColor = 'var(--cx-accent-line)'
+              el.style.color = 'var(--cx-accent)'
+            }}
+            onMouseLeave={e => {
+              const el = e.currentTarget
+              el.style.background = 'transparent'
+              el.style.borderColor = 'var(--cx-line)'
+              el.style.color = 'var(--cx-mute-1)'
+            }}
+          >
+            {uploading
+              ? <Loader2 size={13} className="cx-spin flex-shrink-0" style={{ color: 'var(--cx-accent)' }} />
+              : <UploadCloud size={13} className="flex-shrink-0" />}
+            {uploading ? 'Uploading…' : 'Upload Document'}
+          </motion.button>
+        )}
+      </div>
+
       {/* ── New Chat ─────────────────────────────────────────── */}
-      <div className={`px-2 pt-3 pb-2 flex-shrink-0 ${collapsed ? 'flex justify-center' : ''}`}>
+      <div className={`px-2 pt-1 pb-2 flex-shrink-0 ${collapsed ? 'flex justify-center' : ''}`}>
         {collapsed ? (
           <button
             onClick={handleNewChat}
