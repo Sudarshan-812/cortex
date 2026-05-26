@@ -22,7 +22,9 @@
       "Bash(cat src/app/dashboard/layout.tsx)",
       "Bash(ls src/app/auth/)",
       "Bash(cat src/app/auth/signout/route.ts)",
-      "Bash(python *)"
+      "Bash(python *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\mrsud\\\\OneDrive\\\\Desktop\\\\Cortex\\\\cortex\" -Force)",
+      "Bash(Select-Object Name)"
     ]
   }
 }

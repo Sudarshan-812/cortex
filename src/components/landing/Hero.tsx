@@ -37,29 +37,9 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
   };
 
   return (
-    <main ref={heroRef} className="relative z-10 max-w-5xl mx-auto px-6 pt-32 pb-20 text-center" style={{ position: 'relative' }}>
+    <main ref={heroRef} className="relative z-10 max-w-5xl mx-auto px-6 pt-48 pb-20 text-center" style={{ position: 'relative' }}>
 
       <motion.div style={{ y: textY, opacity: textOpacity }}>
-
-        {/* Badge */}
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          whileHover={{ scale: 1.03 }}
-          transition={{ duration: 0.4, ease, ...spring }}
-          className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border mb-8 cursor-default"
-          style={{
-            background: 'rgba(255,255,255,0.55)',
-            backdropFilter: 'blur(12px)',
-            borderColor: 'rgba(255,255,255,0.5)',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-          }}
-        >
-          <span className="size-1.5 rounded-full cx-pulse-dot flex-shrink-0" style={{ background: 'var(--cx-ok)' }} />
-          <span className="text-[11px] font-semibold tracking-[.1em] uppercase cx-num" style={{ color: 'rgba(10,10,10,0.65)' }}>
-            AI · Document Intelligence
-          </span>
-        </motion.div>
 
         {/* Headline — staggered per line */}
         <motion.div

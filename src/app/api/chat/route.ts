@@ -5,6 +5,23 @@ import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai"
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY!)
 const enc = new TextEncoder()
 
+// Simple in-memory rate limiter — 20 requests per user per minute
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+const RATE_LIMIT = 20
+const RATE_WINDOW_MS = 60_000
+
+function checkRateLimit(userId: string): boolean {
+  const now = Date.now()
+  const entry = rateLimitMap.get(userId)
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_WINDOW_MS })
+    return true
+  }
+  if (entry.count >= RATE_LIMIT) return false
+  entry.count++
+  return true
+}
+
 function sse(data: object) {
   return enc.encode(`data: ${JSON.stringify(data)}\n\n`)
 }
@@ -76,20 +93,23 @@ ${chunks.map((c: any, i: number) => `[${i}] ${c.content.slice(0, 250)}`).join("\
   return { text: sources.map(s => s.content).join("\n\n"), sources }
 }
 
-async function searchWeb(query: string): Promise<string> {
+async function searchWeb(query: string): Promise<string | null> {
   const key = process.env.TAVILY_API_KEY
-  if (!key) return "Web search unavailable (no TAVILY_API_KEY configured)."
+  if (!key) return null
 
-  const res = await fetch("https://api.tavily.com/search", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ api_key: key, query, max_results: 4, search_depth: "basic" }),
-  })
-  const data = await res.json()
-  return (
-    data.results?.map((r: any) => `${r.title}\n${r.content}`).join("\n\n---\n\n") ??
-    "No web results found."
-  )
+  try {
+    const res = await fetch("https://api.tavily.com/search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ api_key: key, query, max_results: 4, search_depth: "basic" }),
+    })
+    if (!res.ok) return null
+    const data = await res.json()
+    const text = data.results?.map((r: any) => `${r.title}\n${r.content}`).join("\n\n---\n\n")
+    return text ?? null
+  } catch {
+    return null
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -102,6 +122,27 @@ export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return new Response("Unauthorized", { status: 401 })
+
+  if (!checkRateLimit(user.id)) {
+    return new Response("Too many requests", { status: 429 })
+  }
+
+  // Verify the workspace belongs to this user and the session belongs to that workspace
+  const { data: workspace } = await supabase
+    .from("workspaces")
+    .select("id")
+    .eq("id", workspaceId)
+    .eq("owner_id", user.id)
+    .single()
+  if (!workspace) return new Response("Forbidden", { status: 403 })
+
+  const { data: session } = await supabase
+    .from("chat_sessions")
+    .select("id")
+    .eq("id", sessionId)
+    .eq("workspace_id", workspaceId)
+    .single()
+  if (!session) return new Response("Forbidden", { status: 403 })
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -182,7 +223,7 @@ Your only job now: decide if a web search would add meaningful value.
           const webQuery = (webCall.functionCall?.args as { query?: string } | undefined)?.query ?? query
           const webResult = await searchWeb(webQuery)
           if (webResult) gatheredContext.push(webResult)
-          controller.enqueue(sse({ type: "tool", name: "search_web", status: "done" }))
+          controller.enqueue(sse({ type: "tool", name: "search_web", status: "done", found: webResult !== null }))
         }
 
         const context = gatheredContext.join("\n\n")

@@ -42,8 +42,15 @@ export async function extractText(file: File): Promise<string> {
 async function parsePdf(buffer: Buffer): Promise<string> {
   const parser = new PDFParser(undefined, true)
   return new Promise((resolve, reject) => {
-    parser.on("pdfParser_dataError", (e: any) => reject(new Error(e?.parserError ?? String(e))))
-    parser.on("pdfParser_dataReady", () => resolve((parser as any).getRawTextContent()))
+    const timeout = setTimeout(() => reject(new Error("PDF parsing timed out after 30s")), 30_000)
+    parser.on("pdfParser_dataError", (e: any) => {
+      clearTimeout(timeout)
+      reject(new Error(e?.parserError ?? String(e)))
+    })
+    parser.on("pdfParser_dataReady", () => {
+      clearTimeout(timeout)
+      resolve((parser as any).getRawTextContent())
+    })
     parser.parseBuffer(buffer)
   })
 }

@@ -73,7 +73,7 @@ export function CTA({ isLoggedIn = false }: CTAProps) {
 
           <motion.p variants={item}
             className="text-[15px] max-w-sm leading-relaxed"
-            style={{ color: 'var(--cx-mute-1)' }}>
+            style={{ color: 'var(--cx-ink)' }}>
             Drop in your PDFs and start asking questions in seconds. No setup, no config — just answers.
           </motion.p>
 
@@ -99,7 +99,7 @@ export function CTA({ isLoggedIn = false }: CTAProps) {
                 <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform duration-200" />
               </Link>
             </motion.div>
-            <span className="text-[12px]" style={{ color: 'rgba(10,10,10,0.4)' }}>
+            <span className="text-[12px]" style={{ color: 'rgba(10,10,10,0.75)' }}>
               No setup · No config · Just upload and ask
             </span>
           </motion.div>

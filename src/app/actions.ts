@@ -98,11 +98,12 @@ export async function deleteDocument(documentId: string) {
 
   const { data: doc } = await supabase
     .from('documents')
-    .select('storage_path')
+    .select('storage_path, workspace_id, workspaces!inner(owner_id)')
     .eq('id', documentId)
     .single()
 
   if (!doc) return { error: 'Document not found' }
+  if ((doc.workspaces as any)?.owner_id !== user.id) return { error: 'Forbidden' }
 
   await supabase.from('document_chunks').delete().eq('document_id', documentId)
   await supabase.from('documents').delete().eq('id', documentId)
@@ -114,14 +115,29 @@ export async function deleteDocument(documentId: string) {
   return { success: true }
 }
 
+const MAX_FILE_BYTES = 50 * 1024 * 1024 // 50 MB
+const EMBED_BATCH = 5
+
 export async function uploadDocument(formData: FormData) {
   const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Not authenticated" }
 
   const file = formData.get("file") as File
   const workspaceId = formData.get("workspaceId") as string
 
   if (!file || !workspaceId) return { error: "Missing file or workspace ID" }
+  if (file.size > MAX_FILE_BYTES) return { error: "File too large. Maximum size is 50 MB." }
   if (!isSupportedFile(file)) return { error: "Unsupported file type. Use PDF, DOCX, TXT, MD, or CSV." }
+
+  const { data: ws } = await supabase
+    .from("workspaces")
+    .select("id")
+    .eq("id", workspaceId)
+    .eq("owner_id", user.id)
+    .single()
+  if (!ws) return { error: "Workspace not found or access denied" }
 
   const safeName = file.name
     .replace(/[^a-zA-Z0-9._-]/g, "_")
@@ -162,11 +178,16 @@ export async function uploadDocument(formData: FormData) {
     const embeddingModel = genAI.getGenerativeModel({ model: "gemini-embedding-001" })
     const chunksData = []
 
-    for (const chunk of splitDocs) {
-      const content = chunk.pageContent.replace(/\n/g, " ")
-      const result = await embeddingModel.embedContent(content)
-      const embedding = result.embedding.values.slice(0, 768)
-      chunksData.push({ document_id: docData.id, content, embedding })
+    for (let i = 0; i < splitDocs.length; i += EMBED_BATCH) {
+      const batch = splitDocs.slice(i, i + EMBED_BATCH)
+      const results = await Promise.all(
+        batch.map(async (chunk) => {
+          const content = chunk.pageContent.replace(/\n/g, " ")
+          const result = await embeddingModel.embedContent(content)
+          return { document_id: docData.id, content, embedding: result.embedding.values.slice(0, 768) }
+        })
+      )
+      chunksData.push(...results)
     }
 
     const { error: vectorError } = await supabase.from("document_chunks").insert(chunksData)

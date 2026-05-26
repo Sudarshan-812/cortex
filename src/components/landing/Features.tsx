@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { motion } from "framer-motion";
 import { Database, FileSearch, BrainCircuit, Zap } from "lucide-react";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -39,29 +39,6 @@ const cards = [
 function FeatureCard({ card, i }: { card: typeof cards[0]; i: number }) {
   const Icon = card.icon;
 
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [3, -3]), { stiffness: 200, damping: 30 });
-  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-4, 4]), { stiffness: 200, damping: 30 });
-
-  const handleMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    mouseX.set((e.clientX - rect.left) / rect.width - 0.5);
-    mouseY.set((e.clientY - rect.top) / rect.height - 0.5);
-  };
-
-  const handleLeave = (e: React.MouseEvent<HTMLDivElement>) => {
-    mouseX.set(0);
-    mouseY.set(0);
-    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.5)';
-    (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.7)';
-  };
-
-  const handleEnter = (e: React.MouseEvent<HTMLDivElement>) => {
-    (e.currentTarget as HTMLElement).style.borderColor = 'rgba(122,31,90,0.25)';
-    (e.currentTarget as HTMLElement).style.boxShadow = '0 16px 48px rgba(0,0,0,0.12), 0 0 0 1px rgba(122,31,90,0.12), inset 0 1px 0 rgba(255,255,255,0.8)';
-  };
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
@@ -69,22 +46,16 @@ function FeatureCard({ card, i }: { card: typeof cards[0]; i: number }) {
       viewport={{ once: true, margin: "-60px" }}
       transition={{ delay: i * 0.07, duration: 0.5, ease }}
       className={card.wide ? "md:col-span-2" : ""}
-      style={{ perspective: '900px' }}
     >
-      <motion.div
+      <div
         style={{
-          rotateX,
-          rotateY,
           background: 'rgba(255,255,255,0.55)',
           backdropFilter: 'blur(32px) saturate(180%)',
           WebkitBackdropFilter: 'blur(32px) saturate(180%)',
           borderColor: 'rgba(255,255,255,0.5)',
           boxShadow: '0 4px 32px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.7)',
         }}
-        onMouseMove={handleMove}
-        onMouseEnter={handleEnter}
-        onMouseLeave={handleLeave}
-        className="relative overflow-hidden rounded-[2rem] p-8 md:p-10 border group h-full transition-[border-color,box-shadow] duration-300"
+        className="relative overflow-hidden rounded-[2rem] p-8 md:p-10 border group h-full"
       >
         {/* Faint step label */}
         <span
@@ -98,8 +69,8 @@ function FeatureCard({ card, i }: { card: typeof cards[0]; i: number }) {
         <motion.div
           whileHover={{ scale: 1.12, rotate: 4 }}
           transition={{ type: 'spring', stiffness: 400, damping: 18 }}
-          className="size-12 rounded-2xl flex items-center justify-center mb-7 w-fit"
-          style={{ background: 'rgba(122,31,90,0.15)', border: '1.5px solid rgba(122,31,90,0.28)' }}
+          className="size-12 flex items-center justify-center mb-7 w-fit"
+          style={{}}
         >
           <Icon size={22} style={{ color: '#7a1f5a' }} />
         </motion.div>
@@ -123,7 +94,7 @@ function FeatureCard({ card, i }: { card: typeof cards[0]; i: number }) {
           className="absolute bottom-0 left-8 right-8 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           style={{ background: 'linear-gradient(90deg, transparent, var(--cx-accent-line), transparent)' }}
         />
-      </motion.div>
+      </div>
     </motion.div>
   );
 }
