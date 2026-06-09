@@ -6,6 +6,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai"
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters"
 import { extractText, isSupportedFile } from "@/lib/parsers"
 import { cookies } from "next/headers"
+import * as Sentry from "@sentry/nextjs"
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY!)
 
@@ -193,6 +194,7 @@ export async function uploadDocument(formData: FormData) {
     const { error: vectorError } = await supabase.from("document_chunks").insert(chunksData)
     if (vectorError) throw new Error(`Vector DB error: ${vectorError.message}`)
   } catch (err: any) {
+    Sentry.captureException(err, { tags: { stage: "upload_pipeline" }, extra: { workspaceId, fileName: file.name } })
     return { error: `Processing error: ${err.message ?? String(err)}` }
   }
 

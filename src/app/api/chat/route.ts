@@ -1,26 +1,25 @@
 import { NextRequest } from "next/server"
 import { createClient } from "@/utils/supabase/server"
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai"
+import { Redis } from "@upstash/redis"
+import { Ratelimit } from "@upstash/ratelimit"
+import * as Sentry from "@sentry/nextjs"
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY!)
 const enc = new TextEncoder()
 
-// Simple in-memory rate limiter — 20 requests per user per minute
-const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
-const RATE_LIMIT = 20
-const RATE_WINDOW_MS = 60_000
+// Gemini model IDs — rerank/agent use 3.1-flash-lite (500 RPD free), stream uses 2.5-flash (best quality)
+const RERANK_MODEL = "gemini-3.1-flash-lite"
+const AGENT_MODEL  = "gemini-3.1-flash-lite"
+const STREAM_MODEL = "gemini-2.5-flash"
 
-function checkRateLimit(userId: string): boolean {
-  const now = Date.now()
-  const entry = rateLimitMap.get(userId)
-  if (!entry || now > entry.resetAt) {
-    rateLimitMap.set(userId, { count: 1, resetAt: now + RATE_WINDOW_MS })
-    return true
-  }
-  if (entry.count >= RATE_LIMIT) return false
-  entry.count++
-  return true
-}
+const redis = Redis.fromEnv()
+const ratelimit = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(20, "1 m"),
+  analytics: true,
+  prefix: "cortex_rl",
+})
 
 function sse(data: object) {
   return enc.encode(`data: ${JSON.stringify(data)}\n\n`)
@@ -48,7 +47,7 @@ async function searchDocuments(
   let topChunks: any[] = chunks
   if (chunks.length > 3) {
     try {
-      const rerankModel = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite-preview" })
+      const rerankModel = genAI.getGenerativeModel({ model: RERANK_MODEL })
       const rerankPrompt = `Score each passage's relevance to the question 1–10.
 Return ONLY a JSON array like [{"index":0,"score":8},...], nothing else.
 
@@ -69,7 +68,8 @@ ${chunks.map((c: any, i: number) => `[${i}] ${c.content.slice(0, 250)}`).join("\
       } else {
         topChunks = chunks.slice(0, 3)
       }
-    } catch {
+    } catch (err) {
+      Sentry.captureException(err, { tags: { stage: "rerank" }, extra: { query, workspaceId } })
       topChunks = chunks.slice(0, 3)
     }
   }
@@ -107,7 +107,8 @@ async function searchWeb(query: string): Promise<string | null> {
     const data = await res.json()
     const text = data.results?.map((r: any) => `${r.title}\n${r.content}`).join("\n\n---\n\n")
     return text ?? null
-  } catch {
+  } catch (err) {
+    Sentry.captureException(err, { tags: { stage: "web_search" }, extra: { query } })
     return null
   }
 }
@@ -123,11 +124,18 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return new Response("Unauthorized", { status: 401 })
 
-  if (!checkRateLimit(user.id)) {
-    return new Response("Too many requests", { status: 429 })
+  const { success, limit, remaining, reset } = await ratelimit.limit(user.id)
+  if (!success) {
+    return new Response("Too many requests", {
+      status: 429,
+      headers: {
+        "X-RateLimit-Limit": String(limit),
+        "X-RateLimit-Remaining": String(remaining),
+        "X-RateLimit-Reset": String(reset),
+      },
+    })
   }
 
-  // Verify the workspace belongs to this user and the session belongs to that workspace
   const { data: workspace } = await supabase
     .from("workspaces")
     .select("id")
@@ -184,7 +192,7 @@ export async function POST(req: NextRequest) {
         }))
 
         const agentModel = genAI.getGenerativeModel({
-          model: "gemini-3.1-flash-lite-preview",
+          model: AGENT_MODEL,
           systemInstruction: `You are Cortex, a document intelligence assistant.
 Document search has already been completed for the user's question.
 ${docResults.sources.length > 0
@@ -231,7 +239,7 @@ Your only job now: decide if a web search would add meaningful value.
           ? `Use the context below to answer the question accurately and concisely. Cite specifics from the context where possible.\n\nContext:\n${context}\n\nQuestion: ${query}\n\nAnswer:`
           : `Answer this question as helpfully as possible: ${query}`
 
-        const streamModel = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite-preview" })
+        const streamModel = genAI.getGenerativeModel({ model: STREAM_MODEL })
         const streamResult = await streamModel.generateContentStream(finalPrompt)
 
         let fullText = ""
@@ -267,6 +275,7 @@ Your only job now: decide if a web search would add meaningful value.
         controller.enqueue(sse({ type: "done", sources: allSources }))
         controller.close()
       } catch (err: any) {
+        Sentry.captureException(err, { tags: { stage: "chat_stream" }, extra: { sessionId, workspaceId } })
         controller.enqueue(sse({ type: "error", message: err.message ?? "Unknown error" }))
         controller.close()
       }

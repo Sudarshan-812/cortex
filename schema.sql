@@ -39,13 +39,15 @@ CREATE TABLE IF NOT EXISTS documents (
   created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
--- Document chunks with 768-dim embeddings (text-embedding-004)
+-- Document chunks with 768-dim embeddings
+-- embedding_model tracks which model produced the vector (prevents silent degradation on model changes)
 CREATE TABLE IF NOT EXISTS document_chunks (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  document_id UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
-  content     TEXT NOT NULL,
-  embedding   vector(768),
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  document_id     UUID NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+  content         TEXT NOT NULL,
+  embedding       vector(768),
+  embedding_model TEXT NOT NULL DEFAULT 'gemini-embedding-001',
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- IVFFlat index for fast cosine similarity search
@@ -53,14 +55,48 @@ CREATE INDEX IF NOT EXISTS document_chunks_embedding_idx
   ON document_chunks USING ivfflat (embedding vector_cosine_ops)
   WITH (lists = 100);
 
+-- GIN index for BM25 full-text search (required for hybrid RRF)
+CREATE INDEX IF NOT EXISTS document_chunks_content_fts_idx
+  ON document_chunks USING gin(to_tsvector('english', content));
+
 -- ============================================================
--- VECTOR SEARCH FUNCTION (called by chat-actions.ts via RPC)
+-- CHAT TABLES
 -- ============================================================
 
+CREATE TABLE IF NOT EXISTS chat_sessions (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+  title        TEXT NOT NULL DEFAULT 'New Chat',
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS chat_messages (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id UUID NOT NULL REFERENCES chat_sessions(id) ON DELETE CASCADE,
+  role       TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
+  content    TEXT NOT NULL,
+  sources    JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS chat_messages_session_id_idx
+  ON chat_messages (session_id, created_at DESC);
+
+-- ============================================================
+-- HYBRID SEARCH FUNCTION
+-- Combines dense vector search (pgvector) + sparse BM25 (PostgreSQL FTS)
+-- fused via Reciprocal Rank Fusion (RRF, k=60)
+-- ============================================================
+
+DROP FUNCTION IF EXISTS match_documents(vector, text, float, int, uuid);
+DROP FUNCTION IF EXISTS match_documents(vector, float, int, uuid);
+
 CREATE OR REPLACE FUNCTION match_documents(
-  query_embedding    vector(768),
-  match_threshold    FLOAT,
-  match_count        INT,
+  query_embedding     vector(768),
+  query_text          TEXT,
+  match_threshold     FLOAT,
+  match_count         INT,
   filter_workspace_id UUID
 )
 RETURNS TABLE (
@@ -71,16 +107,48 @@ RETURNS TABLE (
 )
 LANGUAGE sql STABLE
 AS $$
-  SELECT
-    dc.id,
-    dc.content,
-    dc.document_id,
-    1 - (dc.embedding <=> query_embedding) AS similarity
-  FROM document_chunks dc
-  JOIN documents d ON dc.document_id = d.id
-  WHERE d.workspace_id = filter_workspace_id
-    AND 1 - (dc.embedding <=> query_embedding) > match_threshold
-  ORDER BY dc.embedding <=> query_embedding
+  WITH vector_search AS (
+    SELECT
+      dc.id,
+      dc.content,
+      dc.document_id,
+      ROW_NUMBER() OVER (ORDER BY dc.embedding <=> query_embedding) AS rank
+    FROM document_chunks dc
+    JOIN documents d ON dc.document_id = d.id
+    WHERE d.workspace_id = filter_workspace_id
+      AND 1 - (dc.embedding <=> query_embedding) > match_threshold
+    ORDER BY dc.embedding <=> query_embedding
+    LIMIT match_count * 2
+  ),
+  bm25_search AS (
+    SELECT
+      dc.id,
+      dc.content,
+      dc.document_id,
+      ROW_NUMBER() OVER (
+        ORDER BY ts_rank_cd(to_tsvector('english', dc.content),
+                            websearch_to_tsquery('english', query_text)) DESC
+      ) AS rank
+    FROM document_chunks dc
+    JOIN documents d ON dc.document_id = d.id
+    WHERE d.workspace_id = filter_workspace_id
+      AND to_tsvector('english', dc.content) @@ websearch_to_tsquery('english', query_text)
+    ORDER BY rank
+    LIMIT match_count * 2
+  ),
+  rrf AS (
+    SELECT
+      COALESCE(v.id, b.id)             AS id,
+      COALESCE(v.content, b.content)   AS content,
+      COALESCE(v.document_id, b.document_id) AS document_id,
+      COALESCE(1.0 / (60 + v.rank), 0.0)
+        + COALESCE(1.0 / (60 + b.rank), 0.0) AS rrf_score
+    FROM vector_search v
+    FULL OUTER JOIN bm25_search b ON v.id = b.id
+  )
+  SELECT id, content, document_id, rrf_score AS similarity
+  FROM rrf
+  ORDER BY rrf_score DESC
   LIMIT match_count;
 $$;
 
@@ -92,6 +160,8 @@ ALTER TABLE workspaces        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE workspace_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE documents         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE document_chunks   ENABLE ROW LEVEL SECURITY;
+ALTER TABLE chat_sessions     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE chat_messages     ENABLE ROW LEVEL SECURITY;
 
 -- Workspaces: owner only
 CREATE POLICY "workspaces_select" ON workspaces FOR SELECT USING (owner_id = auth.uid());
@@ -126,15 +196,39 @@ CREATE POLICY "chunks_insert" ON document_chunks FOR INSERT
     WHERE w.owner_id = auth.uid()
   ));
 
+-- Chat sessions: workspace owner
+CREATE POLICY "chat_sessions_select" ON chat_sessions FOR SELECT
+  USING (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
+CREATE POLICY "chat_sessions_insert" ON chat_sessions FOR INSERT
+  WITH CHECK (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
+CREATE POLICY "chat_sessions_update" ON chat_sessions FOR UPDATE
+  USING (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
+CREATE POLICY "chat_sessions_delete" ON chat_sessions FOR DELETE
+  USING (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
+
+-- Chat messages: via session → workspace → owner
+CREATE POLICY "chat_messages_select" ON chat_messages FOR SELECT
+  USING (session_id IN (
+    SELECT cs.id FROM chat_sessions cs
+    JOIN workspaces w ON cs.workspace_id = w.id
+    WHERE w.owner_id = auth.uid()
+  ));
+CREATE POLICY "chat_messages_insert" ON chat_messages FOR INSERT
+  WITH CHECK (session_id IN (
+    SELECT cs.id FROM chat_sessions cs
+    JOIN workspaces w ON cs.workspace_id = w.id
+    WHERE w.owner_id = auth.uid()
+  ));
+
 -- ============================================================
 -- STORAGE
 -- ============================================================
 -- In Supabase Dashboard → Storage → New Bucket:
---   Name: cortex-uploads
+--   Name: synapse-uploads
 --   Public: false
 --
--- Then add this Storage Policy (RLS for bucket):
---
--- INSERT policy: ((bucket_id = 'cortex-uploads') AND (auth.role() = 'authenticated'))
--- SELECT policy: ((bucket_id = 'cortex-uploads') AND (auth.role() = 'authenticated'))
+-- Then add these Storage Policies:
+--   INSERT: ((bucket_id = 'synapse-uploads') AND (auth.role() = 'authenticated'))
+--   SELECT: ((bucket_id = 'synapse-uploads') AND (auth.role() = 'authenticated'))
+--   DELETE: ((bucket_id = 'synapse-uploads') AND (auth.role() = 'authenticated'))
 -- ============================================================
