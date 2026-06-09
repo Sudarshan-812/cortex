@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { createChatSession, deleteChatSession } from '@/app/session-actions'
+import { createChatSession, deleteChatSession, renameChatSession } from '@/app/session-actions'
 import { switchWorkspace } from '@/app/actions'
 import {
   Plus, MessageSquare, Trash2, LayoutDashboard,
@@ -39,6 +39,9 @@ export function ChatSidebar({
   const [wsOpen,      setWsOpen]      = useState(false)
   const [switchingWs, setSwitchingWs] = useState<string | null>(null)
   const [uploading,   setUploading]   = useState(false)
+  const [renamingId,  setRenamingId]  = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState('')
+  const renameRef = useRef<HTMLInputElement>(null)
   const wsRef     = useRef<HTMLDivElement>(null)
   const uploadRef = useRef<HTMLInputElement>(null)
 
@@ -79,6 +82,21 @@ export function ChatSidebar({
     await uploadDocument(fd)
     setUploading(false)
     if (uploadRef.current) uploadRef.current.value = ''
+  }
+
+  function startRename(session: Session, e: React.MouseEvent) {
+    e.preventDefault(); e.stopPropagation()
+    setRenamingId(session.id)
+    setRenameValue(session.title)
+    setTimeout(() => renameRef.current?.select(), 30)
+  }
+
+  async function commitRename(sessionId: string) {
+    const trimmed = renameValue.trim()
+    setRenamingId(null)
+    if (!trimmed || trimmed === sessions.find(s => s.id === sessionId)?.title) return
+    setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, title: trimmed } : s))
+    await renameChatSession(sessionId, trimmed)
   }
 
   async function handleSwitchWorkspace(wsId: string) {
@@ -336,7 +354,34 @@ export function ChatSidebar({
                 />
                 {!collapsed && (
                   <>
-                    <span className="flex-1 text-[12.5px] font-medium truncate">{session.title}</span>
+                    {renamingId === session.id ? (
+                      <input
+                        ref={renameRef}
+                        value={renameValue}
+                        onChange={e => setRenameValue(e.target.value)}
+                        onClick={e => e.stopPropagation()}
+                        onKeyDown={e => {
+                          e.stopPropagation()
+                          if (e.key === 'Enter') commitRename(session.id)
+                          if (e.key === 'Escape') setRenamingId(null)
+                        }}
+                        onBlur={() => commitRename(session.id)}
+                        className="flex-1 min-w-0 text-[12.5px] font-medium bg-transparent outline-none rounded px-1 -mx-1"
+                        style={{
+                          color: isActive ? '#f2f0eb' : 'var(--cx-ink)',
+                          border: `1px solid ${isActive ? 'rgba(255,255,255,0.25)' : 'var(--cx-accent-line)'}`,
+                        }}
+                        maxLength={80}
+                      />
+                    ) : (
+                      <span
+                        className="flex-1 text-[12.5px] font-medium truncate"
+                        onDoubleClick={e => startRename(session, e)}
+                        title="Double-click to rename"
+                      >
+                        {session.title}
+                      </span>
+                    )}
                     <motion.button
                       initial={false}
                       animate={{ opacity: 0 }}

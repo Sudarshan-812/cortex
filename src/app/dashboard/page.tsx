@@ -6,7 +6,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Search, UploadCloud, ChevronRight, Sparkles } from "lucide-react"
+import { Search, UploadCloud, ChevronRight, Sparkles, FileText, MessageSquare, Zap } from "lucide-react"
 
 import { DashboardNavbar }  from "@/components/dashboard/DashboardNavbar"
 import { MetricsGrid }      from "@/components/dashboard/MetricsGrid"
@@ -16,7 +16,7 @@ import { UploadZoneNew }    from "@/components/dashboard/UploadZoneNew"
 import { SystemStatus }     from "@/components/dashboard/SystemStatus"
 import { AgentsCard }       from "@/components/dashboard/AgentsCard"
 import { DocumentTable }    from "@/components/dashboard/DocumentTable"
-import { DevModeWrapper, UserModeWrapper } from "@/components/dashboard/DevModeWrapper"
+import { DevModeWrapper }   from "@/components/dashboard/DevModeWrapper"
 
 export default async function Dashboard() {
   const supabase = await createClient()
@@ -102,6 +102,7 @@ export default async function Dashboard() {
 
   const totalBytes = documents?.reduce((s, d) => s + (d.size_bytes ?? 0), 0) ?? 0
   const storageMB  = Math.round(totalBytes / (1024 * 1024))
+  const isEmpty    = (docCount ?? 0) === 0
 
   return (
     <div className="min-h-screen cx-grain" style={{ background: "var(--cx-paper)", color: "var(--cx-ink)" }}>
@@ -131,15 +132,23 @@ export default async function Dashboard() {
               {workspace.name}
               <span className="cx-serif italic font-normal" style={{ color: "var(--cx-mute-1)" }}>.</span>
             </h1>
-            <p className="mt-3 text-[14px] leading-relaxed" style={{ color: "var(--cx-mute-1)" }}>
-              <span className="cx-num" style={{ color: "var(--cx-ink-2)" }}>{docCount ?? 0}</span>{" "}document{(docCount ?? 0) !== 1 ? 's' : ''} in your knowledge base.
-            </p>
-            <DevModeWrapper>
-              <p className="mt-1 text-[13px] leading-relaxed" style={{ color: "var(--cx-mute-2)" }}>
-                <span className="cx-num" style={{ color: "var(--cx-ink-2)" }}>{(chunkCount ?? 0).toLocaleString()}</span>{" "}embeddings ·{" "}
-                <span className="cx-num" style={{ color: "var(--cx-ink-2)" }}>{sessionCount ?? 0}</span> sessions
-              </p>
-            </DevModeWrapper>
+            {/* Always-visible stats — visible to all users */}
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13.5px]">
+              <span style={{ color: "var(--cx-mute-1)" }}>
+                <span className="cx-num font-semibold" style={{ color: "var(--cx-ink-2)" }}>{docCount ?? 0}</span>
+                {" "}document{(docCount ?? 0) !== 1 ? "s" : ""}
+              </span>
+              <span style={{ color: "var(--cx-line)" }}>·</span>
+              <span style={{ color: "var(--cx-mute-1)" }}>
+                <span className="cx-num font-semibold" style={{ color: "var(--cx-ink-2)" }}>{(chunkCount ?? 0).toLocaleString()}</span>
+                {" "}embeddings
+              </span>
+              <span style={{ color: "var(--cx-line)" }}>·</span>
+              <span style={{ color: "var(--cx-mute-1)" }}>
+                <span className="cx-num font-semibold" style={{ color: "var(--cx-ink-2)" }}>{sessionCount ?? 0}</span>
+                {" "}chat session{(sessionCount ?? 0) !== 1 ? "s" : ""}
+              </span>
+            </div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <a
@@ -155,6 +164,49 @@ export default async function Dashboard() {
           </div>
         </div>
 
+        {/* ── Onboarding guide — shown only when workspace is empty ── */}
+        {isEmpty && (
+          <div className="cx-panel p-7 mb-6">
+            <p className="cx-rule-label mb-6">How Cortex works</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+              {[
+                {
+                  icon: <FileText size={18} />,
+                  step: "01",
+                  title: "Upload your documents",
+                  desc: "Add PDFs, Word docs, spreadsheets, or plain text. Cortex accepts files up to 50 MB.",
+                },
+                {
+                  icon: <Zap size={18} />,
+                  step: "02",
+                  title: "Cortex processes them",
+                  desc: "Your documents are split into semantic chunks, embedded with Gemini, and indexed for hybrid search.",
+                },
+                {
+                  icon: <MessageSquare size={18} />,
+                  step: "03",
+                  title: "Ask questions, get cited answers",
+                  desc: "Query in plain English. Cortex retrieves the most relevant sections and cites every source.",
+                },
+              ].map(({ icon, step, title, desc }) => (
+                <div key={step} className="flex gap-4">
+                  <div
+                    className="size-9 rounded-xl flex items-center justify-center flex-shrink-0 border"
+                    style={{ background: "var(--cx-accent-wash)", borderColor: "var(--cx-accent-line)", color: "var(--cx-accent)" }}
+                  >
+                    {icon}
+                  </div>
+                  <div>
+                    <span className="cx-num text-[10.5px] block mb-0.5" style={{ color: "var(--cx-mute-2)" }}>{step}</span>
+                    <p className="text-[13.5px] font-semibold mb-1" style={{ color: "var(--cx-ink)" }}>{title}</p>
+                    <p className="text-[12.5px] leading-relaxed" style={{ color: "var(--cx-mute-1)" }}>{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Metrics grid — DEV ONLY */}
         <DevModeWrapper>
           <MetricsGrid docs={docCount ?? 0} embeddings={chunkCount ?? 0} storageMB={storageMB} sessions={sessionCount ?? 0} />
@@ -165,111 +217,119 @@ export default async function Dashboard() {
           <PipelineViz />
         </DevModeWrapper>
 
-        {/* Chat demo + Upload + System status — DEV ONLY */}
+        {/* Chat demo + System status — DEV ONLY */}
         <DevModeWrapper>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6">
             <div className="lg:col-span-2">
               <ChatDemo />
             </div>
             <div className="flex flex-col gap-5">
-              <div id="upload-zone">
-                <UploadZoneNew workspaceId={workspace.id} />
-              </div>
               <SystemStatus />
             </div>
           </div>
         </DevModeWrapper>
 
-        {/* Upload zone — USER MODE ONLY */}
-        <UserModeWrapper>
-          <div className="mb-6" id="upload-zone">
-            <UploadZoneNew workspaceId={workspace.id} />
-          </div>
-        </UserModeWrapper>
+        {/* Upload zone — always visible */}
+        <div className="mb-6" id="upload-zone">
+          <UploadZoneNew workspaceId={workspace.id} />
+        </div>
 
         {/* Agents + Recent queries + CTA — DEV ONLY */}
         <DevModeWrapper>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6">
-          <AgentsCard />
+            <AgentsCard />
 
-          <div className="cx-panel p-5">
-            <div className="flex items-center justify-between mb-4">
-              <p className="cx-rule-label">Recent queries</p>
-              <span className="cx-num text-[10.5px]" style={{ color: "var(--cx-mute-2)" }}>
-                {Math.min(4, docCount ?? 0)}
-              </span>
-            </div>
-            {documents && documents.length > 0 ? (
-              <div className="space-y-0.5 -mx-1.5">
-                {documents.slice(0, 4).map(doc => (
-                  <Link
-                    key={doc.id}
-                    href="/chat"
-                    className="flex items-center gap-2.5 px-1.5 py-2 rounded-md"
-                    style={{ color: "var(--cx-ink-2)" }}
-                  >
-                    <Search size={12} className="flex-shrink-0" style={{ color: "var(--cx-mute-2)" }} />
-                    <span className="text-[12.5px] truncate">
-                      {doc.name.replace(/\.(pdf|docx|doc|txt|md|csv)$/i, "")}
-                    </span>
-                  </Link>
-                ))}
+            <div className="cx-panel p-5">
+              <div className="flex items-center justify-between mb-4">
+                <p className="cx-rule-label">Documents</p>
+                <span className="cx-num text-[10.5px]" style={{ color: "var(--cx-mute-2)" }}>
+                  {Math.min(4, docCount ?? 0)}
+                </span>
               </div>
-            ) : (
-              <p className="text-[12.5px]" style={{ color: "var(--cx-mute-2)" }}>No queries yet.</p>
-            )}
-          </div>
-
-          {/* Dark editorial CTA */}
-          <div
-            className="cx-panel p-6 relative overflow-hidden flex flex-col justify-between"
-            style={{
-              background: "linear-gradient(145deg, var(--cx-ink) 0%, #151515 100%)",
-              borderColor: "var(--cx-ink-2)",
-              color: "#f2f0eb",
-            }}
-          >
-            <div
-              className="absolute -top-20 -right-20 size-56 rounded-full pointer-events-none"
-              style={{ background: "radial-gradient(circle, rgba(162,60,122,0.35) 0%, transparent 70%)" }}
-            />
-            <div className="relative z-10">
-              <span
-                className="inline-flex items-center gap-2 px-2 py-0.5 rounded-full border text-[10px] font-medium uppercase tracking-[.18em]"
-                style={{ borderColor: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.7)" }}
-              >
-                <Sparkles size={10} /> New
-              </span>
-              <h3 className="text-[19px] font-semibold tracking-tight mt-4 leading-tight">
-                Spin up a new agent
-                <span className="cx-serif italic font-normal" style={{ color: "#d5a8c2" }}>.</span>
-              </h3>
-              <p className="text-[12.5px] mt-2 leading-relaxed" style={{ color: "rgba(242,240,235,0.55)" }}>
-                Define a goal and tools — Cortex will retrieve, re-rank, and synthesize with citations.
-              </p>
+              {documents && documents.length > 0 ? (
+                <div className="space-y-0.5 -mx-1.5">
+                  {documents.slice(0, 4).map(doc => (
+                    <Link
+                      key={doc.id}
+                      href="/chat"
+                      className="flex items-center gap-2.5 px-1.5 py-2 rounded-md"
+                      style={{ color: "var(--cx-ink-2)" }}
+                    >
+                      <Search size={12} className="flex-shrink-0" style={{ color: "var(--cx-mute-2)" }} />
+                      <span className="text-[12.5px] truncate">
+                        {doc.name.replace(/\.(pdf|docx|doc|txt|md|csv)$/i, "")}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-[12.5px]" style={{ color: "var(--cx-mute-2)" }}>No documents yet.</p>
+              )}
             </div>
-            <Link
-              href="/chat"
-              className="relative z-10 mt-5 inline-flex items-center gap-1.5 text-[12.5px] font-medium group"
-              style={{ color: "#f2f0eb" }}
+
+            {/* Dark editorial CTA */}
+            <div
+              className="cx-panel p-6 relative overflow-hidden flex flex-col justify-between"
+              style={{
+                background: "linear-gradient(145deg, var(--cx-ink) 0%, #151515 100%)",
+                borderColor: "var(--cx-ink-2)",
+                color: "#f2f0eb",
+              }}
             >
-              Create agent
-              <ChevronRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
-            </Link>
+              <div
+                className="absolute -top-20 -right-20 size-56 rounded-full pointer-events-none"
+                style={{ background: "radial-gradient(circle, rgba(162,60,122,0.35) 0%, transparent 70%)" }}
+              />
+              <div className="relative z-10">
+                <span
+                  className="inline-flex items-center gap-2 px-2 py-0.5 rounded-full border text-[10px] font-medium uppercase tracking-[.18em]"
+                  style={{ borderColor: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.7)" }}
+                >
+                  <Sparkles size={10} /> New
+                </span>
+                <h3 className="text-[19px] font-semibold tracking-tight mt-4 leading-tight">
+                  Spin up a new agent
+                  <span className="cx-serif italic font-normal" style={{ color: "#d5a8c2" }}>.</span>
+                </h3>
+                <p className="text-[12.5px] mt-2 leading-relaxed" style={{ color: "rgba(242,240,235,0.55)" }}>
+                  Define a goal and tools — Cortex will retrieve, re-rank, and synthesize with citations.
+                </p>
+              </div>
+              <Link
+                href="/chat"
+                className="relative z-10 mt-5 inline-flex items-center gap-1.5 text-[12.5px] font-medium group"
+                style={{ color: "#f2f0eb" }}
+              >
+                Create agent
+                <ChevronRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+            </div>
           </div>
-        </div>
         </DevModeWrapper>
 
         {/* Document table */}
         {documents && documents.length > 0 && (
           <DocumentTable documents={documents} storageMB={storageMB} />
         )}
-        {documents?.length === 0 && (
-          <div className="cx-panel p-12 text-center">
-            <p className="text-[14px] font-medium mb-1" style={{ color: "var(--cx-mute-1)" }}>No documents yet</p>
-            <p className="text-[12.5px]" style={{ color: "var(--cx-mute-2)" }}>
-              Upload files above to start building your knowledge base.
+        {isEmpty && (
+          <div
+            className="cx-panel p-10 text-center border-dashed"
+            style={{ borderStyle: "dashed" }}
+          >
+            <UploadCloud size={28} className="mx-auto mb-3" style={{ color: "var(--cx-mute-2)" }} />
+            <p className="text-[14px] font-medium mb-1" style={{ color: "var(--cx-mute-1)" }}>
+              No documents yet
             </p>
+            <p className="text-[12.5px] mb-4" style={{ color: "var(--cx-mute-2)" }}>
+              Upload a file above to start building your knowledge base.
+            </p>
+            <a
+              href="#upload-zone"
+              className="inline-flex items-center gap-1.5 h-8 px-4 rounded-full text-[12.5px] font-medium border transition-colors duration-150"
+              style={{ borderColor: "var(--cx-line)", color: "var(--cx-ink-2)", background: "var(--cx-paper-2)" }}
+            >
+              <UploadCloud size={12} /> Upload your first document
+            </a>
           </div>
         )}
 
@@ -283,17 +343,15 @@ export default async function Dashboard() {
             <span className="text-[12px] font-semibold" style={{ color: "var(--cx-ink-2)" }}>Cortex</span>
             <span className="cx-num text-[10.5px]" style={{ color: "var(--cx-mute-2)" }}>v2.0</span>
           </div>
-          <DevModeWrapper>
-            <div className="flex items-center gap-5 text-[10.5px] font-mono" style={{ color: "var(--cx-mute-2)" }}>
-              <span>pgvector</span>
-              <span>Gemini</span>
-              <span>Supabase</span>
-              <span className="flex items-center gap-1.5">
-                <span className="cx-dot cx-pulse-dot" style={{ background: "var(--cx-ok)" }} />
-                <span>production</span>
-              </span>
-            </div>
-          </DevModeWrapper>
+          <div className="flex items-center gap-5 text-[10.5px] font-mono" style={{ color: "var(--cx-mute-2)" }}>
+            <span>pgvector · BM25 · RRF</span>
+            <span>Gemini</span>
+            <span>Supabase</span>
+            <span className="flex items-center gap-1.5">
+              <span className="cx-dot cx-pulse-dot" style={{ background: "var(--cx-ok)" }} />
+              <span>production</span>
+            </span>
+          </div>
         </footer>
       </div>
     </div>

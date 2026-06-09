@@ -20,7 +20,7 @@ export default async function SessionPage({
 
   const { data: workspaces } = await supabase
     .from("workspaces")
-    .select("id")
+    .select("id, name")
     .eq("owner_id", user.id)
     .order("created_at", { ascending: true })
 
@@ -39,23 +39,30 @@ export default async function SessionPage({
 
   if (!session) redirect("/chat")
 
-  const { data: messages } = await supabase
-    .from("chat_messages")
-    .select("id, role, content, sources")
-    .eq("session_id", session.id)
-    .order("created_at", { ascending: true })
+  const [messagesResult, documentsResult] = await Promise.all([
+    supabase
+      .from("chat_messages")
+      .select("id, role, content, sources, created_at")
+      .eq("session_id", session.id)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("documents")
+      .select("name")
+      .eq("workspace_id", workspace.id)
+      .order("created_at", { ascending: false })
+      .limit(10),
+  ])
 
-  const { count: docCount } = await supabase
-    .from("documents")
-    .select("*", { count: "exact", head: true })
-    .eq("workspace_id", workspace.id)
+  const docNames = documentsResult.data?.map(d => d.name) ?? []
 
   return (
     <ChatWindow
       sessionId={session.id}
       workspaceId={workspace.id}
-      initialMessages={(messages ?? []) as any}
-      hasDocuments={(docCount ?? 0) > 0}
+      workspaceName={workspace.name}
+      docNames={docNames}
+      initialMessages={(messagesResult.data ?? []) as any}
+      hasDocuments={docNames.length > 0}
     />
   )
 }

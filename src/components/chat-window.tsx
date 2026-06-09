@@ -5,7 +5,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from
 import Image from 'next/image'
 import {
   FileText, ArrowUp, Plus,
-  ChevronDown, Sparkles, CheckCircle2, UploadCloud,
+  ChevronDown, Sparkles, CheckCircle2, UploadCloud, Copy, Check, Database,
 } from 'lucide-react'
 import { DynamicGreeting } from '@/components/DynamicGreeting'
 import { uploadDocument } from '@/app/actions'
@@ -19,14 +19,32 @@ type Source = {
   similarity: number
 }
 type ToolEvent = { name: string; status: 'running' | 'done'; count?: number }
-type Message   = { id?: string; role: 'user' | 'assistant'; content: string; sources?: Source[] }
+type Message   = { id?: string; role: 'user' | 'assistant'; content: string; sources?: Source[]; created_at?: string }
 
-const SUGGESTED = [
-  'Summarize the key points',
-  'What are the main topics?',
-  'Explain the core concepts',
-  'Find specific information',
-]
+function buildSuggestedPrompts(docNames: string[]): string[] {
+  if (docNames.length === 0) return [
+    'Summarize the key points',
+    'What are the main topics?',
+    'Explain the core concepts',
+    'Find specific information',
+  ]
+  const first  = docNames[0].replace(/\.(pdf|docx|doc|txt|md|csv)$/i, '')
+  const second = docNames[1]?.replace(/\.(pdf|docx|doc|txt|md|csv)$/i, '')
+  return [
+    `Summarize the key points from "${first}"`,
+    `What are the main topics in "${first}"?`,
+    second
+      ? `Compare "${first}" with "${second}"`
+      : `What conclusions can be drawn from "${first}"?`,
+    'Find specific information across all documents',
+  ]
+}
+
+function formatTime(iso?: string): string {
+  if (!iso) return ''
+  const d = new Date(iso)
+  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}
 
 /* ── Streaming text — per-chunk blur reveal ─────────────────────── */
 function StreamingContent({ content }: { content: string }) {
@@ -57,10 +75,10 @@ function ThinkingOrb({ tools }: { tools: ToolEvent[] }) {
   const isDone  = !running && done.length > 0
 
   const label = running
-    ? (running.name === 'search_documents' ? 'Searching documents\u2026' : 'Searching the web\u2026')
+    ? (running.name === 'search_documents' ? 'Searching documents…' : 'Searching the web…')
     : done.length > 0
       ? `Found ${done.at(-1)?.count ?? 0} sources`
-      : 'Thinking\u2026'
+      : 'Thinking…'
 
   return (
     <motion.div
@@ -80,7 +98,6 @@ function ThinkingOrb({ tools }: { tools: ToolEvent[] }) {
           </motion.div>
         ) : (
           <>
-            {/* Morphing blob */}
             <motion.div
               className="size-5 rounded-full"
               style={{ background: 'var(--cx-accent)' }}
@@ -96,7 +113,6 @@ function ThinkingOrb({ tools }: { tools: ToolEvent[] }) {
               }}
               transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
             />
-            {/* Ambient glow halo */}
             <motion.div
               className="absolute inset-0 rounded-full pointer-events-none"
               style={{ background: 'var(--cx-accent)', filter: 'blur(10px)' }}
@@ -245,6 +261,43 @@ function SourceCitations({ sources }: { sources: Source[] }) {
   )
 }
 
+/* ── Code block with copy button ────────────────────────────────── */
+function CodeBlock({ lang, code }: { lang: string; code: string }) {
+  const [copied, setCopied] = useState(false)
+
+  function handleCopy() {
+    navigator.clipboard.writeText(code)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1800)
+  }
+
+  return (
+    <div className="my-3 rounded-xl overflow-hidden border" style={{ borderColor: 'var(--cx-line)' }}>
+      <div
+        className="px-4 py-1.5 border-b flex items-center justify-between"
+        style={{ background: 'var(--cx-paper-2)', borderColor: 'var(--cx-line)' }}
+      >
+        {lang ? (
+          <span className="cx-rule-label">{lang}</span>
+        ) : (
+          <span />
+        )}
+        <button
+          onClick={handleCopy}
+          className="inline-flex items-center gap-1 text-[11px] font-mono transition-colors duration-150"
+          style={{ color: copied ? 'var(--cx-ok)' : 'var(--cx-mute-2)' }}
+        >
+          {copied ? <Check size={11} /> : <Copy size={11} />}
+          {copied ? 'Copied' : 'Copy'}
+        </button>
+      </div>
+      <pre className="text-[13px] leading-relaxed p-4 overflow-x-auto font-mono" style={{ background: 'var(--cx-ink)', color: '#a5d6a7' }}>
+        <code>{code}</code>
+      </pre>
+    </div>
+  )
+}
+
 /* ── Prompt card — 3D magnetic tilt ────────────────────────────── */
 function PromptCard({
   label, index, onClick,
@@ -309,16 +362,7 @@ function renderMarkdown(text: string) {
       i++
       while (i < lines.length && !lines[i].startsWith('```')) { codeLines.push(lines[i]); i++ }
       elements.push(
-        <div key={k++} className="my-3 rounded-xl overflow-hidden border" style={{ borderColor: 'var(--cx-line)' }}>
-          {lang && (
-            <div className="px-4 py-1.5 border-b cx-rule-label" style={{ background: 'var(--cx-paper-2)', borderColor: 'var(--cx-line)' }}>
-              {lang}
-            </div>
-          )}
-          <pre className="text-[13px] leading-relaxed p-4 overflow-x-auto font-mono" style={{ background: 'var(--cx-ink)', color: '#a5d6a7' }}>
-            <code>{codeLines.join('\n')}</code>
-          </pre>
-        </div>
+        <CodeBlock key={k++} lang={lang} code={codeLines.join('\n')} />
       )
     } else if (line.match(/^[-*•]\s/)) {
       const items: string[] = []
@@ -389,11 +433,15 @@ function inlineFormat(text: string): React.ReactNode {
 export function ChatWindow({
   sessionId,
   workspaceId,
+  workspaceName,
+  docNames = [],
   initialMessages,
   hasDocuments = true,
 }: {
   sessionId: string
   workspaceId: string
+  workspaceName?: string
+  docNames?: string[]
   initialMessages: Message[]
   hasDocuments?: boolean
 }) {
@@ -406,6 +454,8 @@ export function ChatWindow({
   const bottomRef   = useRef<HTMLDivElement>(null)
   const inputRef    = useRef<HTMLTextAreaElement>(null)
   const emptyUploadRef = useRef<HTMLInputElement>(null)
+
+  const SUGGESTED = buildSuggestedPrompts(docNames)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -442,9 +492,10 @@ export function ChatWindow({
     setLoading(true)
     setActiveTools([])
 
+    const now = new Date().toISOString()
     setMessages(prev => [
       ...prev,
-      { role: 'user',      content: query },
+      { role: 'user',      content: query,  created_at: now },
       { role: 'assistant', content: '', sources: [] },
     ])
 
@@ -489,9 +540,10 @@ export function ChatWindow({
                 return msgs
               })
             } else if (event.type === 'done') {
+              const doneTime = new Date().toISOString()
               setMessages(prev => {
                 const msgs = [...prev]
-                msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], sources: event.sources ?? [] }
+                msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], sources: event.sources ?? [], created_at: doneTime }
                 return msgs
               })
               setActiveTools([])
@@ -527,21 +579,36 @@ export function ChatWindow({
         className="flex-shrink-0 flex items-center justify-between h-[50px] px-5 border-b"
         style={{ background: 'var(--cx-paper)', borderColor: 'var(--cx-line)' }}
       >
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 min-w-0">
           <div
             className="size-6 rounded-lg flex items-center justify-center border flex-shrink-0"
             style={{ background: 'var(--cx-accent-wash)', borderColor: 'var(--cx-accent-line)' }}
           >
             <Sparkles size={12} style={{ color: 'var(--cx-accent)' }} />
           </div>
-          <span className="text-[13px] font-semibold" style={{ color: 'var(--cx-ink)' }}>Cortex</span>
-          <span className="text-[11px]" style={{ color: 'var(--cx-mute-2)' }}>·</span>
-          <span className="text-[12px]" style={{ color: 'var(--cx-mute-1)' }}>Document Chat</span>
+          <span className="text-[13px] font-semibold flex-shrink-0" style={{ color: 'var(--cx-ink)' }}>Cortex</span>
+          {workspaceName && (
+            <>
+              <span className="text-[11px] flex-shrink-0" style={{ color: 'var(--cx-mute-2)' }}>·</span>
+              <span className="text-[12px] truncate" style={{ color: 'var(--cx-mute-1)' }}>{workspaceName}</span>
+            </>
+          )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Knowledge base doc count */}
+          {docNames.length > 0 && (
+            <div
+              className="hidden sm:flex items-center gap-1.5 h-6 px-2.5 rounded-full border text-[11px]"
+              style={{ borderColor: 'var(--cx-line)', background: 'var(--cx-paper-2)', color: 'var(--cx-mute-1)' }}
+            >
+              <Database size={10} style={{ color: 'var(--cx-mute-2)' }} />
+              <span className="cx-num">{docNames.length}</span>
+              <span>doc{docNames.length !== 1 ? 's' : ''}</span>
+            </div>
+          )}
           <span className="size-1.5 rounded-full flex-shrink-0" style={{ background: 'var(--cx-ok)' }} />
-          <span className="text-[11.5px] cx-num" style={{ color: 'var(--cx-mute-1)' }}>Gemini Flash</span>
+          <span className="text-[11.5px] cx-num" style={{ color: 'var(--cx-mute-1)' }}>Gemini 2.5 Flash</span>
           <span
             className="hidden sm:block text-[11px] px-1.5 py-0.5 rounded border cx-num"
             style={{ color: 'var(--cx-mute-2)', borderColor: 'var(--cx-line)', background: 'var(--cx-paper-2)' }}
@@ -554,7 +621,7 @@ export function ChatWindow({
       {/* ── Message area ──────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto cx-scroll-thin scroll-smooth">
 
-        {/* Empty state */}
+        {/* Empty state — no documents */}
         <AnimatePresence>
           {isEmpty && !hasDocuments && (
             <motion.div
@@ -632,14 +699,12 @@ export function ChatWindow({
               transition={{ duration: 0.4 }}
               className="relative flex flex-col items-center justify-center min-h-full px-6 py-20 gap-10"
             >
-              {/* Ambient radial glow */}
               <div
                 className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] pointer-events-none"
                 style={{ background: 'radial-gradient(ellipse, rgba(122,31,90,0.07) 0%, transparent 65%)' }}
               />
 
               <div className="relative z-10 flex flex-col items-center gap-5">
-                {/* Floating logo with orbiting ring */}
                 <motion.div
                   animate={{ y: [0, -10, 0] }}
                   transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
@@ -655,14 +720,12 @@ export function ChatWindow({
                   >
                     <Image src="/CortexLogo.png" alt="Cortex" width={36} height={36} className="object-contain" />
                   </div>
-                  {/* Orbiting dashed ring */}
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
                     className="absolute pointer-events-none"
                     style={{ inset: -12, borderRadius: 'calc(1.35rem + 12px)', border: '1px dashed var(--cx-line-2)' }}
                   />
-                  {/* Accent dot that orbits */}
                   <motion.div
                     animate={{ rotate: 360 }}
                     transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
@@ -685,7 +748,7 @@ export function ChatWindow({
                 </motion.div>
               </div>
 
-              {/* Suggested prompts */}
+              {/* Document-aware suggested prompts */}
               <div className="relative z-10 grid grid-cols-2 gap-2.5 w-full max-w-[500px]">
                 {SUGGESTED.map((s, i) => (
                   <PromptCard
@@ -706,6 +769,7 @@ export function ChatWindow({
             <AnimatePresence initial={false}>
               {messages.map((msg, i) => {
                 const isLastAssistant = msg.role === 'assistant' && i === messages.length - 1 && loading
+                const timeStr = formatTime(msg.created_at)
 
                 if (msg.role === 'user') {
                   return (
@@ -714,7 +778,7 @@ export function ChatWindow({
                       initial={{ opacity: 0, y: 12, scale: 0.98 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                      className="flex justify-end"
+                      className="flex flex-col items-end gap-1"
                     >
                       <div
                         className="max-w-[78%] rounded-2xl rounded-tr-md px-5 py-3.5 text-[14.5px] leading-[1.75] whitespace-pre-wrap"
@@ -727,6 +791,11 @@ export function ChatWindow({
                       >
                         {msg.content}
                       </div>
+                      {timeStr && (
+                        <span className="text-[10.5px] cx-num pr-1" style={{ color: 'var(--cx-mute-2)' }}>
+                          {timeStr}
+                        </span>
+                      )}
                     </motion.div>
                   )
                 }
@@ -760,7 +829,6 @@ export function ChatWindow({
                           <Image src="/CortexLogo.png" alt="Cortex" width={15} height={15} className="object-contain opacity-75" />
                         )}
                       </div>
-                      {/* Ripple ring when streaming */}
                       {isLastAssistant && (
                         <motion.div
                           className="absolute inset-0 rounded-full pointer-events-none"
@@ -814,7 +882,6 @@ export function ChatWindow({
                           {isLastAssistant ? (
                             <span className="inline">
                               <StreamingContent content={msg.content} />
-                              {/* Blinking cursor */}
                               <motion.span
                                 animate={{ opacity: [1, 0, 1] }}
                                 transition={{ repeat: Infinity, duration: 0.85, ease: 'easeInOut' }}
@@ -830,10 +897,17 @@ export function ChatWindow({
                         </div>
                       )}
 
-                      {/* Sources */}
-                      {!loading && msg.sources && msg.sources.length > 0 && (
-                        <SourceCitations sources={msg.sources} />
-                      )}
+                      {/* Timestamp + Sources row */}
+                      <div className="flex items-center justify-between">
+                        {!loading && msg.sources && msg.sources.length > 0 && (
+                          <SourceCitations sources={msg.sources} />
+                        )}
+                        {timeStr && !isLastAssistant && (
+                          <span className="text-[10.5px] cx-num ml-auto" style={{ color: 'var(--cx-mute-2)' }}>
+                            {timeStr}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </motion.div>
                 )
@@ -847,7 +921,6 @@ export function ChatWindow({
 
       {/* ── Input bar ─────────────────────────────────────────────── */}
       <div className="flex-shrink-0 relative" style={{ background: 'var(--cx-paper)' }}>
-        {/* Fade gradient above input */}
         <div
           className="absolute -top-10 inset-x-0 h-10 pointer-events-none z-10"
           style={{ background: 'linear-gradient(to bottom, transparent, var(--cx-paper))' }}
@@ -858,7 +931,6 @@ export function ChatWindow({
           style={{ borderColor: 'var(--cx-line)' }}
         >
           <div className="max-w-[720px] mx-auto">
-            {/* Input container with animated glow */}
             <motion.div
               animate={{
                 boxShadow: focused

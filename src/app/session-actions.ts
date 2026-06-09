@@ -16,6 +16,27 @@ export async function createChatSession(workspaceId: string) {
   return { session: data }
 }
 
+export async function renameChatSession(sessionId: string, title: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: "Not authenticated" }
+
+  const trimmed = title.trim().slice(0, 80)
+  if (!trimmed) return { error: "Title cannot be empty" }
+
+  const { data: session } = await supabase
+    .from("chat_sessions")
+    .select("workspace_id, workspaces!inner(owner_id)")
+    .eq("id", sessionId)
+    .single()
+
+  if (!session || (session.workspaces as any)?.owner_id !== user.id) return { error: "Not found" }
+
+  await supabase.from("chat_sessions").update({ title: trimmed }).eq("id", sessionId)
+  revalidatePath("/chat")
+  return { success: true }
+}
+
 export async function deleteChatSession(sessionId: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
