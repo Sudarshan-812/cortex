@@ -273,6 +273,29 @@ Your only job now: decide if a web search would add meaningful value.
           .eq("id", sessionId)
 
         controller.enqueue(sse({ type: "done", sources: allSources }))
+
+        // Follow-up questions — non-blocking, emitted after done
+        try {
+          const followUpModel = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite" })
+          const fuPrompt =
+            `Based on this Q&A, suggest exactly 3 short follow-up questions the user might ask next.\n` +
+            `Return ONLY a JSON array of strings, no markdown, no extra text.\n` +
+            `Example: ["What are the key risks?","How does this compare to X?","Can you elaborate on Y?"]\n\n` +
+            `Question: ${query}\n` +
+            `Answer summary: ${fullText.slice(0, 600)}`
+          const fuResult = await followUpModel.generateContent(fuPrompt)
+          const fuText   = fuResult.response.text().trim()
+          const fuMatch  = fuText.match(/\[[\s\S]*?\]/)
+          if (fuMatch) {
+            const questions: string[] = JSON.parse(fuMatch[0])
+            if (Array.isArray(questions) && questions.length > 0) {
+              controller.enqueue(sse({ type: "follow_ups", questions }))
+            }
+          }
+        } catch (err) {
+          Sentry.captureException(err, { tags: { stage: "follow_ups" }, extra: { sessionId } })
+        }
+
         controller.close()
       } catch (err: any) {
         Sentry.captureException(err, { tags: { stage: "chat_stream" }, extra: { sessionId, workspaceId } })

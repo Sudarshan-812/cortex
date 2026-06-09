@@ -2,14 +2,21 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FileText, ExternalLink, Loader2, Trash2 } from 'lucide-react'
+import { FileText, Loader2, Trash2, Info } from 'lucide-react'
 import { deleteDocument } from '@/app/actions'
 
-type Doc = { id: string; name: string; size_bytes: number; created_at: string }
+type Doc = {
+  id: string
+  name: string
+  size_bytes: number
+  created_at: string
+  summary?: string | null
+  topics?: string[] | null
+}
 
 function formatBytes(bytes: number) {
-  if (bytes < 1024)             return `${bytes} B`
-  if (bytes < 1024 * 1024)      return `${(bytes / 1024).toFixed(1)} KB`
+  if (bytes < 1024)        return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
@@ -21,6 +28,53 @@ function timeAgo(dateStr: string) {
   const hrs = Math.floor(mins / 60)
   if (hrs < 24)  return `${hrs}h ago`
   return `${Math.floor(hrs / 24)}d ago`
+}
+
+function TopicTag({ label }: { label: string }) {
+  return (
+    <span
+      className="inline-flex items-center h-5 px-2 rounded-full text-[10px] font-medium border whitespace-nowrap"
+      style={{ background: 'var(--cx-accent-wash)', borderColor: 'var(--cx-accent-line)', color: 'var(--cx-accent)' }}
+    >
+      {label}
+    </span>
+  )
+}
+
+function SummaryPopover({ summary }: { summary: string }) {
+  const [show, setShow] = useState(false)
+  return (
+    <div className="relative inline-flex">
+      <button
+        onMouseEnter={() => setShow(true)}
+        onMouseLeave={() => setShow(false)}
+        className="size-5 rounded flex items-center justify-center transition-colors"
+        style={{ color: 'var(--cx-mute-2)' }}
+        onFocus={() => setShow(true)}
+        onBlur={() => setShow(false)}
+      >
+        <Info size={12} />
+      </button>
+      <AnimatePresence>
+        {show && (
+          <motion.div
+            initial={{ opacity: 0, y: 4, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 4, scale: 0.97 }}
+            transition={{ duration: 0.18 }}
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-[260px] cx-panel p-3 z-50 pointer-events-none"
+          >
+            <p className="cx-rule-label mb-1.5">Summary</p>
+            <p className="text-[12px] leading-relaxed" style={{ color: 'var(--cx-ink-2)' }}>{summary}</p>
+            <div
+              className="absolute top-full left-1/2 -translate-x-1/2 size-2 rotate-45 border-r border-b"
+              style={{ background: 'var(--cx-surface)', borderColor: 'var(--cx-line)', marginTop: -5 }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
 }
 
 export function DocumentTable({
@@ -49,7 +103,7 @@ export function DocumentTable({
   return (
     <motion.div
       id="documents"
-      className="cx-panel"
+      className="cx-panel overflow-hidden"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
@@ -62,19 +116,23 @@ export function DocumentTable({
         <div>
           <p className="cx-rule-label mb-1">Documents</p>
           <h3 className="text-[15px] font-semibold tracking-tight" style={{ color: 'var(--cx-ink)' }}>
-            {docs.length} files ·{' '}
-            <span className="cx-num" style={{ color: 'var(--cx-mute-1)' }}>{storageMB} MB</span>{' '}
-            indexed
+            {docs.length} file{docs.length !== 1 ? 's' : ''} ·{' '}
+            <span className="cx-num" style={{ color: 'var(--cx-mute-1)' }}>{storageMB} MB</span>{' '}indexed
           </h3>
         </div>
       </div>
 
       {/* Column headers */}
       <div
-        className="grid gap-4 px-6 py-2.5 cx-rule-label"
-        style={{ gridTemplateColumns: '1fr 80px 110px 180px', background: 'var(--cx-paper)' }}
+        className="grid gap-4 px-6 py-2.5 cx-rule-label border-b"
+        style={{
+          gridTemplateColumns: '2fr 1fr 80px 100px 120px',
+          background: 'var(--cx-paper)',
+          borderColor: 'var(--cx-line)',
+        }}
       >
         <span>Name</span>
+        <span>Topics</span>
         <span>Size</span>
         <span>Added</span>
         <span>Status</span>
@@ -86,6 +144,7 @@ export function DocumentTable({
           {docs.map((doc, idx) => {
             const isDeleting   = deletingId === doc.id
             const isConfirming = confirmId  === doc.id
+            const topics = Array.isArray(doc.topics) ? doc.topics : []
 
             return (
               <motion.div
@@ -93,19 +152,36 @@ export function DocumentTable({
                 layout
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: isDeleting ? 0.3 : 1, y: 0 }}
-                exit={{ opacity: 0, height: 0, paddingTop: 0, paddingBottom: 0, overflow: 'hidden', transition: { duration: 0.22, ease: 'easeInOut' } }}
-                transition={{ duration: 0.3, delay: idx * 0.04, ease: [0.16, 1, 0.3, 1] }}
+                exit={{ opacity: 0, height: 0, paddingTop: 0, paddingBottom: 0, overflow: 'hidden', transition: { duration: 0.22 } }}
+                transition={{ duration: 0.3, delay: idx * 0.03, ease: [0.16, 1, 0.3, 1] }}
                 className="grid gap-4 items-center px-6 py-3.5 group cursor-default transition-colors duration-150"
-                style={{ gridTemplateColumns: '1fr 80px 110px 180px' }}
+                style={{ gridTemplateColumns: '2fr 1fr 80px 100px 120px' }}
                 onMouseEnter={e => (e.currentTarget.style.background = 'var(--cx-paper)')}
                 onMouseLeave={e => (e.currentTarget.style.background = '')}
               >
-                {/* Name */}
-                <div className="flex items-center gap-3 min-w-0">
+                {/* Name + summary icon */}
+                <div className="flex items-center gap-2.5 min-w-0">
                   <FileText size={14} className="flex-shrink-0" style={{ color: 'var(--cx-mute-2)' }} />
                   <span className="text-[13px] font-medium truncate" style={{ color: 'var(--cx-ink)' }}>
                     {doc.name}
                   </span>
+                  {doc.summary && <SummaryPopover summary={doc.summary} />}
+                </div>
+
+                {/* Topics */}
+                <div className="flex items-center gap-1 overflow-hidden">
+                  {topics.length > 0 ? (
+                    <>
+                      {topics.slice(0, 2).map(t => <TopicTag key={t} label={t} />)}
+                      {topics.length > 2 && (
+                        <span className="text-[10px] cx-num flex-shrink-0" style={{ color: 'var(--cx-mute-2)' }}>
+                          +{topics.length - 2}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="text-[11px]" style={{ color: 'var(--cx-mute-2)' }}>—</span>
+                  )}
                 </div>
 
                 {/* Size */}
@@ -130,31 +206,24 @@ export function DocumentTable({
                         transition={{ duration: 0.15 }}
                         className="flex items-center gap-1.5"
                       >
-                        <motion.button
-                          whileTap={{ scale: 0.9 }}
+                        <button
                           onClick={() => handleDelete(doc.id)}
-                          className="text-[11px] font-bold transition-colors"
+                          className="text-[11px] font-bold"
                           style={{ color: 'var(--cx-err)' }}
                         >
                           Delete
-                        </motion.button>
+                        </button>
                         <span style={{ color: 'var(--cx-line-2)' }}>·</span>
-                        <motion.button
-                          whileTap={{ scale: 0.9 }}
+                        <button
                           onClick={() => setConfirmId(null)}
                           className="text-[11px] font-medium"
                           style={{ color: 'var(--cx-mute-2)' }}
                         >
                           Cancel
-                        </motion.button>
+                        </button>
                       </motion.div>
                     ) : isDeleting ? (
-                      <motion.span
-                        key="loading"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                      >
+                      <motion.span key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                         <Loader2 size={12} className="animate-spin" style={{ color: 'var(--cx-mute-2)' }} />
                       </motion.span>
                     ) : (
@@ -162,17 +231,15 @@ export function DocumentTable({
                         key="actions"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
                         className="flex items-center gap-2"
                       >
                         <span
                           className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-[.14em] rounded-full px-2 py-0.5 border"
                           style={{ color: 'var(--cx-ok)', background: 'var(--cx-ok-wash)', borderColor: 'rgba(60,110,71,0.2)' }}
                         >
-                          Embedded
+                          {doc.summary ? 'Analysed' : 'Embedded'}
                         </span>
-                        <motion.button
-                          whileTap={{ scale: 0.88 }}
+                        <button
                           onClick={() => setConfirmId(doc.id)}
                           className="opacity-0 group-hover:opacity-100 size-6 rounded flex items-center justify-center transition-all"
                           style={{ color: 'var(--cx-mute-2)' }}
@@ -180,16 +247,7 @@ export function DocumentTable({
                           onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'var(--cx-mute-2)' }}
                         >
                           <Trash2 size={11} />
-                        </motion.button>
-                        <motion.button
-                          whileTap={{ scale: 0.88 }}
-                          className="opacity-0 group-hover:opacity-100 size-6 rounded flex items-center justify-center transition-all"
-                          style={{ color: 'var(--cx-mute-2)' }}
-                          onMouseEnter={e => { e.currentTarget.style.background = 'var(--cx-paper-2)'; e.currentTarget.style.color = 'var(--cx-ink)' }}
-                          onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'var(--cx-mute-2)' }}
-                        >
-                          <ExternalLink size={11} />
-                        </motion.button>
+                        </button>
                       </motion.div>
                     )}
                   </AnimatePresence>

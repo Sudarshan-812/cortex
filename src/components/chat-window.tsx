@@ -5,10 +5,11 @@ import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from
 import Image from 'next/image'
 import {
   FileText, ArrowUp, Plus,
-  ChevronDown, Sparkles, CheckCircle2, UploadCloud, Copy, Check, Database,
+  ChevronDown, Sparkles, CheckCircle2, UploadCloud, Copy, Check, Database, ExternalLink, Download,
 } from 'lucide-react'
 import { DynamicGreeting } from '@/components/DynamicGreeting'
 import { uploadDocument } from '@/app/actions'
+import { DocumentReaderPanel } from '@/components/DocumentReaderPanel'
 
 /* ── Types ──────────────────────────────────────────────────────── */
 type Source = {
@@ -38,6 +39,42 @@ function buildSuggestedPrompts(docNames: string[]): string[] {
       : `What conclusions can be drawn from "${first}"?`,
     'Find specific information across all documents',
   ]
+}
+
+function exportConversation(messages: Message[], workspaceName?: string) {
+  const date = new Date().toISOString().slice(0, 10)
+  const lines: string[] = [
+    `# Cortex Conversation Export`,
+    `**Workspace:** ${workspaceName ?? 'Unknown'}`,
+    `**Exported:** ${date}`,
+    `---`,
+    '',
+  ]
+  for (const msg of messages) {
+    if (!msg.content) continue
+    if (msg.role === 'user') {
+      lines.push(`## You`)
+      lines.push(msg.content)
+    } else {
+      lines.push(`## Cortex`)
+      lines.push(msg.content)
+      if (msg.sources && msg.sources.length > 0) {
+        lines.push('')
+        lines.push(`**Sources:**`)
+        for (const src of msg.sources) {
+          lines.push(`- ${src.document_name} (${src.similarity}% relevance)`)
+        }
+      }
+    }
+    lines.push('')
+  }
+  const blob = new Blob([lines.join('\n')], { type: 'text/markdown' })
+  const url  = URL.createObjectURL(blob)
+  const a    = document.createElement('a')
+  a.href     = url
+  a.download = `cortex-export-${date}.md`
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 function formatTime(iso?: string): string {
@@ -167,7 +204,7 @@ function RelevanceBar({ score }: { score: number }) {
   )
 }
 
-function SourceCitations({ sources }: { sources: Source[] }) {
+function SourceCitations({ sources, onViewChunk }: { sources: Source[]; onViewChunk: (id: string) => void }) {
   const [open, setOpen] = useState(false)
 
   return (
@@ -250,6 +287,16 @@ function SourceCitations({ sources }: { sources: Source[] }) {
                     >
                       &ldquo;{src.content}&rdquo;
                     </p>
+                    <button
+                      onClick={e => { e.stopPropagation(); onViewChunk(src.chunk_id) }}
+                      className="mt-2.5 inline-flex items-center gap-1 text-[11px] font-medium transition-colors duration-150"
+                      style={{ color: 'var(--cx-mute-2)' }}
+                      onMouseEnter={e => (e.currentTarget.style.color = 'var(--cx-accent)')}
+                      onMouseLeave={e => (e.currentTarget.style.color = 'var(--cx-mute-2)')}
+                    >
+                      <ExternalLink size={10} />
+                      View passage
+                    </button>
                   </div>
                 </motion.div>
               ))}
@@ -449,7 +496,9 @@ export function ChatWindow({
   const [input,       setInput]       = useState('')
   const [loading,     setLoading]     = useState(false)
   const [activeTools, setActiveTools] = useState<ToolEvent[]>([])
-  const [focused,     setFocused]     = useState(false)
+  const [followUps,     setFollowUps]     = useState<string[]>([])
+  const [activeChunkId, setActiveChunkId] = useState<string | null>(null)
+  const [focused,       setFocused]       = useState(false)
   const [uploading,   setUploading]   = useState(false)
   const bottomRef   = useRef<HTMLDivElement>(null)
   const inputRef    = useRef<HTMLTextAreaElement>(null)
@@ -491,6 +540,7 @@ export function ChatWindow({
     if (inputRef.current) inputRef.current.style.height = 'auto'
     setLoading(true)
     setActiveTools([])
+    setFollowUps([])
 
     const now = new Date().toISOString()
     setMessages(prev => [
@@ -547,6 +597,8 @@ export function ChatWindow({
                 return msgs
               })
               setActiveTools([])
+            } else if (event.type === 'follow_ups') {
+              if (Array.isArray(event.questions)) setFollowUps(event.questions)
             } else if (event.type === 'error') {
               setMessages(prev => {
                 const msgs = [...prev]
@@ -606,6 +658,18 @@ export function ChatWindow({
               <span className="cx-num">{docNames.length}</span>
               <span>doc{docNames.length !== 1 ? 's' : ''}</span>
             </div>
+          )}
+          {messages.length > 0 && (
+            <button
+              onClick={() => exportConversation(messages, workspaceName)}
+              title="Export conversation as Markdown"
+              className="size-7 rounded-lg flex items-center justify-center transition-colors"
+              style={{ color: 'var(--cx-mute-2)' }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--cx-paper-2)'; e.currentTarget.style.color = 'var(--cx-ink)' }}
+              onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'var(--cx-mute-2)' }}
+            >
+              <Download size={13} />
+            </button>
           )}
           <span className="size-1.5 rounded-full flex-shrink-0" style={{ background: 'var(--cx-ok)' }} />
           <span className="text-[11.5px] cx-num" style={{ color: 'var(--cx-mute-1)' }}>Gemini 2.5 Flash</span>
@@ -900,7 +964,10 @@ export function ChatWindow({
                       {/* Timestamp + Sources row */}
                       <div className="flex items-center justify-between">
                         {!loading && msg.sources && msg.sources.length > 0 && (
-                          <SourceCitations sources={msg.sources} />
+                          <SourceCitations
+                            sources={msg.sources}
+                            onViewChunk={id => setActiveChunkId(id)}
+                          />
                         )}
                         {timeStr && !isLastAssistant && (
                           <span className="text-[10.5px] cx-num ml-auto" style={{ color: 'var(--cx-mute-2)' }}>
@@ -916,8 +983,60 @@ export function ChatWindow({
           </div>
         )}
 
+        {/* Follow-up question chips */}
+        <AnimatePresence>
+          {followUps.length > 0 && !loading && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              className="max-w-[720px] mx-auto px-6 pb-6"
+            >
+              <p className="cx-rule-label mb-2.5">Suggested questions</p>
+              <div className="flex flex-col gap-2">
+                {followUps.map((q, i) => (
+                  <motion.button
+                    key={q}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.08, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    onClick={() => handleSubmit(q)}
+                    className="group text-left flex items-center gap-3 px-4 py-2.5 rounded-xl border text-[13px] font-medium transition-all duration-200"
+                    style={{
+                      borderColor: 'var(--cx-line)',
+                      background: 'var(--cx-paper-2)',
+                      color: 'var(--cx-ink-2)',
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.borderColor = 'var(--cx-accent-line)'
+                      e.currentTarget.style.background  = 'var(--cx-accent-wash)'
+                      e.currentTarget.style.color       = 'var(--cx-accent)'
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.borderColor = 'var(--cx-line)'
+                      e.currentTarget.style.background  = 'var(--cx-paper-2)'
+                      e.currentTarget.style.color       = 'var(--cx-ink-2)'
+                    }}
+                  >
+                    <Sparkles size={11} className="flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity" />
+                    <span className="flex-1">{q}</span>
+                    <ArrowUp size={11} className="flex-shrink-0 opacity-0 group-hover:opacity-60 transition-opacity -rotate-45" />
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <div ref={bottomRef} className="h-6" />
       </div>
+
+      {/* ── Citation side panel ───────────────────────────────────── */}
+      <DocumentReaderPanel
+        chunkId={activeChunkId}
+        onClose={() => setActiveChunkId(null)}
+      />
 
       {/* ── Input bar ─────────────────────────────────────────────── */}
       <div className="flex-shrink-0 relative" style={{ background: 'var(--cx-paper)' }}>

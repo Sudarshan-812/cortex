@@ -60,6 +60,12 @@ CREATE INDEX IF NOT EXISTS document_chunks_content_fts_idx
   ON document_chunks USING gin(to_tsvector('english', content));
 
 -- ============================================================
+-- DOCUMENT INTELLIGENCE (run as a migration if tables already exist)
+-- ============================================================
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS summary TEXT;
+ALTER TABLE documents ADD COLUMN IF NOT EXISTS topics  JSONB DEFAULT '[]'::jsonb;
+
+-- ============================================================
 -- CHAT TABLES
 -- ============================================================
 

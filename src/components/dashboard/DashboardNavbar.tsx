@@ -10,6 +10,7 @@ import {
   LogOut, Plus, Loader2, X, BellOff,
 } from 'lucide-react'
 import { switchWorkspace, createNewWorkspace, deleteWorkspace } from '@/app/actions'
+import { SearchModal } from '@/components/SearchModal'
 
 type Workspace = { id: string; name: string; created_at: string }
 type User = { name: string; email: string; avatarUrl?: string }
@@ -25,6 +26,7 @@ export function DashboardNavbar({
 }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
   const [bellOpen, setBellOpen] = useState(false)
   const [switching, setSwitching] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
@@ -69,12 +71,12 @@ export function DashboardNavbar({
     function handleCmdK(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
-        router.push('/chat')
+        setSearchOpen(o => !o)
       }
     }
     document.addEventListener('keydown', handleCmdK)
     return () => document.removeEventListener('keydown', handleCmdK)
-  }, [router])
+  }, [])
 
   async function handleSwitch(id: string) {
     if (id === workspace.id || switching) return
@@ -105,6 +107,7 @@ export function DashboardNavbar({
   const navLink = "px-3 py-1.5 text-[13px] font-medium rounded-lg transition-colors text-[color:var(--cx-mute-1)] hover:text-[color:var(--cx-ink)]"
 
   return (
+    <>
     <header
       className="fixed top-0 inset-x-0 z-40 backdrop-blur-xl border-b"
       style={{ background: 'rgba(246,245,242,0.88)', borderColor: 'var(--cx-line)' }}
@@ -120,8 +123,8 @@ export function DashboardNavbar({
           <nav className="hidden md:flex items-center gap-1">
             <Link href="/dashboard" className={`${navLink} font-semibold`} style={{ color: 'var(--cx-ink)' }}>Overview</Link>
             <Link href="/dashboard#documents" className={navLink}>Documents</Link>
+            <Link href="/dashboard/analytics" className={navLink}>Analytics</Link>
             <Link href="/chat" className={navLink}>Agents</Link>
-            <Link href="/docs" className={navLink}>Docs</Link>
           </nav>
         </div>
 
@@ -153,10 +156,12 @@ export function DashboardNavbar({
             {devMode ? 'Dev Mode' : 'User View'}
           </button>
 
-          <Link
-            href="/chat"
+          <button
+            onClick={() => setSearchOpen(true)}
             className="hidden sm:flex items-center gap-2 h-8 pl-2.5 pr-2 rounded-lg border transition-colors text-[12px]"
             style={{ borderColor: 'var(--cx-line)', background: 'rgba(255,255,255,0.5)', color: 'var(--cx-mute-1)' }}
+            onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--cx-accent-line)')}
+            onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--cx-line)')}
           >
             <Search size={13} />
             <span className="mr-6">Search documents</span>
@@ -166,7 +171,7 @@ export function DashboardNavbar({
             >
               ⌘K
             </kbd>
-          </Link>
+          </button>
 
           <div className="relative" ref={bellRef}>
             <button
@@ -368,5 +373,12 @@ export function DashboardNavbar({
         </div>
       </div>
     </header>
+
+    <SearchModal
+      open={searchOpen}
+      onClose={() => setSearchOpen(false)}
+      workspaceId={workspace.id}
+    />
+    </>
   )
 }

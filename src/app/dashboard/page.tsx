@@ -17,6 +17,7 @@ import { SystemStatus }     from "@/components/dashboard/SystemStatus"
 import { AgentsCard }       from "@/components/dashboard/AgentsCard"
 import { DocumentTable }    from "@/components/dashboard/DocumentTable"
 import { DevModeWrapper }   from "@/components/dashboard/DevModeWrapper"
+import { KnowledgeGraph }   from "@/components/dashboard/KnowledgeGraph"
 
 export default async function Dashboard() {
   const supabase = await createClient()
@@ -86,7 +87,7 @@ export default async function Dashboard() {
   /* ── Fetch data ───────────────────────────────────────────────── */
   const { data: documents, count: docCount } = await supabase
     .from("documents")
-    .select("id, name, size_bytes, created_at", { count: "exact" })
+    .select("id, name, size_bytes, created_at, summary, topics", { count: "exact" })
     .eq("workspace_id", workspace.id)
     .order("created_at", { ascending: false })
 
@@ -306,6 +307,13 @@ export default async function Dashboard() {
             </div>
           </div>
         </DevModeWrapper>
+
+        {/* Knowledge graph — shown when at least one doc has topics */}
+        {documents && documents.length > 0 && (
+          <div className="mb-6">
+            <KnowledgeGraph documents={documents} />
+          </div>
+        )}
 
         {/* Document table */}
         {documents && documents.length > 0 && (

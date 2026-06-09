@@ -193,6 +193,30 @@ export async function uploadDocument(formData: FormData) {
 
     const { error: vectorError } = await supabase.from("document_chunks").insert(chunksData)
     if (vectorError) throw new Error(`Vector DB error: ${vectorError.message}`)
+
+    // Auto-summary: generate 2-sentence summary + 5 topics in the background
+    try {
+      const summaryModel = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite" })
+      const preview = rawText.slice(0, 4000)
+      const summaryResult = await summaryModel.generateContent(
+        `Summarize this document in exactly 2 sentences, then list exactly 5 key topics as a JSON array of short strings.\n` +
+        `Return ONLY valid JSON: {"summary":"...","topics":["topic1","topic2","topic3","topic4","topic5"]}\n\nDocument:\n${preview}`
+      )
+      const text = summaryResult.response.text()
+      const jsonMatch = text.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0])
+        if (parsed.summary && Array.isArray(parsed.topics)) {
+          await supabase
+            .from("documents")
+            .update({ summary: parsed.summary, topics: parsed.topics })
+            .eq("id", docData.id)
+        }
+      }
+    } catch (err) {
+      // Non-fatal — summary is enhancement only
+      Sentry.captureException(err, { tags: { stage: "auto_summary" }, extra: { docId: docData.id } })
+    }
   } catch (err: any) {
     Sentry.captureException(err, { tags: { stage: "upload_pipeline" }, extra: { workspaceId, fileName: file.name } })
     return { error: `Processing error: ${err.message ?? String(err)}` }
