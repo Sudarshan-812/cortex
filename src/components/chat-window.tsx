@@ -80,7 +80,7 @@ function exportConversation(messages: Message[], workspaceName?: string) {
 function formatTime(iso?: string): string {
   if (!iso) return ''
   const d = new Date(iso)
-  return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
 }
 
 /* ── Streaming text — per-chunk blur reveal ─────────────────────── */
@@ -555,7 +555,12 @@ export function ChatWindow({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId, workspaceId, query }),
       })
-      if (!response.ok) throw new Error(`Request failed: ${response.status}`)
+      if (!response.ok) {
+        const body = await response.text().catch(() => '')
+        if (response.status === 429) throw new Error('rate_limit')
+        if (response.status === 401) throw new Error('unauthorized')
+        throw new Error(`${response.status}: ${body || 'Unknown error'}`)
+      }
 
       const reader  = response.body!.getReader()
       const decoder = new TextDecoder()
@@ -609,10 +614,17 @@ export function ChatWindow({
           } catch { /* ignore parse errors */ }
         }
       }
-    } catch {
+    } catch (err: any) {
+      const msg = err?.message ?? ''
+      const content =
+        msg === 'rate_limit'
+          ? '**Rate limit reached.** You can send 20 messages per minute. Wait a moment and try again.'
+          : msg === 'unauthorized'
+          ? '**Session expired.** Please refresh the page and try again.'
+          : `**Something went wrong.** ${msg ? `(${msg})` : 'Please try again.'}`
       setMessages(prev => {
         const msgs = [...prev]
-        msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], content: '**Something went wrong.** Please try again.' }
+        msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], content }
         return msgs
       })
     } finally {
@@ -856,7 +868,7 @@ export function ChatWindow({
                         {msg.content}
                       </div>
                       {timeStr && (
-                        <span className="text-[10.5px] cx-num pr-1" style={{ color: 'var(--cx-mute-2)' }}>
+                        <span className="text-[10.5px] cx-num pr-1" style={{ color: 'var(--cx-mute-2)' }} suppressHydrationWarning>
                           {timeStr}
                         </span>
                       )}
@@ -970,7 +982,7 @@ export function ChatWindow({
                           />
                         )}
                         {timeStr && !isLastAssistant && (
-                          <span className="text-[10.5px] cx-num ml-auto" style={{ color: 'var(--cx-mute-2)' }}>
+                          <span className="text-[10.5px] cx-num ml-auto" style={{ color: 'var(--cx-mute-2)' }} suppressHydrationWarning>
                             {timeStr}
                           </span>
                         )}

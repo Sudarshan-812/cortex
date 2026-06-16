@@ -18,7 +18,13 @@ export default async function LandingPage({
   }
 
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  let user = null
+  try {
+    const { data } = await supabase.auth.getUser()
+    user = data.user
+  } catch {
+    // stale refresh token — treat as logged out
+  }
 
   const isLoggedIn = !!user;
   const avatarUrl = user?.user_metadata?.avatar_url || undefined;

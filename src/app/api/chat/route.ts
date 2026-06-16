@@ -124,16 +124,21 @@ export async function POST(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return new Response("Unauthorized", { status: 401 })
 
-  const { success, limit, remaining, reset } = await ratelimit.limit(user.id)
-  if (!success) {
-    return new Response("Too many requests", {
-      status: 429,
-      headers: {
-        "X-RateLimit-Limit": String(limit),
-        "X-RateLimit-Remaining": String(remaining),
-        "X-RateLimit-Reset": String(reset),
-      },
-    })
+  try {
+    const { success, limit, remaining, reset } = await ratelimit.limit(user.id)
+    if (!success) {
+      return new Response("Too many requests", {
+        status: 429,
+        headers: {
+          "X-RateLimit-Limit": String(limit),
+          "X-RateLimit-Remaining": String(remaining),
+          "X-RateLimit-Reset": String(reset),
+        },
+      })
+    }
+  } catch (rlErr) {
+    Sentry.captureException(rlErr, { tags: { stage: "ratelimit" } })
+    // fail open — let the request through if Redis is unavailable
   }
 
   const { data: workspace } = await supabase
