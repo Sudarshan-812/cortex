@@ -4,7 +4,7 @@ import { useRef } from "react";
 import { motion, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight, Plus, FileText, MessageSquare, ExternalLink } from "lucide-react";
-import { MagneticButton } from "./MagneticButton";
+import { MagneticButton } from "@/components/MagneticButton";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 

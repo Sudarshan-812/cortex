@@ -89,7 +89,7 @@ export function ProgressBar() {
           {/* Leading glow tip */}
           <div
             className="absolute right-0 top-1/2 -translate-y-1/2 w-20 h-[3.5px] blur-[2px]"
-            style={{ background: 'linear-gradient(to left, rgba(162,60,122,0.7), transparent)' }}
+            style={{ background: 'linear-gradient(to left, rgba(161,98,7,0.7), transparent)' }}
           />
         </motion.div>
       )}

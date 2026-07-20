@@ -18,7 +18,7 @@ export function DynamicGreeting() {
   return (
     <div className="flex flex-col items-center gap-1.5 text-center">
       <h2
-        className="text-[1.75rem] font-semibold tracking-tight leading-tight"
+        className="cx-display text-[1.9rem] font-bold tracking-[-0.02em] leading-tight"
         style={{ color: 'var(--cx-ink)' }}
       >
         {greeting.text},{' '}

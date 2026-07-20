@@ -110,9 +110,12 @@ export function DocumentTable({
     >
       {/* Header */}
       <div
-        className="flex items-center justify-between px-6 py-4 border-b"
+        className="flex items-center gap-3 px-6 py-4 border-b"
         style={{ borderColor: 'var(--cx-line)' }}
       >
+        <div className="cx-icon-chip cx-icon-chip-sm">
+          <FileText size={15} />
+        </div>
         <div>
           <p className="cx-rule-label mb-1">Documents</p>
           <h3 className="text-[15px] font-semibold tracking-tight" style={{ color: 'var(--cx-ink)' }}>

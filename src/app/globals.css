@@ -136,10 +136,10 @@
   --cx-mute-2:       #97958f;
   --cx-line:         #e8e5dd;
   --cx-line-2:       #d9d5cb;
-  --cx-accent:       #7a1f5a;
-  --cx-accent-2:     #a23c7a;
-  --cx-accent-wash:  #f6eaf1;
-  --cx-accent-line:  #ecd5e2;
+  --cx-accent:       #a16207;
+  --cx-accent-2:     #b8790a;
+  --cx-accent-wash:  #f5ecd9;
+  --cx-accent-line:  #e8d5ac;
   --cx-ok:           #3c6e47;
   --cx-ok-wash:      #eaf0e7;
   --cx-warn:         #a06a1a;
@@ -231,12 +231,12 @@
   background-size: 200% 100%;
   color: #fdfcfa;
   border: 1px solid transparent;
-  box-shadow: 0 8px 30px -10px rgba(122,31,90,0.45);
+  box-shadow: 0 8px 30px -10px rgba(161,98,7,0.45);
   transition: transform .18s cubic-bezier(.2,.7,.2,1), box-shadow .18s cubic-bezier(.2,.7,.2,1), background-position .5s ease;
 }
 .lp-btn-accent:hover {
   background-position: 100% 50%;
-  box-shadow: 0 14px 38px -10px rgba(122,31,90,0.5);
+  box-shadow: 0 14px 38px -10px rgba(161,98,7,0.5);
   transform: translateY(-1px);
 }
 .lp-btn-ghost {
@@ -317,6 +317,11 @@
   font-family: var(--font-instrument-serif, Georgia, serif);
   letter-spacing: -0.01em;
 }
+.cx-display {
+  font-family: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  font-optical-sizing: auto;
+  letter-spacing: -0.02em;
+}
 .cx-rule-label {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   letter-spacing: .22em;
@@ -330,10 +335,34 @@
   border: 1px solid var(--cx-line);
   border-radius: 14px;
   box-shadow:
-    0 1px 0 rgba(255,255,255,0.6) inset,
-    0 1px 2px rgba(10,10,10,0.025),
-    0 8px 30px -12px rgba(10,10,10,0.06);
+    0 1px 0 rgba(255,255,255,0.7) inset,
+    0 1px 2px rgba(10,10,10,0.03),
+    0 10px 26px -14px rgba(10,10,10,0.09),
+    0 28px 56px -28px rgba(10,10,10,0.1);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
 }
+.cx-panel-hover:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.7) inset,
+    0 2px 4px rgba(10,10,10,0.04),
+    0 18px 34px -14px rgba(10,10,10,0.14),
+    0 36px 64px -24px rgba(10,10,10,0.14);
+}
+.cx-icon-chip {
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid var(--cx-accent-line);
+  background: var(--cx-accent-wash);
+  color: var(--cx-accent);
+}
+.cx-icon-chip-sm  { width: 32px; height: 32px; }
+.cx-icon-chip-md  { width: 36px; height: 36px; }
+.cx-icon-chip-lg  { width: 40px; height: 40px; }
+.cx-icon-chip-xl  { width: 56px; height: 56px; border-radius: 16px; }
 .cx-panel-flat {
   background: var(--cx-surface);
   border: 1px solid var(--cx-line);
@@ -404,9 +433,9 @@
 @keyframes cx-fade-up { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
 .cx-fade-up { animation: cx-fade-up .42s cubic-bezier(.2,.7,.2,1) both; }
 @keyframes cx-chunk-flash {
-  0%   { background-color: var(--cx-surface); box-shadow: 0 0 0 0 rgba(122,31,90,0); }
-  15%  { background-color: var(--cx-accent-wash); box-shadow: 0 0 0 6px rgba(122,31,90,0.06); }
-  100% { background-color: var(--cx-surface); box-shadow: 0 0 0 0 rgba(122,31,90,0); }
+  0%   { background-color: var(--cx-surface); box-shadow: 0 0 0 0 rgba(161,98,7,0); }
+  15%  { background-color: var(--cx-accent-wash); box-shadow: 0 0 0 6px rgba(161,98,7,0.06); }
+  100% { background-color: var(--cx-surface); box-shadow: 0 0 0 0 rgba(161,98,7,0); }
 }
 .cx-chunk-flash { animation: cx-chunk-flash 2s cubic-bezier(.4,0,.2,1) 1; }
 @keyframes cx-flow { to { stroke-dashoffset: -100; } }
@@ -429,7 +458,7 @@
 .cx-scroll-thin::-webkit-scrollbar-track { background: transparent; }
 .cx-grain {
   background-image:
-    radial-gradient(ellipse 70% 50% at 50% -5%, rgba(122,31,90,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 50% -5%, rgba(161,98,7,0.04) 0%, transparent 60%),
     url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='7'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.03 0'/></filter><rect width='120' height='120' filter='url(%23n)' opacity='0.65'/></svg>");
 }
 
@@ -457,5 +486,5 @@
   background: var(--cx-accent-wash);
   border-color: var(--cx-accent-line);
   color: var(--cx-ink);
-  box-shadow: 0 4px 20px rgba(122,31,90,0.09);
+  box-shadow: 0 4px 20px rgba(161,98,7,0.09);
 }

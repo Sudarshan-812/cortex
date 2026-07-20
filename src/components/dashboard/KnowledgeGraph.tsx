@@ -140,7 +140,7 @@ export function KnowledgeGraph({ documents }: { documents: Doc[] }) {
   return (
     <motion.div
       id="knowledge-graph"
-      className="cx-panel overflow-hidden"
+      className="cx-panel cx-panel-hover overflow-hidden"
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
@@ -154,11 +154,8 @@ export function KnowledgeGraph({ documents }: { documents: Doc[] }) {
         onMouseLeave={e => (e.currentTarget.style.background = '')}
       >
         <div className="flex items-center gap-3">
-          <div
-            className="size-8 rounded-lg flex items-center justify-center border"
-            style={{ background: 'var(--cx-accent-wash)', borderColor: 'var(--cx-accent-line)' }}
-          >
-            <Network size={14} style={{ color: 'var(--cx-accent)' }} />
+          <div className="cx-icon-chip cx-icon-chip-sm">
+            <Network size={15} />
           </div>
           <div className="text-left">
             <p className="cx-rule-label mb-0.5">Knowledge Graph</p>

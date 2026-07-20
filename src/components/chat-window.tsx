@@ -10,6 +10,8 @@ import {
 import { DynamicGreeting } from '@/components/DynamicGreeting'
 import { uploadDocument } from '@/app/actions'
 import { DocumentReaderPanel } from '@/components/DocumentReaderPanel'
+import { ChatTopBar } from '@/components/ChatTopBar'
+import { MagneticButton } from '@/components/MagneticButton'
 
 /* ── Types ──────────────────────────────────────────────────────── */
 type Source = {
@@ -255,7 +257,7 @@ function SourceCitations({ sources, onViewChunk }: { sources: Source[]; onViewCh
                   onMouseEnter={e => {
                     e.currentTarget.style.borderColor = 'var(--cx-accent-line)'
                     e.currentTarget.style.background  = 'var(--cx-accent-wash)'
-                    e.currentTarget.style.boxShadow   = '0 2px 14px rgba(122,31,90,0.09)'
+                    e.currentTarget.style.boxShadow   = '0 2px 14px rgba(161,98,7,0.09)'
                   }}
                   onMouseLeave={e => {
                     e.currentTarget.style.borderColor = 'var(--cx-line)'
@@ -639,60 +641,39 @@ export function ChatWindow({
     <div className="flex flex-col h-full" style={{ background: 'var(--cx-paper)' }}>
 
       {/* ── Top bar ───────────────────────────────────────────────── */}
-      <div
-        className="flex-shrink-0 flex items-center justify-between h-[50px] px-5 border-b"
-        style={{ background: 'var(--cx-paper)', borderColor: 'var(--cx-line)' }}
-      >
-        <div className="flex items-center gap-2.5 min-w-0">
+      <ChatTopBar subtitle={workspaceName}>
+        {/* Knowledge base doc count */}
+        {docNames.length > 0 && (
           <div
-            className="size-6 rounded-lg flex items-center justify-center border flex-shrink-0"
-            style={{ background: 'var(--cx-accent-wash)', borderColor: 'var(--cx-accent-line)' }}
+            className="hidden sm:flex items-center gap-1.5 h-6 px-2.5 rounded-full border text-[11px]"
+            style={{ borderColor: 'var(--cx-line)', background: 'var(--cx-paper-2)', color: 'var(--cx-mute-1)' }}
           >
-            <Sparkles size={12} style={{ color: 'var(--cx-accent)' }} />
+            <Database size={10} style={{ color: 'var(--cx-mute-2)' }} />
+            <span className="cx-num">{docNames.length}</span>
+            <span>doc{docNames.length !== 1 ? 's' : ''}</span>
           </div>
-          <span className="text-[13px] font-semibold flex-shrink-0" style={{ color: 'var(--cx-ink)' }}>Cortex</span>
-          {workspaceName && (
-            <>
-              <span className="text-[11px] flex-shrink-0" style={{ color: 'var(--cx-mute-2)' }}>·</span>
-              <span className="text-[12px] truncate" style={{ color: 'var(--cx-mute-1)' }}>{workspaceName}</span>
-            </>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Knowledge base doc count */}
-          {docNames.length > 0 && (
-            <div
-              className="hidden sm:flex items-center gap-1.5 h-6 px-2.5 rounded-full border text-[11px]"
-              style={{ borderColor: 'var(--cx-line)', background: 'var(--cx-paper-2)', color: 'var(--cx-mute-1)' }}
-            >
-              <Database size={10} style={{ color: 'var(--cx-mute-2)' }} />
-              <span className="cx-num">{docNames.length}</span>
-              <span>doc{docNames.length !== 1 ? 's' : ''}</span>
-            </div>
-          )}
-          {messages.length > 0 && (
-            <button
-              onClick={() => exportConversation(messages, workspaceName)}
-              title="Export conversation as Markdown"
-              className="size-7 rounded-lg flex items-center justify-center transition-colors"
-              style={{ color: 'var(--cx-mute-2)' }}
-              onMouseEnter={e => { e.currentTarget.style.background = 'var(--cx-paper-2)'; e.currentTarget.style.color = 'var(--cx-ink)' }}
-              onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'var(--cx-mute-2)' }}
-            >
-              <Download size={13} />
-            </button>
-          )}
-          <span className="size-1.5 rounded-full flex-shrink-0" style={{ background: 'var(--cx-ok)' }} />
-          <span className="text-[11.5px] cx-num" style={{ color: 'var(--cx-mute-1)' }}>Gemini 2.5 Flash</span>
-          <span
-            className="hidden sm:block text-[11px] px-1.5 py-0.5 rounded border cx-num"
-            style={{ color: 'var(--cx-mute-2)', borderColor: 'var(--cx-line)', background: 'var(--cx-paper-2)' }}
+        )}
+        {messages.length > 0 && (
+          <button
+            onClick={() => exportConversation(messages, workspaceName)}
+            title="Export conversation as Markdown"
+            className="size-7 rounded-lg flex items-center justify-center transition-colors"
+            style={{ color: 'var(--cx-mute-2)' }}
+            onMouseEnter={e => { e.currentTarget.style.background = 'var(--cx-paper-2)'; e.currentTarget.style.color = 'var(--cx-ink)' }}
+            onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'var(--cx-mute-2)' }}
           >
-            Hybrid RAG
-          </span>
-        </div>
-      </div>
+            <Download size={13} />
+          </button>
+        )}
+        <span className="size-1.5 rounded-full flex-shrink-0" style={{ background: 'var(--cx-ok)' }} />
+        <span className="text-[11.5px] cx-num" style={{ color: 'var(--cx-mute-1)' }}>Gemini 2.5 Flash</span>
+        <span
+          className="hidden sm:block text-[11px] px-1.5 py-0.5 rounded border cx-num"
+          style={{ color: 'var(--cx-mute-2)', borderColor: 'var(--cx-line)', background: 'var(--cx-paper-2)' }}
+        >
+          Hybrid RAG
+        </span>
+      </ChatTopBar>
 
       {/* ── Message area ──────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto cx-scroll-thin scroll-smooth">
@@ -709,7 +690,7 @@ export function ChatWindow({
             >
               <div
                 className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[480px] h-[480px] pointer-events-none"
-                style={{ background: 'radial-gradient(ellipse, rgba(122,31,90,0.05) 0%, transparent 65%)' }}
+                style={{ background: 'radial-gradient(ellipse, rgba(161,98,7,0.05) 0%, transparent 65%)' }}
               />
               <input
                 ref={emptyUploadRef}
@@ -726,13 +707,13 @@ export function ChatWindow({
                   style={{
                     background: 'var(--cx-accent-wash)',
                     borderColor: 'var(--cx-accent-line)',
-                    boxShadow: '0 8px 32px rgba(122,31,90,0.1)',
+                    boxShadow: '0 8px 32px rgba(161,98,7,0.1)',
                   }}
                 >
                   <UploadCloud size={32} style={{ color: 'var(--cx-accent)' }} />
                 </motion.div>
                 <div>
-                  <p className="text-[18px] font-semibold tracking-tight" style={{ color: 'var(--cx-ink)' }}>
+                  <p className="cx-display text-[19px] font-bold tracking-[-0.01em]" style={{ color: 'var(--cx-ink)' }}>
                     Upload your first document to get started
                   </p>
                   <p className="mt-2 text-[13.5px]" style={{ color: 'var(--cx-mute-1)' }}>
@@ -777,7 +758,7 @@ export function ChatWindow({
             >
               <div
                 className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] pointer-events-none"
-                style={{ background: 'radial-gradient(ellipse, rgba(122,31,90,0.07) 0%, transparent 65%)' }}
+                style={{ background: 'radial-gradient(ellipse, rgba(161,98,7,0.07) 0%, transparent 65%)' }}
               />
 
               <div className="relative z-10 flex flex-col items-center gap-5">
@@ -791,7 +772,7 @@ export function ChatWindow({
                     style={{
                       background: 'var(--cx-surface)',
                       borderColor: 'var(--cx-line)',
-                      boxShadow: '0 8px 32px rgba(122,31,90,0.12), 0 1px 0 rgba(255,255,255,0.85) inset',
+                      boxShadow: '0 8px 32px rgba(161,98,7,0.12), 0 1px 0 rgba(255,255,255,0.85) inset',
                     }}
                   >
                     <Image src="/CortexLogo.png" alt="Cortex" width={36} height={36} className="object-contain" />
@@ -908,7 +889,7 @@ export function ChatWindow({
                       {isLastAssistant && (
                         <motion.div
                           className="absolute inset-0 rounded-full pointer-events-none"
-                          style={{ border: '2px solid rgba(122,31,90,0.4)' }}
+                          style={{ border: '2px solid rgba(161,98,7,0.4)' }}
                           animate={{ scale: [1, 1.6], opacity: [0.7, 0] }}
                           transition={{ duration: 1.3, repeat: Infinity, ease: 'easeOut' }}
                         />
@@ -1066,9 +1047,9 @@ export function ChatWindow({
               animate={{
                 boxShadow: focused
                   ? [
-                      '0 0 0 3px var(--cx-accent-wash), 0 4px 24px rgba(122,31,90,0.09)',
-                      '0 0 0 4.5px var(--cx-accent-wash), 0 8px 32px rgba(122,31,90,0.16)',
-                      '0 0 0 3px var(--cx-accent-wash), 0 4px 24px rgba(122,31,90,0.09)',
+                      '0 0 0 3px var(--cx-accent-wash), 0 4px 24px rgba(161,98,7,0.09)',
+                      '0 0 0 4.5px var(--cx-accent-wash), 0 8px 32px rgba(161,98,7,0.16)',
+                      '0 0 0 3px var(--cx-accent-wash), 0 4px 24px rgba(161,98,7,0.09)',
                     ]
                   : '0 2px 8px rgba(10,10,10,0.04)',
               }}
@@ -1114,23 +1095,25 @@ export function ChatWindow({
                   <span className="text-[11px] font-medium hidden sm:block" style={{ color: 'var(--cx-mute-2)' }}>
                     Shift ↵ new line
                   </span>
-                  <motion.button
-                    whileTap={{ scale: 0.82 }}
-                    whileHover={input.trim() && !loading ? { scale: 1.07 } : {}}
-                    onClick={() => handleSubmit()}
-                    disabled={loading || !input.trim()}
-                    className="size-8 rounded-full flex items-center justify-center transition-all duration-200"
-                    style={{
-                      background: input.trim() && !loading ? 'var(--cx-ink)' : 'var(--cx-line)',
-                      color:      input.trim() && !loading ? '#f9f8f5'       : 'var(--cx-mute-2)',
-                      cursor:     input.trim() && !loading ? 'pointer'       : 'not-allowed',
-                      boxShadow:  input.trim() && !loading
-                        ? '0 4px 14px rgba(10,10,10,0.28)'
-                        : 'none',
-                    }}
-                  >
-                    <ArrowUp size={15} strokeWidth={2.25} />
-                  </motion.button>
+                  <MagneticButton strength={input.trim() && !loading ? 0.4 : 0}>
+                    <motion.button
+                      whileTap={{ scale: 0.82 }}
+                      whileHover={input.trim() && !loading ? { scale: 1.07 } : {}}
+                      onClick={() => handleSubmit()}
+                      disabled={loading || !input.trim()}
+                      className="size-8 rounded-full flex items-center justify-center transition-all duration-200"
+                      style={{
+                        background: input.trim() && !loading ? 'var(--cx-ink)' : 'var(--cx-line)',
+                        color:      input.trim() && !loading ? '#f9f8f5'       : 'var(--cx-mute-2)',
+                        cursor:     input.trim() && !loading ? 'pointer'       : 'not-allowed',
+                        boxShadow:  input.trim() && !loading
+                          ? '0 4px 14px rgba(10,10,10,0.28)'
+                          : 'none',
+                      }}
+                    >
+                      <ArrowUp size={15} strokeWidth={2.25} />
+                    </motion.button>
+                  </MagneticButton>
                 </div>
               </div>
             </motion.div>

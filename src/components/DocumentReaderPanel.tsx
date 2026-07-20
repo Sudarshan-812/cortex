@@ -140,7 +140,7 @@ export function DocumentReaderPanel({
                         style={{
                           background:   isTarget ? 'var(--cx-accent-wash)' : 'var(--cx-paper)',
                           borderColor:  isTarget ? 'var(--cx-accent-line)'  : 'var(--cx-line)',
-                          boxShadow:    isTarget ? '0 2px 16px rgba(122,31,90,0.1)' : 'none',
+                          boxShadow:    isTarget ? '0 2px 16px rgba(161,98,7,0.1)' : 'none',
                         }}
                       >
                         {isTarget && (

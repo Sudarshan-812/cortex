@@ -1,19 +1,15 @@
 import { createClient } from '@/utils/supabase/server'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
-import Link from 'next/link'
-import { ArrowLeft, BarChart2 } from 'lucide-react'
-import { DashboardNavbar } from '@/components/dashboard/DashboardNavbar'
+import { BarChart2 } from 'lucide-react'
 import { AnalyticsDashboard } from '@/components/dashboard/AnalyticsDashboard'
+import { PageHeader } from '@/components/dashboard/PageHeader'
+import { buildDailyTimeline } from '@/lib/timeline'
 
 export default async function AnalyticsPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
-
-  const avatarUrl = user.user_metadata?.avatar_url || undefined
-  const userName  = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split('@')[0] || 'User'
-  const userEmail = user.email ?? ''
 
   const { data: workspaces } = await supabase
     .from('workspaces')
@@ -80,43 +76,14 @@ export default async function AnalyticsPage() {
   }))
 
   return (
-    <div className="min-h-screen cx-grain" style={{ background: 'var(--cx-paper)', color: 'var(--cx-ink)' }}>
-      <DashboardNavbar
-        workspace={workspace}
-        workspaces={workspaces ?? []}
-        user={{ name: userName, email: userEmail, avatarUrl }}
-      />
-
-      <div className="max-w-[1240px] mx-auto px-6 pt-[88px] pb-16">
-        {/* Header */}
-        <div className="flex items-center justify-between gap-4 mb-8">
-          <div>
-            <div className="flex items-center gap-2.5 mb-4">
-              <Link
-                href="/dashboard"
-                className="inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors"
-                style={{ color: 'var(--cx-mute-1)' }}
-              >
-                <ArrowLeft size={12} />
-                Dashboard
-              </Link>
-            </div>
-            <div className="flex items-center gap-3">
-              <div
-                className="size-10 rounded-xl flex items-center justify-center border"
-                style={{ background: 'var(--cx-accent-wash)', borderColor: 'var(--cx-accent-line)' }}
-              >
-                <BarChart2 size={18} style={{ color: 'var(--cx-accent)' }} />
-              </div>
-              <div>
-                <p className="cx-rule-label mb-0.5">Analytics</p>
-                <h1 className="text-[24px] font-semibold tracking-tight" style={{ color: 'var(--cx-ink)' }}>
-                  {workspace.name}
-                </h1>
-              </div>
-            </div>
-          </div>
-        </div>
+    <div className="min-h-screen">
+      <div className="max-w-[1240px] mx-auto px-6 md:px-8 pt-10 pb-16">
+        <PageHeader
+          icon={<BarChart2 size={18} style={{ color: 'var(--cx-accent)' }} />}
+          eyebrow="Analytics"
+          title={workspace.name}
+          description="Usage across documents, queries, and chat sessions in this workspace."
+        />
 
         <AnalyticsDashboard
           docTimeline={docTimeline}
@@ -130,24 +97,4 @@ export default async function AnalyticsPage() {
       </div>
     </div>
   )
-}
-
-function buildDailyTimeline(dates: string[]): { date: string; count: number }[] {
-  if (dates.length === 0) return []
-  const counts = new Map<string, number>()
-  for (const d of dates) {
-    const day = d.slice(0, 10)
-    counts.set(day, (counts.get(day) ?? 0) + 1)
-  }
-  const sorted = [...counts.entries()].sort((a, b) => a[0].localeCompare(b[0]))
-  // Fill gaps with 0s for a continuous chart
-  if (sorted.length < 2) return sorted.map(([date, count]) => ({ date, count }))
-  const result: { date: string; count: number }[] = []
-  const start = new Date(sorted[0][0])
-  const end   = new Date(sorted[sorted.length - 1][0])
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-    const key = d.toISOString().slice(0, 10)
-    result.push({ date: key, count: counts.get(key) ?? 0 })
-  }
-  return result
 }

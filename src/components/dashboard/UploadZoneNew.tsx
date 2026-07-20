@@ -171,8 +171,16 @@ export function UploadZoneNew({ workspaceId }: { workspaceId: string }) {
   }
 
   return (
-    <div className="cx-panel overflow-hidden flex flex-col">
-      <div className="flex items-center justify-between px-5 pt-5 pb-3">
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      className="cx-panel cx-panel-hover overflow-hidden flex flex-col h-full"
+    >
+      <div className="flex items-center gap-3 px-5 pt-5 pb-3">
+        <div className="cx-icon-chip cx-icon-chip-sm">
+          <UploadCloud size={15} />
+        </div>
         <div>
           <p className="cx-rule-label mb-1">Ingest</p>
           <h3 className="text-[14.5px] font-semibold tracking-tight" style={{ color: 'var(--cx-ink)' }}>
@@ -235,6 +243,6 @@ export function UploadZoneNew({ workspaceId }: { workspaceId: string }) {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </motion.div>
   )
 }

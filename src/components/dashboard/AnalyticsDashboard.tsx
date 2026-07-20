@@ -17,8 +17,8 @@ type Props = {
   totalSessions:  number
 }
 
-const ACCENT   = '#7a1f5a'
-const ACCENT_L = 'rgba(122,31,90,0.12)'
+const ACCENT   = '#a16207'
+const ACCENT_L = 'rgba(161,98,7,0.12)'
 const OK       = '#3c6e47'
 const OK_L     = 'rgba(60,110,71,0.12)'
 

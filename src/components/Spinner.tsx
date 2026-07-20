@@ -44,7 +44,7 @@ export function Spinner({ size = 48 }: { size?: number }) {
             strokeLinecap="round"
             strokeDasharray={`${arc} ${gap}`}
             strokeDashoffset={circ * 0.25}
-            style={{ filter: 'drop-shadow(0 0 3px rgba(122,31,90,0.45))' }}
+            style={{ filter: 'drop-shadow(0 0 3px rgba(161,98,7,0.45))' }}
           />
         </svg>
       </motion.div>

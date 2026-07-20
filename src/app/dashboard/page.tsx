@@ -3,30 +3,19 @@ import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Search, UploadCloud, ChevronRight, Sparkles, FileText, MessageSquare, Zap } from "lucide-react"
+import { Search, UploadCloud, FileText, MessageSquare, Zap } from "lucide-react"
 
-import { DashboardNavbar }  from "@/components/dashboard/DashboardNavbar"
+import { MagneticButton }   from "@/components/MagneticButton"
 import { MetricsGrid }      from "@/components/dashboard/MetricsGrid"
-import { PipelineViz }      from "@/components/dashboard/PipelineViz"
-import { ChatDemo }         from "@/components/dashboard/ChatDemo"
 import { UploadZoneNew }    from "@/components/dashboard/UploadZoneNew"
-import { SystemStatus }     from "@/components/dashboard/SystemStatus"
-import { AgentsCard }       from "@/components/dashboard/AgentsCard"
 import { DocumentTable }    from "@/components/dashboard/DocumentTable"
-import { DevModeWrapper }   from "@/components/dashboard/DevModeWrapper"
 import { KnowledgeGraph }   from "@/components/dashboard/KnowledgeGraph"
+import { buildDailyTimeline } from "@/lib/timeline"
 
 export default async function Dashboard() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/login")
-
-  const avatarUrl = user.user_metadata?.avatar_url || undefined
-  const userName  = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "User"
-  const userEmail = user.email ?? ""
 
   const { data: workspaces } = await supabase
     .from("workspaces")
@@ -65,7 +54,7 @@ export default async function Dashboard() {
             <div className="mb-6">
               <Image src="/CortexLogo.png" alt="Cortex" width={40} height={40} className="object-contain" />
             </div>
-            <h1 className="text-2xl font-semibold tracking-tight mb-1" style={{ color: "var(--cx-ink)" }}>
+            <h1 className="cx-display text-2xl font-bold tracking-[-0.01em] mb-1" style={{ color: "var(--cx-ink)" }}>
               Initialize Cortex
             </h1>
             <p className="text-sm mb-8" style={{ color: "var(--cx-mute-1)" }}>
@@ -73,10 +62,21 @@ export default async function Dashboard() {
             </p>
             <form action={initWorkspace} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="workspaceName" className="text-sm font-medium">Workspace Name</Label>
-                <Input name="workspaceName" id="workspaceName" placeholder="e.g., Acme Legal Docs" required className="h-11 rounded-xl" />
+                <label htmlFor="workspaceName" className="text-sm font-medium" style={{ color: "var(--cx-ink-2)" }}>
+                  Workspace Name
+                </label>
+                <input
+                  name="workspaceName" id="workspaceName" placeholder="e.g., Acme Legal Docs" required
+                  className="w-full h-11 rounded-xl border px-4 text-sm outline-none transition-colors"
+                  style={{ borderColor: "var(--cx-line)", background: "var(--cx-surface)", color: "var(--cx-ink)" }}
+                />
               </div>
-              <Button type="submit" className="w-full h-11 rounded-xl font-semibold">Deploy Workspace</Button>
+              <button
+                type="submit"
+                className="cx-btn-ink w-full h-11 rounded-xl font-semibold text-[14px]"
+              >
+                Deploy Workspace
+              </button>
             </form>
           </div>
         </div>
@@ -96,24 +96,28 @@ export default async function Dashboard() {
     ? await supabase.from("document_chunks").select("*", { count: "exact", head: true }).in("document_id", docIds)
     : { count: 0 }
 
-  const { count: sessionCount } = await supabase
+  const { data: sessions, count: sessionCount } = await supabase
     .from("chat_sessions")
-    .select("*", { count: "exact", head: true })
+    .select("id, created_at", { count: "exact" })
     .eq("workspace_id", workspace.id)
 
   const totalBytes = documents?.reduce((s, d) => s + (d.size_bytes ?? 0), 0) ?? 0
   const storageMB  = Math.round(totalBytes / (1024 * 1024))
   const isEmpty    = (docCount ?? 0) === 0
 
-  return (
-    <div className="min-h-screen cx-grain" style={{ background: "var(--cx-paper)", color: "var(--cx-ink)" }}>
-      <DashboardNavbar
-        workspace={workspace}
-        workspaces={workspaces}
-        user={{ name: userName, email: userEmail, avatarUrl }}
-      />
+  // Real timelines from actual created_at timestamps — no fake/hardcoded data.
+  const docsTimeline     = buildDailyTimeline((documents ?? []).map(d => d.created_at).reverse())
+  const sessionsTimeline = buildDailyTimeline((sessions ?? []).map(s => s.created_at))
 
-      <div className="max-w-[1240px] mx-auto px-6 pt-[88px] pb-16">
+  const now = Date.now()
+  const weekMs = 7 * 24 * 60 * 60 * 1000
+  const docsThisWeek     = (documents ?? []).filter(d => now - new Date(d.created_at).getTime() < weekMs).length
+  const sessionsThisWeek = (sessions ?? []).filter(s => now - new Date(s.created_at).getTime() < weekMs).length
+  const hasKnowledgeGraph = (documents ?? []).some(d => Array.isArray(d.topics) && d.topics.length > 0)
+
+  return (
+    <div className="min-h-screen">
+      <div className="max-w-[1240px] mx-auto px-6 md:px-8 pt-10 pb-16">
 
         {/* Editorial header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
@@ -127,13 +131,12 @@ export default async function Dashboard() {
               </span>
             </div>
             <h1
-              className="text-[44px] md:text-[52px] font-semibold tracking-[-0.03em] leading-[1.02] cx-fade-up"
+              className="cx-display text-[36px] md:text-[44px] font-bold tracking-[-0.03em] leading-[1.02] cx-fade-up"
               style={{ color: "var(--cx-ink)" }}
             >
               {workspace.name}
               <span className="cx-serif italic font-normal" style={{ color: "var(--cx-mute-1)" }}>.</span>
             </h1>
-            {/* Always-visible stats — visible to all users */}
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13.5px]">
               <span style={{ color: "var(--cx-mute-1)" }}>
                 <span className="cx-num font-semibold" style={{ color: "var(--cx-ink-2)" }}>{docCount ?? 0}</span>
@@ -159,9 +162,11 @@ export default async function Dashboard() {
             >
               <UploadCloud size={13} /> Upload
             </a>
-            <Link href="/chat" className="cx-btn-ink h-9 px-4 rounded-full text-[12.5px] font-medium flex items-center gap-1.5">
-              <Search size={13} /> Query knowledge base
-            </Link>
+            <MagneticButton strength={0.3}>
+              <Link href="/chat" className="cx-btn-ink h-9 px-4 rounded-full text-[12.5px] font-medium flex items-center gap-1.5">
+                <Search size={13} /> Query knowledge base
+              </Link>
+            </MagneticButton>
           </div>
         </div>
 
@@ -172,29 +177,26 @@ export default async function Dashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               {[
                 {
-                  icon: <FileText size={18} />,
+                  icon: <FileText size={16} />,
                   step: "01",
                   title: "Upload your documents",
                   desc: "Add PDFs, Word docs, spreadsheets, or plain text. Cortex accepts files up to 50 MB.",
                 },
                 {
-                  icon: <Zap size={18} />,
+                  icon: <Zap size={16} />,
                   step: "02",
                   title: "Cortex processes them",
                   desc: "Your documents are split into semantic chunks, embedded with Gemini, and indexed for hybrid search.",
                 },
                 {
-                  icon: <MessageSquare size={18} />,
+                  icon: <MessageSquare size={16} />,
                   step: "03",
                   title: "Ask questions, get cited answers",
                   desc: "Query in plain English. Cortex retrieves the most relevant sections and cites every source.",
                 },
               ].map(({ icon, step, title, desc }) => (
                 <div key={step} className="flex gap-4">
-                  <div
-                    className="size-9 rounded-xl flex items-center justify-center flex-shrink-0 border"
-                    style={{ background: "var(--cx-accent-wash)", borderColor: "var(--cx-accent-line)", color: "var(--cx-accent)" }}
-                  >
+                  <div className="cx-icon-chip cx-icon-chip-md">
                     {icon}
                   </div>
                   <div>
@@ -208,110 +210,33 @@ export default async function Dashboard() {
           </div>
         )}
 
-        {/* Metrics grid — DEV ONLY */}
-        <DevModeWrapper>
-          <MetricsGrid docs={docCount ?? 0} embeddings={chunkCount ?? 0} storageMB={storageMB} sessions={sessionCount ?? 0} />
-        </DevModeWrapper>
+        {/* Real metrics — computed from actual workspace data */}
+        {!isEmpty && (
+          <MetricsGrid
+            docs={docCount ?? 0}
+            embeddings={chunkCount ?? 0}
+            storageMB={storageMB}
+            sessions={sessionCount ?? 0}
+            docsTrend={docsThisWeek > 0 ? `+${docsThisWeek} this week` : undefined}
+            docsSpark={docsTimeline.map(d => d.count)}
+            sessionsTrend={sessionsThisWeek > 0 ? `+${sessionsThisWeek} this week` : undefined}
+            sessionsSpark={sessionsTimeline.map(d => d.count)}
+          />
+        )}
 
-        {/* RAG pipeline visualization — DEV ONLY */}
-        <DevModeWrapper>
-          <PipelineViz />
-        </DevModeWrapper>
-
-        {/* Chat demo + System status — DEV ONLY */}
-        <DevModeWrapper>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6">
-            <div className="lg:col-span-2">
-              <ChatDemo />
+        {/* Upload zone + knowledge graph — paired side by side on desktop */}
+        {hasKnowledgeGraph ? (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-6 items-stretch">
+            <div className="lg:col-span-5" id="upload-zone">
+              <UploadZoneNew workspaceId={workspace.id} />
             </div>
-            <div className="flex flex-col gap-5">
-              <SystemStatus />
-            </div>
-          </div>
-        </DevModeWrapper>
-
-        {/* Upload zone — always visible */}
-        <div className="mb-6" id="upload-zone">
-          <UploadZoneNew workspaceId={workspace.id} />
-        </div>
-
-        {/* Agents + Recent queries + CTA — DEV ONLY */}
-        <DevModeWrapper>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-6">
-            <AgentsCard />
-
-            <div className="cx-panel p-5">
-              <div className="flex items-center justify-between mb-4">
-                <p className="cx-rule-label">Documents</p>
-                <span className="cx-num text-[10.5px]" style={{ color: "var(--cx-mute-2)" }}>
-                  {Math.min(4, docCount ?? 0)}
-                </span>
-              </div>
-              {documents && documents.length > 0 ? (
-                <div className="space-y-0.5 -mx-1.5">
-                  {documents.slice(0, 4).map(doc => (
-                    <Link
-                      key={doc.id}
-                      href="/chat"
-                      className="flex items-center gap-2.5 px-1.5 py-2 rounded-md"
-                      style={{ color: "var(--cx-ink-2)" }}
-                    >
-                      <Search size={12} className="flex-shrink-0" style={{ color: "var(--cx-mute-2)" }} />
-                      <span className="text-[12.5px] truncate">
-                        {doc.name.replace(/\.(pdf|docx|doc|txt|md|csv)$/i, "")}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-[12.5px]" style={{ color: "var(--cx-mute-2)" }}>No documents yet.</p>
-              )}
-            </div>
-
-            {/* Dark editorial CTA */}
-            <div
-              className="cx-panel p-6 relative overflow-hidden flex flex-col justify-between"
-              style={{
-                background: "linear-gradient(145deg, var(--cx-ink) 0%, #151515 100%)",
-                borderColor: "var(--cx-ink-2)",
-                color: "#f2f0eb",
-              }}
-            >
-              <div
-                className="absolute -top-20 -right-20 size-56 rounded-full pointer-events-none"
-                style={{ background: "radial-gradient(circle, rgba(162,60,122,0.35) 0%, transparent 70%)" }}
-              />
-              <div className="relative z-10">
-                <span
-                  className="inline-flex items-center gap-2 px-2 py-0.5 rounded-full border text-[10px] font-medium uppercase tracking-[.18em]"
-                  style={{ borderColor: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.7)" }}
-                >
-                  <Sparkles size={10} /> New
-                </span>
-                <h3 className="text-[19px] font-semibold tracking-tight mt-4 leading-tight">
-                  Spin up a new agent
-                  <span className="cx-serif italic font-normal" style={{ color: "#d5a8c2" }}>.</span>
-                </h3>
-                <p className="text-[12.5px] mt-2 leading-relaxed" style={{ color: "rgba(242,240,235,0.55)" }}>
-                  Define a goal and tools — Cortex will retrieve, re-rank, and synthesize with citations.
-                </p>
-              </div>
-              <Link
-                href="/chat"
-                className="relative z-10 mt-5 inline-flex items-center gap-1.5 text-[12.5px] font-medium group"
-                style={{ color: "#f2f0eb" }}
-              >
-                Create agent
-                <ChevronRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
-              </Link>
+            <div className="lg:col-span-7">
+              <KnowledgeGraph documents={documents!} />
             </div>
           </div>
-        </DevModeWrapper>
-
-        {/* Knowledge graph — shown when at least one doc has topics */}
-        {documents && documents.length > 0 && (
-          <div className="mb-6">
-            <KnowledgeGraph documents={documents} />
+        ) : (
+          <div className="mb-6" id="upload-zone">
+            <UploadZoneNew workspaceId={workspace.id} />
           </div>
         )}
 
@@ -324,8 +249,10 @@ export default async function Dashboard() {
             className="cx-panel p-10 text-center border-dashed"
             style={{ borderStyle: "dashed" }}
           >
-            <UploadCloud size={28} className="mx-auto mb-3" style={{ color: "var(--cx-mute-2)" }} />
-            <p className="text-[14px] font-medium mb-1" style={{ color: "var(--cx-mute-1)" }}>
+            <div className="cx-icon-chip cx-icon-chip-xl mx-auto mb-4">
+              <UploadCloud size={22} />
+            </div>
+            <p className="cx-display text-[16px] font-bold tracking-[-0.01em] mb-1" style={{ color: "var(--cx-ink)" }}>
               No documents yet
             </p>
             <p className="text-[12.5px] mb-4" style={{ color: "var(--cx-mute-2)" }}>

@@ -341,7 +341,7 @@ export function ChatSidebar({
                     style={{
                       top: '20%', bottom: '20%',
                       width: 2,
-                      background: '#d5a8c2',
+                      background: '#d9a441',
                     }}
                     transition={{ type: 'spring', stiffness: 420, damping: 30 }}
                   />
@@ -350,7 +350,7 @@ export function ChatSidebar({
                 <MessageSquare
                   size={13}
                   className="flex-shrink-0"
-                  style={{ color: isActive ? '#d5a8c2' : 'var(--cx-mute-2)' }}
+                  style={{ color: isActive ? '#d9a441' : 'var(--cx-mute-2)' }}
                 />
                 {!collapsed && (
                   <>
