@@ -3,9 +3,9 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { MagneticButton } from "./MagneticButton";
 
 const ease = [0.16, 1, 0.3, 1] as const;
-const spring = { type: "spring" as const, stiffness: 380, damping: 22 };
 
 const stagger = {
   hidden: {},
@@ -22,40 +22,17 @@ interface CTAProps {
 
 export function CTA({ isLoggedIn = false }: CTAProps) {
   return (
-    <section className="relative z-10 max-w-[1200px] mx-auto px-6 pb-20">
+    <section className="lp-font relative z-10 max-w-[1200px] mx-auto px-6 pb-20">
       <motion.div
         initial={{ opacity: 0, y: 32 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-80px" }}
         transition={{ duration: 0.65, ease }}
-        className="relative overflow-hidden rounded-[2rem] px-10 py-16 text-center"
-        style={{
-          background: 'rgba(255,255,255,0.12)',
-          backdropFilter: 'blur(28px) saturate(160%)',
-          WebkitBackdropFilter: 'blur(28px) saturate(160%)',
-          border: '1px solid rgba(255,255,255,0.28)',
-          boxShadow: '0 8px 40px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.4)',
-        }}
+        className="lp-panel relative overflow-hidden rounded-[2rem] px-10 py-16 text-center"
       >
         {/* Soft inner highlight */}
         <div className="absolute inset-0 pointer-events-none rounded-[2rem]"
-          style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 0%, rgba(255,255,255,0.18), transparent)' }} />
-
-        {/* Slowly rotating outer ring */}
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ repeat: Infinity, duration: 42, ease: "linear" }}
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] rounded-full border border-dashed pointer-events-none"
-          style={{ borderColor: 'rgba(0,0,0,0.07)' }}
-        />
-
-        {/* Counter-rotating inner ring */}
-        <motion.div
-          animate={{ rotate: -360 }}
-          transition={{ repeat: Infinity, duration: 28, ease: "linear" }}
-          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] h-[320px] rounded-full border pointer-events-none"
-          style={{ borderColor: 'rgba(0,0,0,0.05)' }}
-        />
+          style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 0%, rgba(161,98,7,0.08), transparent)' }} />
 
         {/* Staggered content */}
         <motion.div
@@ -66,40 +43,28 @@ export function CTA({ isLoggedIn = false }: CTAProps) {
           className="relative z-10 flex flex-col items-center gap-5"
         >
           <motion.h2 variants={item}
-            className="text-3xl md:text-[2.6rem] font-semibold tracking-tight leading-[1.1] max-w-lg"
-            style={{ color: 'var(--cx-ink)' }}>
-            Your knowledge base is one upload away.
+            className="lp-display text-4xl md:text-[3.2rem] font-medium tracking-tight leading-[1.08] max-w-lg"
+            style={{ color: 'var(--lp-ink)' }}>
+            Your knowledge base is <span className="lp-gradient-text">one upload away.</span>
           </motion.h2>
 
           <motion.p variants={item}
             className="text-[15px] max-w-sm leading-relaxed"
-            style={{ color: 'var(--cx-ink)' }}>
+            style={{ color: 'var(--lp-mute-1)' }}>
             Drop in your PDFs and start asking questions in seconds. No setup, no config — just answers.
           </motion.p>
 
           <motion.div variants={item} className="mt-2 flex flex-col sm:flex-row items-center gap-3">
-            <motion.div
-              whileHover={{ scale: 1.03, y: -2 }}
-              whileTap={{ scale: 0.97 }}
-              transition={spring}
-            >
+            <MagneticButton>
               <Link
                 href={isLoggedIn ? "/dashboard" : "/login"}
-                className="group inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full font-semibold text-[15px] transition-all"
-                style={{
-                  background: 'var(--cx-ink)',
-                  color: '#f9f8f5',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  boxShadow: '0 8px 28px rgba(10,10,10,0.28), 0 1px 0 rgba(255,255,255,0.06) inset',
-                }}
-                onMouseEnter={e => (e.currentTarget.style.boxShadow = '0 14px 36px rgba(10,10,10,0.38), 0 1px 0 rgba(255,255,255,0.06) inset')}
-                onMouseLeave={e => (e.currentTarget.style.boxShadow = '0 8px 28px rgba(10,10,10,0.28), 0 1px 0 rgba(255,255,255,0.06) inset')}
+                className="lp-btn-accent group inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full font-semibold text-[15px]"
               >
                 {isLoggedIn ? "Open Dashboard" : "Get Started — It's Free"}
                 <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform duration-200" />
               </Link>
-            </motion.div>
-            <span className="text-[12px]" style={{ color: 'rgba(10,10,10,0.75)' }}>
+            </MagneticButton>
+            <span className="text-[12px]" style={{ color: 'var(--lp-mute-2)' }}>
               No setup · No config · Just upload and ask
             </span>
           </motion.div>

@@ -24,7 +24,39 @@
       "Bash(cat src/app/auth/signout/route.ts)",
       "Bash(python *)",
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\mrsud\\\\OneDrive\\\\Desktop\\\\Cortex\\\\cortex\" -Force)",
-      "Bash(Select-Object Name)"
+      "Bash(Select-Object Name)",
+      "Skill(run)",
+      "Bash(timeout 60 bash -c 'until curl -sf http://localhost:3000 >/dev/null; do sleep 1; done')",
+      "Bash(curl -s http://localhost:3000 -o /tmp/landing.html)",
+      "Read(//tmp/**)",
+      "Bash(npx --no-install playwright --version)",
+      "Bash(lsof -ti:3000 -sTCP:LISTEN)",
+      "Bash(xargs -r kill)",
+      "Bash(netstat -ano)",
+      "Bash(powershell -NoProfile -Command \"Get-Process -Id 18312,21856 -ErrorAction SilentlyContinue | Select-Object Id,ProcessName,Path,StartTime | Format-List\")",
+      "Bash(powershell -NoProfile -Command \"Stop-Process -Id 18312 -Force\")",
+      "Bash(npm ls *)",
+      "Bash(where ui-ux-pro-max-cli *)",
+      "Bash(node \"C:/Users/mrsud/AppData/Roaming/npm/node_modules/ui-ux-pro-max-cli/dist/index.js\" --help)",
+      "Bash(node \"C:/Users/mrsud/AppData/Roaming/npm/node_modules/ui-ux-pro-max-cli/dist/index.js\" versions)",
+      "Bash(node \"C:/Users/mrsud/AppData/Roaming/npm/node_modules/ui-ux-pro-max-cli/dist/index.js\" update)",
+      "Bash(node *)",
+      "Bash(curl -s http://localhost:3000 -o /tmp/landing2.html)",
+      "Bash(powershell -NoProfile -Command \"Get-Process -Id 26140 -ErrorAction SilentlyContinue | Select-Object Id,ProcessName,Path,StartTime\")",
+      "Bash(powershell -NoProfile -Command \"Stop-Process -Id 26140 -Force\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/)",
+      "Bash(curl -s http://localhost:3000/)",
+      "Bash(curl -s \"http://localhost:3000/_next/static/chunks/%5Broot-of-the-server%5D__1bf4fdb4._.css\")",
+      "Bash(npx --no-install chromium-cli --version)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:3000/)",
+      "Bash(npx --version)",
+      "Bash(npx --yes playwright@latest --version)",
+      "Bash(npx --yes playwright@1.61.1 install chromium --with-deps)",
+      "Bash(export NODE_PATH=\"C:\\\\Users\\\\mrsud\\\\AppData\\\\Local\\\\npm-cache\\\\_npx\\\\361ceb562f3b3235\\\\node_modules;C:\\\\Users\\\\mrsud\\\\AppData\\\\Local\\\\npm-cache\\\\_npx\\\\705bc6b22212b352\\\\node_modules;C:\\\\Users\\\\mrsud\\\\AppData\\\\Local\\\\npm-cache\\\\_npx\\\\e41f203b7505f1fb\\\\node_modules\")"
     ]
-  }
+  },
+  "enableAllProjectMcpServers": true,
+  "enabledMcpjsonServers": [
+    "21st"
+  ]
 }

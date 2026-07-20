@@ -21,13 +21,13 @@ export function Footer() {
 
   return (
     <footer
-      className="fixed bottom-0 inset-x-0 z-50 transition-all duration-300"
+      className="lp-font fixed bottom-0 inset-x-0 z-50 transition-all duration-300"
       style={{
-        background:           'rgba(246,245,242,0.42)',
-        borderTop:            '1px solid var(--cx-line)',
-        backdropFilter:       'blur(24px) saturate(200%)',
-        WebkitBackdropFilter: 'blur(24px) saturate(200%)',
-        boxShadow:            '0 -1px 20px rgba(0,0,0,0.04)',
+        background:           'rgba(250,250,249,0.78)',
+        borderTop:            '1px solid var(--lp-border)',
+        backdropFilter:       'blur(24px) saturate(140%)',
+        WebkitBackdropFilter: 'blur(24px) saturate(140%)',
+        boxShadow:            '0 -1px 24px rgba(28,25,23,0.06)',
         opacity:              atBottom ? 1 : 0,
         transform:            atBottom ? 'translateY(0)' : 'translateY(100%)',
         pointerEvents:        atBottom ? 'auto' : 'none',
@@ -37,22 +37,22 @@ export function Footer() {
 
         <Link href="/" className="flex items-center gap-2 flex-shrink-0">
           <Image src="/CortexLogo.png" alt="Cortex logo" width={18} height={18} className="object-contain" style={{ width: '18px', height: '18px' }} />
-          <span className="text-[14px] font-semibold tracking-tight" style={{ color: '#000' }}>Cortex</span>
+          <span className="text-[14px] font-semibold tracking-tight" style={{ color: 'var(--lp-ink)' }}>Cortex</span>
         </Link>
 
-        <span className="text-[12px] cx-num" style={{ color: '#000' }}>
+        <span className="text-[12px] cx-num" style={{ color: 'var(--lp-mute-1)' }}>
           &copy; {new Date().getFullYear()} Cortex
         </span>
 
         <div className="flex items-center gap-3 flex-shrink-0">
           <a href="https://github.com/Sudarshan-812" target="_blank" rel="noopener noreferrer" aria-label="GitHub"
-            className="transition-opacity" style={{ color: '#000' }}
+            className="transition-opacity" style={{ color: 'var(--lp-ink)' }}
             onMouseEnter={e => (e.currentTarget.style.opacity = '0.6')}
             onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
             <Github className="size-4" />
           </a>
           <a href="https://x.com/Sudarshan_dev8" target="_blank" rel="noopener noreferrer" aria-label="Twitter / X"
-            className="transition-opacity" style={{ color: '#000' }}
+            className="transition-opacity" style={{ color: 'var(--lp-ink)' }}
             onMouseEnter={e => (e.currentTarget.style.opacity = '0.6')}
             onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
             <Twitter className="size-4" />

@@ -2,6 +2,7 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { Navbar } from "@/components/landing/Navbar";
 import { Hero } from "@/components/landing/Hero";
+import { Architecture } from "@/components/landing/Architecture";
 import { Features } from "@/components/landing/Features";
 import { CTA } from "@/components/landing/CTA";
 import { Footer } from "@/components/landing/Footer";
@@ -38,9 +39,10 @@ export default async function LandingPage({
     <>
       {/* Outside the stacking context so fixed bg + backdrop-filter work correctly */}
       <LandingBackground />
-      <div className="relative min-h-screen font-sans pb-14" style={{ color: 'var(--cx-ink)' }}>
+      <div className="relative min-h-screen lp-font pb-14" style={{ color: 'var(--lp-ink)' }}>
         <Navbar isLoggedIn={isLoggedIn} avatarUrl={avatarUrl} userName={userName} />
         <Hero isLoggedIn={isLoggedIn} />
+        <Architecture />
         <Features />
         <CTA isLoggedIn={isLoggedIn} />
         <Footer />

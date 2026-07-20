@@ -99,7 +99,7 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
   };
 
   const rowHover = {
-    onMouseEnter: (e: React.MouseEvent<HTMLElement>) => (e.currentTarget.style.background = 'var(--cx-surface)'),
+    onMouseEnter: (e: React.MouseEvent<HTMLElement>) => (e.currentTarget.style.background = 'var(--lp-surface-2)'),
     onMouseLeave: (e: React.MouseEvent<HTMLElement>) => (e.currentTarget.style.background = ''),
   };
 
@@ -108,9 +108,9 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
       className="rounded-full overflow-hidden border flex-shrink-0 flex items-center justify-center font-bold"
       style={{
         width: size, height: size,
-        borderColor: 'var(--cx-line)',
-        background: 'var(--cx-accent-wash)',
-        color: 'var(--cx-accent)',
+        borderColor: 'var(--lp-border)',
+        background: 'var(--lp-primary-wash)',
+        color: 'var(--lp-primary)',
         fontSize: size < 30 ? '11px' : '12px',
       }}
     >
@@ -126,10 +126,10 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
       <header
         className="fixed top-0 inset-x-0 z-50 transition-all duration-300"
         style={{
-          background:    scrolled ? 'rgba(246,245,242,0.42)'       : 'transparent',
-          borderBottom:  scrolled ? '1px solid var(--cx-line)'     : '1px solid transparent',
-          backdropFilter:scrolled ? 'blur(24px) saturate(200%)'    : 'none',
-          boxShadow:     scrolled ? '0 1px 20px rgba(0,0,0,0.04)' : 'none',
+          background:    scrolled ? 'rgba(250,250,249,0.78)'         : 'transparent',
+          borderBottom:  scrolled ? '1px solid var(--lp-border)'     : '1px solid transparent',
+          backdropFilter:scrolled ? 'blur(24px) saturate(140%)'     : 'none',
+          boxShadow:     scrolled ? '0 1px 24px rgba(28,25,23,0.06)' : 'none',
         }}
       >
         <div className="max-w-[1200px] mx-auto px-6 h-16 flex items-center justify-between gap-6">
@@ -138,7 +138,7 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
           <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
             <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
               <Image src="/CortexLogo.png" alt="Cortex logo" width={26} height={26} className="object-contain" style={{ width: '26px', height: '26px' }} />
-              <span className="text-[16px] font-semibold tracking-tight" style={{ color: '#000' }}>Cortex</span>
+              <span className="lp-display text-[17px] font-semibold tracking-tight" style={{ color: 'var(--lp-ink)' }}>Cortex</span>
             </Link>
           </motion.div>
 
@@ -147,7 +147,7 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
 
             <Link href="#features"
               className="px-3.5 py-2 text-[13.5px] font-medium rounded-xl transition-colors outline-none"
-              style={{ color: '#000' }} {...linkHover}>
+              style={{ color: 'var(--lp-ink)' }} {...linkHover}>
               Product
             </Link>
 
@@ -155,7 +155,7 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
             <div className="relative">
               <button onClick={() => toggle("features")}
                 className="flex items-center gap-1 px-3.5 py-2 text-[13.5px] font-medium rounded-xl transition-colors outline-none"
-                style={{ color: '#000' }}>
+                style={{ color: 'var(--lp-ink)' }}>
                 Features
                 <motion.span animate={{ rotate: open === "features" ? 180 : 0 }} transition={{ duration: 0.2 }} className="flex">
                   <ChevronDown size={13} />
@@ -165,7 +165,7 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
                 {open === "features" && (
                   <motion.div {...dropPop} role="menu"
                     className="absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 w-[380px] border rounded-2xl p-2 z-50"
-                    style={{ transformOrigin: 'top center', background: 'var(--cx-paper)', borderColor: 'var(--cx-line)', boxShadow: '0 20px 60px rgba(0,0,0,0.1)' }}>
+                    style={{ transformOrigin: 'top center', background: 'var(--lp-surface)', borderColor: 'var(--lp-border)', boxShadow: '0 20px 60px rgba(28,25,23,0.14)' }}>
                     {featuresMenu.map(item => {
                       const Icon = item.icon;
                       return (
@@ -173,22 +173,22 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
                           className="flex items-start gap-3 p-3 rounded-xl transition-colors outline-none"
                           {...rowHover}>
                           <div className="size-8 rounded-xl flex items-center justify-center flex-shrink-0 border"
-                            style={{ background: 'var(--cx-accent-wash)', borderColor: 'var(--cx-accent-line)' }}>
-                            <Icon size={14} style={{ color: 'var(--cx-accent)' }} />
+                            style={{ background: 'var(--lp-primary-wash)', borderColor: 'var(--lp-primary-line)' }}>
+                            <Icon size={14} style={{ color: 'var(--lp-primary)' }} />
                           </div>
                           <div className="min-w-0">
-                            <p className="text-[12.5px] font-semibold" style={{ color: 'var(--cx-ink)' }}>{item.title}</p>
-                            <p className="text-[11.5px] mt-0.5 leading-snug" style={{ color: 'var(--cx-mute-1)' }}>{item.description}</p>
+                            <p className="text-[12.5px] font-semibold" style={{ color: 'var(--lp-ink)' }}>{item.title}</p>
+                            <p className="text-[11.5px] mt-0.5 leading-snug" style={{ color: 'var(--lp-mute-1)' }}>{item.description}</p>
                           </div>
                         </Link>
                       );
                     })}
-                    <div className="border-t mt-1.5 pt-1.5 px-1" style={{ borderColor: 'var(--cx-line)' }}>
+                    <div className="border-t mt-1.5 pt-1.5 px-1" style={{ borderColor: 'var(--lp-border)' }}>
                       <Link href="#features" onClick={() => setOpen(null)}
                         className="flex items-center justify-center py-2 text-[12px] font-semibold transition-colors rounded-lg outline-none"
-                        style={{ color: 'var(--cx-mute-1)' }}
-                        onMouseEnter={e => (e.currentTarget.style.color = 'var(--cx-accent)')}
-                        onMouseLeave={e => (e.currentTarget.style.color = 'var(--cx-mute-1)')}>
+                        style={{ color: 'var(--lp-mute-1)' }}
+                        onMouseEnter={e => (e.currentTarget.style.color = 'var(--lp-primary)')}
+                        onMouseLeave={e => (e.currentTarget.style.color = 'var(--lp-mute-1)')}>
                         View all features →
                       </Link>
                     </div>
@@ -201,7 +201,7 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
             <div className="relative">
               <button onClick={() => toggle("usecases")}
                 className="flex items-center gap-1 px-3.5 py-2 text-[13.5px] font-medium rounded-xl transition-colors outline-none"
-                style={{ color: '#000' }}>
+                style={{ color: 'var(--lp-ink)' }}>
                 Use Cases
                 <motion.span animate={{ rotate: open === "usecases" ? 180 : 0 }} transition={{ duration: 0.2 }} className="flex">
                   <ChevronDown size={13} />
@@ -211,7 +211,7 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
                 {open === "usecases" && (
                   <motion.div {...dropPop} role="menu"
                     className="absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 w-[300px] border rounded-2xl p-2 z-50"
-                    style={{ transformOrigin: 'top center', background: 'var(--cx-paper)', borderColor: 'var(--cx-line)', boxShadow: '0 20px 60px rgba(0,0,0,0.1)' }}>
+                    style={{ transformOrigin: 'top center', background: 'var(--lp-surface)', borderColor: 'var(--lp-border)', boxShadow: '0 20px 60px rgba(28,25,23,0.14)' }}>
                     {useCasesMenu.map(item => {
                       const Icon = item.icon;
                       return (
@@ -219,12 +219,12 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
                           className="flex items-start gap-3 p-3 rounded-xl transition-colors outline-none"
                           {...rowHover}>
                           <div className="size-8 rounded-xl flex items-center justify-center flex-shrink-0 border"
-                            style={{ background: 'var(--cx-accent-wash)', borderColor: 'var(--cx-accent-line)' }}>
-                            <Icon size={14} style={{ color: 'var(--cx-accent)' }} />
+                            style={{ background: 'var(--lp-primary-wash)', borderColor: 'var(--lp-primary-line)' }}>
+                            <Icon size={14} style={{ color: 'var(--lp-primary)' }} />
                           </div>
                           <div className="min-w-0">
-                            <p className="text-[12.5px] font-semibold" style={{ color: 'var(--cx-ink)' }}>{item.title}</p>
-                            <p className="text-[11.5px] mt-0.5 leading-snug" style={{ color: 'var(--cx-mute-1)' }}>{item.description}</p>
+                            <p className="text-[12.5px] font-semibold" style={{ color: 'var(--lp-ink)' }}>{item.title}</p>
+                            <p className="text-[11.5px] mt-0.5 leading-snug" style={{ color: 'var(--lp-mute-1)' }}>{item.description}</p>
                           </div>
                         </Link>
                       );
@@ -236,7 +236,7 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
 
             <Link href="/docs"
               className="px-3.5 py-2 text-[13.5px] font-medium rounded-xl transition-colors outline-none"
-              style={{ color: '#000' }} {...linkHover}>
+              style={{ color: 'var(--lp-ink)' }} {...linkHover}>
               Docs
             </Link>
           </nav>
@@ -250,38 +250,38 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
                   {...rowHover}>
                   <AvatarBubble size={28} />
                   <motion.span animate={{ rotate: open === "avatar" ? 180 : 0 }} transition={{ duration: 0.2 }} className="flex">
-                    <ChevronDown size={13} style={{ color: '#000' }} />
+                    <ChevronDown size={13} style={{ color: 'var(--lp-ink)' }} />
                   </motion.span>
                 </button>
                 <AnimatePresence>
                   {open === "avatar" && (
                     <motion.div {...dropPop} role="menu"
                       className="absolute top-[calc(100%+8px)] right-0 w-[220px] border rounded-2xl p-1.5 z-50"
-                      style={{ transformOrigin: 'top right', background: 'var(--cx-paper)', borderColor: 'var(--cx-line)', boxShadow: '0 20px 60px rgba(0,0,0,0.1)' }}>
+                      style={{ transformOrigin: 'top right', background: 'var(--lp-surface)', borderColor: 'var(--lp-border)', boxShadow: '0 20px 60px rgba(28,25,23,0.14)' }}>
                       <div className="flex items-center gap-2.5 px-3 py-2.5 mb-1">
                         <AvatarBubble size={32} />
                         <div className="min-w-0">
-                          <p className="text-[13px] font-semibold truncate" style={{ color: 'var(--cx-ink)' }}>{userName}</p>
-                          <p className="text-[11px]" style={{ color: 'var(--cx-mute-2)' }}>Personal workspace</p>
+                          <p className="text-[13px] font-semibold truncate" style={{ color: 'var(--lp-ink)' }}>{userName}</p>
+                          <p className="text-[11px]" style={{ color: 'var(--lp-mute-2)' }}>Personal workspace</p>
                         </div>
                       </div>
-                      <div className="border-t my-1" style={{ borderColor: 'var(--cx-line)' }} />
+                      <div className="border-t my-1" style={{ borderColor: 'var(--lp-border)' }} />
                       <Link href="/dashboard" role="menuitem" onClick={() => setOpen(null)}
                         className="flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors text-[13px] font-medium outline-none"
-                        style={{ color: 'var(--cx-ink-2)' }} {...rowHover}>
-                        <LayoutDashboard size={14} style={{ color: 'var(--cx-mute-2)' }} /> Dashboard
+                        style={{ color: 'var(--lp-ink-2)' }} {...rowHover}>
+                        <LayoutDashboard size={14} style={{ color: 'var(--lp-mute-2)' }} /> Dashboard
                       </Link>
                       <Link href="/dashboard/settings" role="menuitem" onClick={() => setOpen(null)}
                         className="flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors text-[13px] font-medium outline-none"
-                        style={{ color: 'var(--cx-ink-2)' }} {...rowHover}>
-                        <Settings size={14} style={{ color: 'var(--cx-mute-2)' }} /> Settings
+                        style={{ color: 'var(--lp-ink-2)' }} {...rowHover}>
+                        <Settings size={14} style={{ color: 'var(--lp-mute-2)' }} /> Settings
                       </Link>
-                      <div className="border-t my-1" style={{ borderColor: 'var(--cx-line)' }} />
+                      <div className="border-t my-1" style={{ borderColor: 'var(--lp-border)' }} />
                       <button role="menuitem" onClick={handleSignOut}
                         className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors text-[13px] font-medium text-left outline-none"
-                        style={{ color: 'var(--cx-mute-1)' }}
-                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(166,68,58,0.06)'; e.currentTarget.style.color = 'var(--cx-err)'; }}
-                        onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'var(--cx-mute-1)'; }}>
+                        style={{ color: 'var(--lp-mute-1)' }}
+                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(248,113,113,0.12)'; e.currentTarget.style.color = 'var(--lp-err)'; }}
+                        onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'var(--lp-mute-1)'; }}>
                         <LogOut size={14} /> Sign out
                       </button>
                     </motion.div>
@@ -292,11 +292,11 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
               <>
                 <Link href="/login"
                   className="hidden sm:block px-3.5 py-2 text-[13px] font-medium rounded-xl transition-colors outline-none"
-                  style={{ color: '#000' }} {...linkHover}>
+                  style={{ color: 'var(--lp-ink)' }} {...linkHover}>
                   Log in
                 </Link>
                 <motion.div whileHover={{ scale: 1.05, y: -1 }} whileTap={{ scale: 0.96 }} transition={{ type: 'spring', stiffness: 420, damping: 20 }}>
-                  <Link href="/login" className="h-8 px-4 inline-flex items-center justify-center rounded-full text-[13px] font-semibold cx-btn-ink">
+                  <Link href="/login" className="h-8 px-4 inline-flex items-center justify-center rounded-full text-[13px] font-semibold lp-btn-primary">
                     Get Started
                   </Link>
                 </motion.div>
@@ -306,7 +306,7 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
             <button onClick={() => setMobileOpen(v => !v)}
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
               className="md:hidden flex items-center justify-center h-8 w-8 rounded-xl transition-opacity ml-1 outline-none"
-              style={{ color: '#000' }}
+              style={{ color: 'var(--lp-ink)' }}
               onMouseEnter={e => (e.currentTarget.style.opacity = '0.6')}
               onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
               {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
@@ -324,41 +324,41 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
             exit={{    opacity: 0, y: -8 }}
             transition={{ type: 'spring', stiffness: 340, damping: 28 }}
             className="fixed inset-x-0 top-16 z-40 md:hidden border-b"
-            style={{ background: 'var(--cx-paper)', borderColor: 'var(--cx-line)' }}>
+            style={{ background: 'var(--lp-surface)', borderColor: 'var(--lp-border)' }}>
             <nav className="max-w-[1200px] mx-auto px-6 py-4 flex flex-col gap-0.5">
               {[{ label: "Product", href: "#features" }, { label: "Docs", href: "/docs" }].map(({ label, href }) => (
                 <Link key={label} href={href} onClick={() => setMobileOpen(false)}
                   className="flex items-center px-3 py-2.5 text-[14px] font-medium rounded-xl transition-colors"
-                  style={{ color: 'var(--cx-ink-2)' }} {...rowHover}>{label}</Link>
+                  style={{ color: 'var(--lp-ink-2)' }} {...rowHover}>{label}</Link>
               ))}
 
               <div className="px-3 pt-3 pb-1">
-                <p className="text-[10.5px] font-semibold uppercase tracking-widest cx-num" style={{ color: 'var(--cx-mute-2)' }}>Features</p>
+                <p className="text-[10.5px] font-semibold uppercase tracking-widest cx-num" style={{ color: 'var(--lp-mute-2)' }}>Features</p>
               </div>
               {featuresMenu.map(item => {
                 const Icon = item.icon;
                 return (
                   <Link key={item.title} href={item.href} onClick={() => setMobileOpen(false)}
                     className="flex items-center gap-3 px-3 py-2 text-[13.5px] font-medium rounded-xl transition-colors"
-                    style={{ color: 'var(--cx-ink-2)' }} {...rowHover}>
-                    <Icon size={14} style={{ color: 'var(--cx-mute-2)' }} />{item.title}
+                    style={{ color: 'var(--lp-ink-2)' }} {...rowHover}>
+                    <Icon size={14} style={{ color: 'var(--lp-mute-2)' }} />{item.title}
                   </Link>
                 );
               })}
 
-              <div className="border-t my-2" style={{ borderColor: 'var(--cx-line)' }} />
+              <div className="border-t my-2" style={{ borderColor: 'var(--lp-border)' }} />
 
               {isLoggedIn ? (
                 <>
                   <Link href="/dashboard" onClick={() => setMobileOpen(false)}
                     className="flex items-center gap-2.5 px-3 py-2.5 text-[14px] font-medium rounded-xl transition-colors"
-                    style={{ color: 'var(--cx-ink-2)' }} {...rowHover}>
-                    <LayoutDashboard size={15} style={{ color: 'var(--cx-mute-2)' }} /> Dashboard
+                    style={{ color: 'var(--lp-ink-2)' }} {...rowHover}>
+                    <LayoutDashboard size={15} style={{ color: 'var(--lp-mute-2)' }} /> Dashboard
                   </Link>
                   <button onClick={handleSignOut}
                     className="flex items-center gap-2.5 px-3 py-2.5 text-[14px] font-medium rounded-xl transition-colors w-full text-left outline-none"
-                    style={{ color: 'var(--cx-err)' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(166,68,58,0.06)')}
+                    style={{ color: 'var(--lp-err)' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(248,113,113,0.12)')}
                     onMouseLeave={e => (e.currentTarget.style.background = '')}>
                     <LogOut size={15} /> Sign out
                   </button>
@@ -367,11 +367,11 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
                 <div className="flex flex-col gap-2 pt-1">
                   <Link href="/login" onClick={() => setMobileOpen(false)}
                     className="px-3 py-2.5 text-center text-[14px] font-medium rounded-xl transition-colors"
-                    style={{ color: 'var(--cx-ink-2)' }} {...rowHover}>
+                    style={{ color: 'var(--lp-ink-2)' }} {...rowHover}>
                     Log in
                   </Link>
                   <Link href="/login" onClick={() => setMobileOpen(false)}
-                    className="py-2.5 text-center rounded-xl text-[14px] font-semibold cx-btn-ink">
+                    className="py-2.5 text-center rounded-xl text-[14px] font-semibold lp-btn-primary">
                     Get Started
                   </Link>
                 </div>
