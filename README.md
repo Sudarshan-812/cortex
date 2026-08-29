@@ -44,15 +44,15 @@ This project relies on strict Row Level Security (RLS) in Supabase. A user can o
 
 ## ⚖️ Copyright & License
 
-**© 2026 Sudarshan Kulkarni. All Rights Reserved.**
+**© 2026 Sudarshan Kulkarni. All rights reserved.**
 
-This repository is uniquely developed as a proprietary portfolio piece. The source code is made public strictly for **demonstration, evaluation, and code-review purposes by prospective employers.**
+Cortex is proprietary, closed-source software operated as a commercial SaaS product
+by its author. The code in this repository is confidential and is not licensed for
+redistribution, self-hosting, or the creation of derivative works. No open-source or
+public license is granted.
 
-* 🚫 **No Unauthorized Cloning:** You may not clone, deploy, or run this software locally or on a server.
-* 🚫 **No Commercial Use:** You may not use, modify, or distribute this codebase for any commercial or non-commercial projects.
-* 🚫 **No Derivatives:** You may not fork this repository to create derivative works.
-
-If you are a recruiter, engineering manager, or founder reviewing my profile, you are welcome to inspect the architecture and code quality directly on GitHub.
+Use of the hosted service is governed by the product's Terms of Service and Privacy
+Policy.
 
 ---
 *Built by [Sudarshan Kulkarni](https://sudarshank.com)*

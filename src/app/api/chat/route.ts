@@ -157,6 +157,28 @@ export async function POST(req: NextRequest) {
     .single()
   if (!session) return new Response("Forbidden", { status: 403 })
 
+  // Request-scoped so cancel()/error paths can still flush a partial answer.
+  let fullText = ""
+  let assistantPersisted = false
+  const allSources: any[] = []
+  let answeredFrom: "documents" | "web" | "both" | "none" = "none"
+
+  async function persistAssistant() {
+    if (assistantPersisted) return
+    assistantPersisted = true
+    try {
+      await supabase.from("chat_messages").insert({
+        session_id: sessionId,
+        role: "assistant",
+        content: fullText || "[Response interrupted before any text was generated.]",
+        sources: allSources,
+        answered_from: answeredFrom,
+      })
+    } catch (e) {
+      Sentry.captureException(e, { tags: { stage: "persist_assistant" }, extra: { sessionId } })
+    }
+  }
+
   const stream = new ReadableStream({
     async start(controller) {
       try {
@@ -182,8 +204,8 @@ export async function POST(req: NextRequest) {
             parts: [{ text: m.content }],
           }))
 
-        const allSources: any[] = []
         const gatheredContext: string[] = []
+        let webContext = ""
 
         controller.enqueue(sse({ type: "tool", name: "search_documents", status: "running" }))
         const docResults = await searchDocuments(query, workspaceId, supabase)
@@ -235,33 +257,52 @@ Your only job now: decide if a web search would add meaningful value.
           controller.enqueue(sse({ type: "tool", name: "search_web", status: "running" }))
           const webQuery = (webCall.functionCall?.args as { query?: string } | undefined)?.query ?? query
           const webResult = await searchWeb(webQuery)
-          if (webResult) gatheredContext.push(webResult)
+          if (webResult) {
+            webContext = webResult
+            gatheredContext.push(webResult)
+          }
           controller.enqueue(sse({ type: "tool", name: "search_web", status: "done", found: webResult !== null }))
         }
 
-        const context = gatheredContext.join("\n\n")
-        const finalPrompt = context
-          ? `Use the context below to answer the question accurately and concisely. Cite specifics from the context where possible.\n\nContext:\n${context}\n\nQuestion: ${query}\n\nAnswer:`
-          : `Answer this question as helpfully as possible: ${query}`
+        const docContext = docResults.text
+        answeredFrom = docContext && webContext ? "both"
+          : docContext ? "documents"
+          : webContext ? "web"
+          : "none"
 
-        const streamModel = genAI.getGenerativeModel({ model: STREAM_MODEL })
-        const streamResult = await streamModel.generateContentStream(finalPrompt)
+        if (answeredFrom === "none") {
+          // Grounding guardrail (§3.2): never fall back to un-grounded Gemini.
+          fullText =
+            "I couldn't find anything about this in your documents, and a web search didn't return a usable answer. " +
+            "Try rephrasing the question, or upload a document that covers this topic."
+          controller.enqueue(sse({ type: "token", text: fullText }))
+        } else {
+          const parts: string[] = []
+          if (docContext) parts.push(`Context from the user's own documents:\n${docContext}`)
+          if (webContext) parts.push(`Context from a web search (NOT from the user's documents):\n${webContext}`)
 
-        let fullText = ""
-        for await (const chunk of streamResult.stream) {
-          const text = chunk.text()
-          if (text) {
-            fullText += text
-            controller.enqueue(sse({ type: "token", text }))
+          const finalPrompt =
+            `${parts.join("\n\n")}\n\n` +
+            `Answer the question using ONLY the context above. If the context does not contain the answer, say so plainly — do not use outside knowledge.\n` +
+            (webContext
+              ? `When any part of your answer comes from the web-search context, prefix that part with "According to a web search:" so the user knows it is not from their own documents.\n`
+              : "") +
+            `Be accurate and concise, and cite specifics from the context.\n\n` +
+            `Question: ${query}\n\nAnswer:`
+
+          const streamModel = genAI.getGenerativeModel({ model: STREAM_MODEL })
+          const streamResult = await streamModel.generateContentStream(finalPrompt)
+
+          for await (const chunk of streamResult.stream) {
+            const text = chunk.text()
+            if (text) {
+              fullText += text
+              controller.enqueue(sse({ type: "token", text }))
+            }
           }
         }
 
-        await supabase.from("chat_messages").insert({
-          session_id: sessionId,
-          role: "assistant",
-          content: fullText,
-          sources: allSources,
-        })
+        await persistAssistant()
 
         const { count } = await supabase
           .from("chat_messages")
@@ -277,7 +318,13 @@ Your only job now: decide if a web search would add meaningful value.
           )
           .eq("id", sessionId)
 
-        controller.enqueue(sse({ type: "done", sources: allSources }))
+        controller.enqueue(sse({ type: "done", sources: allSources, answered_from: answeredFrom }))
+
+        // No grounded context → skip follow-ups (nothing meaningful to build on).
+        if (answeredFrom === "none") {
+          controller.close()
+          return
+        }
 
         // Follow-up questions — non-blocking, emitted after done
         try {
@@ -304,9 +351,18 @@ Your only job now: decide if a web search would add meaningful value.
         controller.close()
       } catch (err: any) {
         Sentry.captureException(err, { tags: { stage: "chat_stream" }, extra: { sessionId, workspaceId } })
-        controller.enqueue(sse({ type: "error", message: err.message ?? "Unknown error" }))
-        controller.close()
+        // Save whatever text we streamed before the failure.
+        await persistAssistant()
+        try {
+          controller.enqueue(sse({ type: "error", message: err.message ?? "Unknown error" }))
+          controller.close()
+        } catch {}
       }
+    },
+    // Client disconnected mid-stream — flush the partial answer so the
+    // conversation isn't left with a dangling user message (§3.2).
+    async cancel() {
+      await persistAssistant()
     },
   })
 

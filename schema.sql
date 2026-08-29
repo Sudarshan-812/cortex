@@ -86,6 +86,10 @@ CREATE TABLE IF NOT EXISTS chat_messages (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- answered_from: 'documents' | 'web' | 'both' | 'none'
+-- Lets the UI label how an assistant answer was grounded (grounding guardrail, §3.2).
+ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS answered_from TEXT;
+
 CREATE INDEX IF NOT EXISTS chat_messages_session_id_idx
   ON chat_messages (session_id, created_at DESC);
 
@@ -201,6 +205,27 @@ CREATE POLICY "chunks_insert" ON document_chunks FOR INSERT
     JOIN workspaces w ON d.workspace_id = w.id
     WHERE w.owner_id = auth.uid()
   ));
+-- UPDATE / DELETE were missing — without them a chunk row could never be
+-- edited or removed under RLS, and re-embed / cleanup paths would silently fail.
+DROP POLICY IF EXISTS "chunks_update" ON document_chunks;
+CREATE POLICY "chunks_update" ON document_chunks FOR UPDATE
+  USING (document_id IN (
+    SELECT d.id FROM documents d
+    JOIN workspaces w ON d.workspace_id = w.id
+    WHERE w.owner_id = auth.uid()
+  ))
+  WITH CHECK (document_id IN (
+    SELECT d.id FROM documents d
+    JOIN workspaces w ON d.workspace_id = w.id
+    WHERE w.owner_id = auth.uid()
+  ));
+DROP POLICY IF EXISTS "chunks_delete" ON document_chunks;
+CREATE POLICY "chunks_delete" ON document_chunks FOR DELETE
+  USING (document_id IN (
+    SELECT d.id FROM documents d
+    JOIN workspaces w ON d.workspace_id = w.id
+    WHERE w.owner_id = auth.uid()
+  ));
 
 -- Chat sessions: workspace owner
 CREATE POLICY "chat_sessions_select" ON chat_sessions FOR SELECT
@@ -227,14 +252,81 @@ CREATE POLICY "chat_messages_insert" ON chat_messages FOR INSERT
   ));
 
 -- ============================================================
--- STORAGE
+-- STORAGE  (bucket: synapse-uploads, Public: false)
 -- ============================================================
--- In Supabase Dashboard → Storage → New Bucket:
---   Name: synapse-uploads
---   Public: false
+-- Object path convention (see src/app/api/upload/route.ts):
+--   "<workspaceId>/<timestamp>_<filename>"
+-- so (storage.foldername(name))[1] is always the workspace UUID.
 --
--- Then add these Storage Policies:
---   INSERT: ((bucket_id = 'synapse-uploads') AND (auth.role() = 'authenticated'))
---   SELECT: ((bucket_id = 'synapse-uploads') AND (auth.role() = 'authenticated'))
---   DELETE: ((bucket_id = 'synapse-uploads') AND (auth.role() = 'authenticated'))
+-- Run this whole section in the Supabase SQL Editor (it runs as a
+-- privileged role, which is required to touch storage.objects policies).
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('synapse-uploads', 'synapse-uploads', false)
+ON CONFLICT (id) DO NOTHING;
+
+ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+
+-- Drop EVERY pre-existing policy that references this bucket.
+-- Older builds shipped "authenticated"-only policies — any logged-in user
+-- could read or delete any other tenant's files (§3.1, CRITICAL).
+DO $$
+DECLARE pol record;
+BEGIN
+  FOR pol IN
+    SELECT policyname FROM pg_policies
+    WHERE schemaname = 'storage' AND tablename = 'objects'
+      AND (COALESCE(qual, '') LIKE '%synapse-uploads%'
+        OR COALESCE(with_check, '') LIKE '%synapse-uploads%')
+  LOOP
+    EXECUTE format('DROP POLICY IF EXISTS %I ON storage.objects', pol.policyname);
+  END LOOP;
+END $$;
+
+DROP POLICY IF EXISTS "synapse_uploads_select" ON storage.objects;
+DROP POLICY IF EXISTS "synapse_uploads_insert" ON storage.objects;
+DROP POLICY IF EXISTS "synapse_uploads_update" ON storage.objects;
+DROP POLICY IF EXISTS "synapse_uploads_delete" ON storage.objects;
+
+-- Folder-scoped: first path segment must be a workspace the caller owns.
+CREATE POLICY "synapse_uploads_select" ON storage.objects FOR SELECT
+USING (
+  bucket_id = 'synapse-uploads'
+  AND (storage.foldername(name))[1] IN (
+    SELECT id::text FROM public.workspaces WHERE owner_id = auth.uid()
+  )
+);
+
+CREATE POLICY "synapse_uploads_insert" ON storage.objects FOR INSERT
+WITH CHECK (
+  bucket_id = 'synapse-uploads'
+  AND (storage.foldername(name))[1] IN (
+    SELECT id::text FROM public.workspaces WHERE owner_id = auth.uid()
+  )
+);
+
+CREATE POLICY "synapse_uploads_update" ON storage.objects FOR UPDATE
+USING (
+  bucket_id = 'synapse-uploads'
+  AND (storage.foldername(name))[1] IN (
+    SELECT id::text FROM public.workspaces WHERE owner_id = auth.uid()
+  )
+)
+WITH CHECK (
+  bucket_id = 'synapse-uploads'
+  AND (storage.foldername(name))[1] IN (
+    SELECT id::text FROM public.workspaces WHERE owner_id = auth.uid()
+  )
+);
+
+CREATE POLICY "synapse_uploads_delete" ON storage.objects FOR DELETE
+USING (
+  bucket_id = 'synapse-uploads'
+  AND (storage.foldername(name))[1] IN (
+    SELECT id::text FROM public.workspaces WHERE owner_id = auth.uid()
+  )
+);
+-- ============================================================
+-- Re-verify: sign in as user B, try to GET user A's object path →
+-- must return 403 / empty. Repeat for DELETE.
 -- ============================================================

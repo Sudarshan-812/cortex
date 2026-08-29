@@ -42,7 +42,7 @@ export default async function SessionPage({
   const [messagesResult, documentsResult] = await Promise.all([
     supabase
       .from("chat_messages")
-      .select("id, role, content, sources, created_at")
+      .select("id, role, content, sources, created_at, answered_from")
       .eq("session_id", session.id)
       .order("created_at", { ascending: true }),
     supabase

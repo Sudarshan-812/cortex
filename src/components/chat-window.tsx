@@ -22,7 +22,7 @@ type Source = {
   similarity: number
 }
 type ToolEvent = { name: string; status: 'running' | 'done'; count?: number }
-type Message   = { id?: string; role: 'user' | 'assistant'; content: string; sources?: Source[]; created_at?: string }
+type Message   = { id?: string; role: 'user' | 'assistant'; content: string; sources?: Source[]; created_at?: string; answered_from?: 'documents' | 'web' | 'both' | 'none' }
 
 function buildSuggestedPrompts(docNames: string[]): string[] {
   if (docNames.length === 0) return [
@@ -307,6 +307,30 @@ function SourceCitations({ sources, onViewChunk }: { sources: Source[]; onViewCh
         )}
       </AnimatePresence>
     </motion.div>
+  )
+}
+
+/* ── Answer grounding badge ─────────────────────────────────────── */
+function AnsweredFromBadge({ kind }: { kind: NonNullable<Message['answered_from']> }) {
+  const map = {
+    documents: { label: 'Answered from your documents', ok: true },
+    web:       { label: 'Answered from web search',     ok: false },
+    both:      { label: 'Answered from your documents + web', ok: true },
+    none:      { label: 'Not found in your documents',  ok: false },
+  } as const
+  const { label, ok } = map[kind]
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 h-6 px-2.5 rounded-full border text-[11px] font-medium"
+      style={{
+        color:       ok ? 'var(--cx-ok)' : 'var(--cx-mute-1)',
+        background:   ok ? 'var(--cx-ok-wash)' : 'var(--cx-paper-2)',
+        borderColor: ok ? 'rgba(60,110,71,0.2)' : 'var(--cx-line)',
+      }}
+    >
+      {ok ? <FileText size={10} /> : <ExternalLink size={10} />}
+      {label}
+    </span>
   )
 }
 
@@ -600,7 +624,12 @@ export function ChatWindow({
               const doneTime = new Date().toISOString()
               setMessages(prev => {
                 const msgs = [...prev]
-                msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], sources: event.sources ?? [], created_at: doneTime }
+                msgs[msgs.length - 1] = {
+                  ...msgs[msgs.length - 1],
+                  sources: event.sources ?? [],
+                  created_at: doneTime,
+                  answered_from: event.answered_from,
+                }
                 return msgs
               })
               setActiveTools([])
@@ -951,6 +980,13 @@ export function ChatWindow({
                               {renderMarkdown(msg.content)}
                             </div>
                           )}
+                        </div>
+                      )}
+
+                      {/* Grounding badge */}
+                      {!loading && msg.content && msg.answered_from && (
+                        <div className="pt-1">
+                          <AnsweredFromBadge kind={msg.answered_from} />
                         </div>
                       )}
 
