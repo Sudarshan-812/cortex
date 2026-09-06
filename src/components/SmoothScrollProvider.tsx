@@ -15,11 +15,13 @@ export function SmoothScrollProvider({ children }: { children: React.ReactNode }
     if (!enabled) return
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return
 
+    // Kept for the marketing surface only (disabled on app routes above).
+    // Tuned close to native so wheel/trackpad momentum still feels like the OS.
     const lenis = new Lenis({
-      duration: 1.25,
+      duration: 0.9,
       easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
       smoothWheel: true,
-      touchMultiplier: 1.8,
+      touchMultiplier: 1,
     })
 
     let rafId: number

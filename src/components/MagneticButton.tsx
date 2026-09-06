@@ -1,43 +1,17 @@
 "use client";
 
-import { useRef } from "react";
-import { motion, useMotionValue, useSpring } from "framer-motion";
-
 interface MagneticButtonProps {
   children: React.ReactNode;
   className?: string;
+  /** Retained for API compatibility; magnetism was removed as over-design. */
   strength?: number;
 }
 
-export function MagneticButton({ children, className, strength = 0.35 }: MagneticButtonProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const springX = useSpring(x, { stiffness: 300, damping: 20, mass: 0.5 });
-  const springY = useSpring(y, { stiffness: 300, damping: 20, mass: 0.5 });
-
-  const handleMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    x.set((e.clientX - rect.left - rect.width / 2) * strength);
-    y.set((e.clientY - rect.top - rect.height / 2) * strength);
-  };
-  const handleLeave = () => {
-    x.set(0);
-    y.set(0);
-  };
-
-  return (
-    <motion.div
-      ref={ref}
-      onMouseMove={handleMove}
-      onMouseLeave={handleLeave}
-      style={{ x: springX, y: springY }}
-      whileHover={{ scale: 1.035 }}
-      whileTap={{ scale: 0.96 }}
-      transition={{ type: "spring", stiffness: 400, damping: 24 }}
-      className={className}
-    >
-      {children}
-    </motion.div>
-  );
+/**
+ * Formerly a cursor-following "magnetic" wrapper. Now a plain passthrough so
+ * CTAs behave predictably. Kept as a component so the ~16 call sites don't
+ * need touching; button hover/press feedback lives in the button classes.
+ */
+export function MagneticButton({ children, className }: MagneticButtonProps) {
+  return <div className={className}>{children}</div>;
 }

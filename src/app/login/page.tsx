@@ -76,12 +76,12 @@ export default function LoginPage() {
             className="absolute inset-0"
             style={{
               background:
-                'radial-gradient(120% 90% at 15% 10%, rgba(192,38,211,0.14), transparent 55%),' +
-                'radial-gradient(120% 90% at 90% 90%, rgba(161,98,7,0.14), transparent 55%),' +
+                'radial-gradient(120% 90% at 12% 8%, rgba(161,98,7,0.12), transparent 55%),' +
+                'radial-gradient(120% 90% at 92% 92%, rgba(120,53,15,0.10), transparent 55%),' +
                 'linear-gradient(160deg, var(--cx-paper-2), var(--cx-paper))',
             }}
           />
-          <div className="absolute inset-0 cx-grain opacity-40" />
+          <div className="absolute inset-0 cx-grain opacity-30" />
         </div>
 
         <div className="relative z-10 flex flex-col h-full">
@@ -95,7 +95,6 @@ export default function LoginPage() {
               <Image src="/CortexLogo.png" alt="Cortex Logo" width={32} height={32} className="object-contain" />
               <span className="text-[18px] font-semibold tracking-tight" style={{ color: 'var(--cx-ink)' }}>Cortex</span>
             </div>
-            <span className="cx-num text-[10.5px]" style={{ color: 'var(--cx-mute-2)' }}>v2.0 · Active</span>
           </motion.div>
 
           <motion.div
@@ -106,26 +105,13 @@ export default function LoginPage() {
           >
             <h1 className="text-5xl font-semibold tracking-[-0.025em] leading-[1.05] mb-5" style={{ color: 'var(--cx-ink)' }}>
               Your documents.<br />
-              <span style={{ color: 'var(--cx-mute-1)' }}>Finally intelligent.</span>
+              <span style={{ color: 'var(--cx-accent)' }}>Finally intelligent.</span>
             </h1>
-            <p className="text-[16px] leading-relaxed" style={{ color: 'var(--cx-mute-1)' }}>
-              Secure enterprise RAG platform with hybrid search, AI re-ranking, and real-time conversational memory.
+            <p className="text-[16px] leading-relaxed" style={{ color: 'var(--cx-ink-2)' }}>
+              Hybrid search, AI re-ranking, and source citations on every answer.
             </p>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.25, duration: 0.4 }}
-            className="cx-num text-[10.5px] flex items-center justify-between mt-auto"
-            style={{ color: 'var(--cx-mute-2)' }}
-          >
-            <div>pgvector · Gemini · Supabase</div>
-            <div className="flex items-center gap-1.5">
-              <span className="size-1.5 rounded-full cx-pulse-dot" style={{ background: 'var(--cx-ok)' }} />
-              <span style={{ color: 'var(--cx-ok)' }}>Production Ready</span>
-            </div>
-          </motion.div>
         </div>
       </div>
 

@@ -66,7 +66,8 @@ void main() {
   col = mix(col, bronze, smoothstep(0.55, 0.92, r.x));
   col = mix(col, ink, smoothstep(0.8, 1.05, q.y) * 0.35);
 
-  col = mix(paper, col, 0.22);
+  // Very low blend - a faint warm paper texture, not a "creative" centrepiece.
+  col = mix(paper, col, 0.10);
 
   gl_FragColor = vec4(col, 1.0);
 }
@@ -117,7 +118,7 @@ export function LandingBackground() {
     const uTime = gl.getUniformLocation(program, "uTime");
     const uResolution = gl.getUniformLocation(program, "uResolution");
 
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.75);
+    const dpr = 1;
     let width = 0;
     let height = 0;
     let rafId = 0;
@@ -146,10 +147,14 @@ export function LandingBackground() {
       return () => window.removeEventListener("resize", resize);
     }
 
+    // Animate briefly to settle into an organic frame, then freeze. A SaaS
+    // marketing page doesn't need a perpetually-moving GPU background.
     const start = performance.now();
+    const SETTLE_MS = 2200;
     const tick = (now: number) => {
-      renderFrame((now - start) * 0.001);
-      rafId = requestAnimationFrame(tick);
+      const elapsed = now - start;
+      renderFrame(elapsed * 0.001);
+      if (elapsed < SETTLE_MS) rafId = requestAnimationFrame(tick);
     };
     rafId = requestAnimationFrame(tick);
 
@@ -176,10 +181,15 @@ export function LandingBackground() {
         }}
       />
 
-      {/* Bottom vignette so content stays legible over the flow */}
+      {/* Full-bleed wash so copy stays legible over the texture everywhere,
+          not just at the bottom. */}
       <div
-        className="absolute inset-x-0 bottom-0 h-[32%] pointer-events-none"
-        style={{ background: "linear-gradient(to bottom, transparent, var(--lp-bg))" }}
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background:
+            "radial-gradient(120% 80% at 50% 0%, rgba(250,250,249,0.55), transparent 60%)," +
+            "linear-gradient(to bottom, rgba(250,250,249,0.4), transparent 25%, transparent 70%, var(--lp-bg))",
+        }}
       />
     </div>
   );

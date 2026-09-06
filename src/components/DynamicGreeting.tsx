@@ -9,7 +9,7 @@ function getGreeting(): Greeting {
   if (hour >= 5 && hour < 12) return { text: 'Good morning', sub: 'Ready to explore your documents?' }
   if (hour >= 12 && hour < 17) return { text: 'Good afternoon', sub: 'What would you like to research today?' }
   if (hour >= 17 && hour < 21) return { text: 'Good evening', sub: "Let's make the most of your evening." }
-  return { text: 'Good night', sub: "Still at it\u2014I'm here to help." }
+  return { text: 'Good night', sub: "Still at it - I'm here to help." }
 }
 
 export function DynamicGreeting() {

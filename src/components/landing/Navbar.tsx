@@ -83,11 +83,6 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
 
   const initials = userName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
-  const linkHover = {
-    onMouseEnter: (e: React.MouseEvent<HTMLElement>) => (e.currentTarget.style.opacity = '0.6'),
-    onMouseLeave: (e: React.MouseEvent<HTMLElement>) => (e.currentTarget.style.opacity = '1'),
-  };
-
   const rowHover = {
     onMouseEnter: (e: React.MouseEvent<HTMLElement>) => (e.currentTarget.style.background = 'var(--lp-surface-2)'),
     onMouseLeave: (e: React.MouseEvent<HTMLElement>) => (e.currentTarget.style.background = ''),
@@ -125,12 +120,10 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
         <div className="max-w-[1200px] mx-auto px-6 h-16 flex items-center justify-between gap-6">
 
           {/* Logo */}
-          <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }} transition={{ type: 'spring', stiffness: 400, damping: 20 }}>
-            <Link href="/" className="flex items-center gap-2.5 flex-shrink-0">
-              <Image src="/CortexLogo.png" alt="Cortex logo" width={26} height={26} className="object-contain" style={{ width: '26px', height: '26px' }} />
-              <span className="lp-display text-[17px] font-semibold tracking-tight" style={{ color: 'var(--lp-ink)' }}>Cortex</span>
-            </Link>
-          </motion.div>
+          <Link href="/" className="flex items-center gap-2.5 flex-shrink-0 hover:opacity-70 transition-opacity">
+            <Image src="/CortexLogo.png" alt="Cortex logo" width={26} height={26} className="object-contain" style={{ width: '26px', height: '26px' }} />
+            <span className="lp-display text-[17px] font-semibold tracking-tight" style={{ color: 'var(--lp-ink)' }}>Cortex</span>
+          </Link>
 
           {/* Desktop nav */}
           <nav ref={navRef} className="hidden md:flex items-center gap-0.5 relative">
@@ -140,8 +133,8 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
               { label: 'Docs', href: '/docs' },
             ].map(l => (
               <Link key={l.label} href={l.href}
-                className="px-3.5 py-2 text-[13.5px] font-medium rounded-xl transition-colors outline-none"
-                style={{ color: 'var(--lp-ink)' }} {...linkHover}>
+                className="px-3.5 py-2 text-[13.5px] font-medium rounded-xl transition-opacity hover:opacity-60 outline-none"
+                style={{ color: 'var(--lp-ink)' }}>
                 {l.label}
               </Link>
             ))}
@@ -197,24 +190,20 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
             ) : (
               <>
                 <Link href="/login"
-                  className="hidden sm:block px-3.5 py-2 text-[13px] font-medium rounded-xl transition-colors outline-none"
-                  style={{ color: 'var(--lp-ink)' }} {...linkHover}>
+                  className="hidden sm:block px-3.5 py-2 text-[13px] font-medium rounded-xl transition-opacity hover:opacity-60 outline-none"
+                  style={{ color: 'var(--lp-ink)' }}>
                   Log in
                 </Link>
-                <motion.div whileHover={{ scale: 1.05, y: -1 }} whileTap={{ scale: 0.96 }} transition={{ type: 'spring', stiffness: 420, damping: 20 }}>
-                  <Link href="/login" className="h-8 px-4 inline-flex items-center justify-center rounded-full text-[13px] font-semibold lp-btn-primary">
-                    Get Started
-                  </Link>
-                </motion.div>
+                <Link href="/login" className="h-8 px-4 inline-flex items-center justify-center rounded-full text-[13px] font-semibold lp-btn-primary">
+                  Get started
+                </Link>
               </>
             )}
 
             <button onClick={() => setMobileOpen(v => !v)}
               aria-label={mobileOpen ? "Close menu" : "Open menu"}
-              className="md:hidden flex items-center justify-center h-8 w-8 rounded-xl transition-opacity ml-1 outline-none"
-              style={{ color: 'var(--lp-ink)' }}
-              onMouseEnter={e => (e.currentTarget.style.opacity = '0.6')}
-              onMouseLeave={e => (e.currentTarget.style.opacity = '1')}>
+              className="md:hidden flex items-center justify-center h-8 w-8 rounded-xl transition-opacity hover:opacity-60 ml-1 outline-none"
+              style={{ color: 'var(--lp-ink)' }}>
               {mobileOpen ? <X className="size-5" /> : <Menu className="size-5" />}
             </button>
           </div>

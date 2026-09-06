@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Upload, Sparkles, Search, ArrowUpDown, Bot, Radio, ArrowRight, ArrowDown } from "lucide-react";
 import { Spotlight } from "./Spotlight";
 
@@ -53,24 +52,13 @@ const nodes = [
 ];
 
 export function Architecture() {
-  const reduceMotion = useReducedMotion();
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  useEffect(() => {
-    if (reduceMotion) return;
-    const id = setInterval(() => {
-      setActiveIndex((i) => (i + 1) % nodes.length);
-    }, 1800);
-    return () => clearInterval(id);
-  }, [reduceMotion]);
-
   return (
     <section id="architecture" className="lp-font relative z-10 max-w-7xl mx-auto px-6 pb-28">
       <motion.div
-        initial={{ opacity: 0, y: 24 }}
+        initial={{ opacity: 0, y: 16 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
-        transition={{ duration: 0.6, ease }}
+        transition={{ duration: 0.4, ease }}
         className="lp-panel relative overflow-hidden rounded-[2rem] px-6 py-12 sm:px-10 sm:py-14"
       >
         {/* Faint top glow */}
@@ -97,85 +85,59 @@ export function Architecture() {
 
         {/* Pipeline grid */}
         <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {nodes.map((node, i) => {
+          {nodes.map((node) => {
             const Icon = node.icon;
-            const isActive = i === activeIndex;
+            const i = nodes.indexOf(node);
             const isLastInRow = (i + 1) % 3 === 0;
             const isLast = i === nodes.length - 1;
-            const arrowLit = i < activeIndex;
 
             return (
-              <motion.div
+              <div
                 key={node.title}
-                initial={{ opacity: 0, x: -12 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ delay: i * 0.09, duration: 0.35, ease }}
-                className={`lp-node relative rounded-2xl border ${isActive ? "lp-node--active" : ""}`}
+                className="lp-node relative rounded-2xl border"
               >
-              <Spotlight className="rounded-2xl p-5 flex flex-col gap-3 h-full">
-                <div className="flex items-center justify-between">
+                <Spotlight className="rounded-2xl p-5 flex flex-col gap-3 h-full">
                   <span
                     className="text-[10.5px] font-semibold tracking-widest"
-                    style={{
-                      fontFamily: "var(--font-jetbrains-mono)",
-                      color: isActive ? "var(--lp-primary)" : "var(--lp-mute-2)",
-                    }}
+                    style={{ fontFamily: "var(--font-jetbrains-mono)", color: "var(--lp-mute-2)" }}
                   >
                     {node.step}
                   </span>
-                  {isActive && (
-                    <span
-                      className="size-1.5 rounded-full cx-breathe"
-                      style={{ background: "var(--lp-primary)" }}
-                    />
-                  )}
-                </div>
 
-                <div
-                  className="size-9 rounded-xl flex items-center justify-center border"
-                  style={{
-                    background: isActive ? "var(--lp-primary-wash)" : "var(--lp-surface-2)",
-                    borderColor: isActive ? "var(--lp-primary-line)" : "var(--lp-border)",
-                  }}
-                >
-                  <Icon size={16} style={{ color: isActive ? "var(--lp-primary)" : "var(--lp-mute-2)" }} />
-                </div>
+                  <div
+                    className="size-9 rounded-xl flex items-center justify-center border"
+                    style={{ background: "var(--lp-surface-2)", borderColor: "var(--lp-border)" }}
+                  >
+                    <Icon size={16} style={{ color: "var(--lp-mute-2)" }} />
+                  </div>
 
-                <h3 className="text-[13.5px] font-semibold" style={{ color: "var(--lp-ink)" }}>
-                  {node.title}
-                </h3>
-                <p className="text-[12px] leading-relaxed" style={{ color: "var(--lp-mute-1)" }}>
-                  {node.desc}
-                </p>
+                  <h3 className="text-[13.5px] font-semibold" style={{ color: "var(--lp-ink)" }}>
+                    {node.title}
+                  </h3>
+                  <p className="text-[12px] leading-relaxed" style={{ color: "var(--lp-mute-1)" }}>
+                    {node.desc}
+                  </p>
 
-                <span
-                  className="inline-flex w-fit items-center px-2 py-1 rounded-md border text-[10.5px]"
-                  style={{
-                    fontFamily: "var(--font-jetbrains-mono)",
-                    background: "var(--lp-surface-2)",
-                    borderColor: "var(--lp-border)",
-                    color: "var(--lp-mute-1)",
-                  }}
-                >
-                  {node.tag}
-                </span>
-              </Spotlight>
+                  <span
+                    className="inline-flex w-fit items-center px-2 py-1 rounded-md border text-[10.5px]"
+                    style={{
+                      fontFamily: "var(--font-jetbrains-mono)",
+                      background: "var(--lp-surface-2)",
+                      borderColor: "var(--lp-border)",
+                      color: "var(--lp-mute-1)",
+                    }}
+                  >
+                    {node.tag}
+                  </span>
+                </Spotlight>
 
                 {/* Connector to next node in the same row */}
                 {!isLast && !isLastInRow && (
                   <div
                     className="hidden lg:flex absolute top-1/2 -right-[22px] -translate-y-1/2 items-center justify-center size-6 rounded-full border z-10"
-                    style={{
-                      background: "var(--lp-surface)",
-                      borderColor: arrowLit ? "var(--lp-primary)" : "var(--lp-border)",
-                      transition: "border-color 0.4s ease",
-                    }}
+                    style={{ background: "var(--lp-surface)", borderColor: "var(--lp-border)" }}
                   >
-                    <ArrowRight
-                      size={12}
-                      style={{ color: arrowLit ? "var(--lp-primary)" : "var(--lp-mute-2)", transition: "color 0.4s ease" }}
-                    />
+                    <ArrowRight size={12} style={{ color: "var(--lp-mute-2)" }} />
                   </div>
                 )}
 
@@ -183,19 +145,12 @@ export function Architecture() {
                 {isLastInRow && !isLast && (
                   <div
                     className="hidden lg:flex absolute -bottom-[22px] left-1/2 -translate-x-1/2 items-center justify-center size-6 rounded-full border z-10"
-                    style={{
-                      background: "var(--lp-surface)",
-                      borderColor: arrowLit ? "var(--lp-primary)" : "var(--lp-border)",
-                      transition: "border-color 0.4s ease",
-                    }}
+                    style={{ background: "var(--lp-surface)", borderColor: "var(--lp-border)" }}
                   >
-                    <ArrowDown
-                      size={12}
-                      style={{ color: arrowLit ? "var(--lp-primary)" : "var(--lp-mute-2)", transition: "color 0.4s ease" }}
-                    />
+                    <ArrowDown size={12} style={{ color: "var(--lp-mute-2)" }} />
                   </div>
                 )}
-              </motion.div>
+              </div>
             );
           })}
         </div>

@@ -127,7 +127,7 @@ export function AppSidebar({
             <X size={16} />
           </button>
           <motion.button
-            whileTap={{ scale: 0.88 }}
+            whileTap={{ scale: 0.94 }}
             onClick={() => setCollapsed(v => !v)}
             className="hidden md:flex flex-shrink-0 size-8 rounded-lg items-center justify-center transition-colors"
             style={{ color: 'var(--cx-mute-2)' }}

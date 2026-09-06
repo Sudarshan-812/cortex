@@ -68,7 +68,7 @@ export function SettingsContent({
               className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border text-[10.5px] font-semibold uppercase tracking-[.12em]"
               style={{ color: 'var(--cx-ok)', background: 'var(--cx-ok-wash)', borderColor: 'rgba(60,110,71,0.2)' }}
             >
-              <span className="size-1.5 rounded-full cx-pulse-dot" style={{ background: 'var(--cx-ok)' }} />
+              <span className="size-1.5 rounded-full" style={{ background: 'var(--cx-ok)' }} />
               Active
             </div>
           </div>

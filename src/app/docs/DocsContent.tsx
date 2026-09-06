@@ -46,10 +46,8 @@ export default function DocsContent() {
           <div className="flex items-center gap-3">
             <Link
               href="/"
-              className="flex items-center gap-1.5 text-[12.5px] font-medium transition-colors"
+              className="flex items-center gap-1.5 text-[12.5px] font-medium transition-opacity hover:opacity-60"
               style={{ color: 'var(--cx-mute-1)' }}
-              onMouseEnter={e => (e.currentTarget.style.color = 'var(--cx-ink)')}
-              onMouseLeave={e => (e.currentTarget.style.color = 'var(--cx-mute-1)')}
             >
               <ArrowLeft size={13} />
               Back to Cortex
@@ -60,14 +58,12 @@ export default function DocsContent() {
               <span className="text-[13px] font-semibold" style={{ color: 'var(--cx-ink)' }}>Documentation</span>
             </div>
           </div>
-          <motion.div whileTap={{ scale: 0.96 }}>
-            <Link
-              href="/login"
-              className="h-7 px-3.5 inline-flex items-center rounded-full text-[12.5px] font-medium transition-colors cx-btn-ink"
-            >
-              Get Started
-            </Link>
-          </motion.div>
+          <Link
+            href="/login"
+            className="h-7 px-3.5 inline-flex items-center rounded-full text-[12.5px] font-medium transition-colors cx-btn-ink"
+          >
+            Get started
+          </Link>
         </div>
       </header>
 

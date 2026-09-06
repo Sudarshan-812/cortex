@@ -39,7 +39,7 @@ export default async function LandingPage({
     <>
       {/* Outside the stacking context so fixed bg + backdrop-filter work correctly */}
       <LandingBackground />
-      <div className="relative min-h-screen lp-font pb-14" style={{ color: 'var(--lp-ink)' }}>
+      <div className="relative min-h-screen lp-font" style={{ color: 'var(--lp-ink)' }}>
         <Navbar isLoggedIn={isLoggedIn} avatarUrl={avatarUrl} userName={userName} />
         <Hero isLoggedIn={isLoggedIn} />
         <Architecture />

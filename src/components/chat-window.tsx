@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion, AnimatePresence, useMotionValue, useTransform, useSpring, useReducedMotion } from 'framer-motion'
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import Image from 'next/image'
 import {
   FileText, ArrowUp, Plus, Square,
@@ -103,7 +103,7 @@ function StreamingContent({ content }: { content: string }) {
 
   return (
     <span
-      className="whitespace-pre-wrap break-words text-[15px] leading-[1.85]"
+      className="whitespace-pre-wrap break-words text-[15px] leading-[1.7]"
       style={{ color: 'var(--cx-ink-2)' }}
     >
       {chunks.map((chunk, i) => (
@@ -113,8 +113,9 @@ function StreamingContent({ content }: { content: string }) {
   )
 }
 
-/* ── Morphing thinking orb ──────────────────────────────────────── */
+/* ── Thinking indicator - one calm pulse ────────────────────────── */
 function ThinkingOrb({ tools }: { tools: ToolEvent[] }) {
+  const reduce  = useReducedMotion()
   const running = tools.find(t => t.status === 'running')
   const done    = tools.filter(t => t.status === 'done')
   const isDone  = !running && done.length > 0
@@ -132,64 +133,29 @@ function ThinkingOrb({ tools }: { tools: ToolEvent[] }) {
       exit={{ opacity: 0, y: -4 }}
       className="flex items-center gap-3 py-1"
     >
-      <div className="relative flex-shrink-0 size-5">
+      <div className="relative flex-shrink-0 size-5 flex items-center justify-center">
         {isDone ? (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-          >
-            <CheckCircle2 size={18} style={{ color: 'var(--cx-ok)' }} />
-          </motion.div>
+          <CheckCircle2 size={18} style={{ color: 'var(--cx-ok)' }} />
         ) : (
-          <>
-            <motion.div
-              className="size-5 rounded-full"
-              style={{ background: 'var(--cx-accent)' }}
-              animate={{
-                borderRadius: [
-                  '50%',
-                  '38% 62% 63% 37% / 41% 44% 56% 59%',
-                  '44% 56% 32% 68% / 60% 38% 62% 40%',
-                  '30% 70% 60% 40% / 50% 60% 40% 50%',
-                  '50%',
-                ],
-                scale: [1, 1.14, 0.93, 1.1, 1],
-              }}
-              transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
-            />
-            <motion.div
-              className="absolute inset-0 rounded-full pointer-events-none"
-              style={{ background: 'var(--cx-accent)', filter: 'blur(10px)' }}
-              animate={{ scale: [1, 2.1, 1], opacity: [0.38, 0.04, 0.38] }}
-              transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
-            />
-          </>
-        )}
-      </div>
-
-      <div className="relative overflow-hidden">
-        <motion.span
-          key={label}
-          initial={{ opacity: 0, y: 5 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.22 }}
-          className="text-[13px] font-medium block"
-          style={{ color: 'var(--cx-mute-1)' }}
-        >
-          {label}
-        </motion.span>
-        {!isDone && (
           <motion.div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background: 'linear-gradient(90deg, transparent 0%, var(--cx-paper) 50%, transparent 100%)',
-            }}
-            animate={{ x: ['-100%', '200%'] }}
-            transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut', repeatDelay: 0.7 }}
+            className="size-2.5 rounded-full"
+            style={{ background: 'var(--cx-accent)' }}
+            animate={reduce ? undefined : { opacity: [1, 0.3, 1], scale: [1, 0.85, 1] }}
+            transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
           />
         )}
       </div>
+
+      <motion.span
+        key={label}
+        initial={{ opacity: 0, y: 5 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.22 }}
+        className="text-[13px] font-medium block"
+        style={{ color: 'var(--cx-mute-1)' }}
+      >
+        {label}
+      </motion.span>
     </motion.div>
   )
 }
@@ -406,28 +372,15 @@ function CodeBlock({ lang, code }: { lang: string; code: string }) {
   )
 }
 
-/* ── Prompt card - 3D magnetic tilt ────────────────────────────── */
+/* ── Prompt card ───────────────────────────────────────────────── */
 function PromptCard({
   label, index, onClick,
 }: { label: string; index: number; onClick: () => void }) {
-  const x    = useMotionValue(0)
-  const y    = useMotionValue(0)
-  const rotX = useSpring(useTransform(y, [-40, 40], [7, -7]),   { stiffness: 180, damping: 18 })
-  const rotY = useSpring(useTransform(x, [-80, 80], [-7, 7]),   { stiffness: 180, damping: 18 })
-
   return (
     <motion.button
-      initial={{ opacity: 0, y: 14 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.28 + index * 0.07, duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-      style={{ rotateX: rotX, rotateY: rotY, transformPerspective: 700 }}
-      whileTap={{ scale: 0.95 }}
-      onMouseMove={e => {
-        const r = e.currentTarget.getBoundingClientRect()
-        x.set(e.clientX - r.left  - r.width  / 2)
-        y.set(e.clientY - r.top   - r.height / 2)
-      }}
-      onMouseLeave={() => { x.set(0); y.set(0) }}
+      transition={{ delay: 0.15 + index * 0.04, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       onClick={onClick}
       className="cx-prompt-card text-left px-4 py-3.5 rounded-2xl border text-[13px] font-medium"
     >
@@ -444,14 +397,14 @@ function Markdown({ content, onCite }: { content: string; onCite?: (id: string) 
   // Turn [<id>] tokens into links the `a` renderer picks up as citation chips.
   const src = content.replace(CITE, (_m, id) => `[[${id}]](#cite-${id})`)
   return (
-    <div className="text-[15px] leading-[1.85]" style={{ color: 'var(--cx-ink-2)' }}>
+    <div className="text-[15px] leading-[1.7]" style={{ color: 'var(--cx-ink-2)' }}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
           h1: p => <h1 className="text-xl font-semibold tracking-tight mt-5 mb-2" style={{ color: 'var(--cx-ink)' }} {...p} />,
           h2: p => <h2 className="text-[17px] font-semibold tracking-tight mt-4 mb-1.5" style={{ color: 'var(--cx-ink)' }} {...p} />,
           h3: p => <h3 className="text-[15px] font-semibold mt-3 mb-1" style={{ color: 'var(--cx-ink-2)' }} {...p} />,
-          p:  p => <p className="my-2 leading-[1.85]" {...p} />,
+          p:  p => <p className="my-2 leading-[1.7]" {...p} />,
           ul: p => <ul className="my-2 pl-5 space-y-1.5 list-disc marker:text-[var(--cx-mute-2)]" {...p} />,
           ol: p => <ol className="my-2 pl-5 space-y-1.5 list-decimal marker:text-[var(--cx-accent)] marker:font-semibold" {...p} />,
           li: p => <li className="leading-relaxed" {...p} />,
@@ -763,14 +716,7 @@ export function ChatWindow({
             <Download size={13} />
           </button>
         )}
-        <span className="size-1.5 rounded-full flex-shrink-0" style={{ background: 'var(--cx-ok)' }} />
-        <span className="text-[11.5px] cx-num" style={{ color: 'var(--cx-mute-1)' }}>Gemini Flash</span>
-        <span
-          className="hidden sm:block text-[11px] px-1.5 py-0.5 rounded border cx-num"
-          style={{ color: 'var(--cx-mute-2)', borderColor: 'var(--cx-line)', background: 'var(--cx-paper-2)' }}
-        >
-          Hybrid RAG
-        </span>
+        <span className="text-[11.5px] cx-num" style={{ color: 'var(--cx-mute-2)' }}>Gemini Flash</span>
       </ChatTopBar>
 
       {/* ── Message area ──────────────────────────────────────────── */}
@@ -798,9 +744,7 @@ export function ChatWindow({
                 onChange={handleUploadInput}
               />
               <div className="relative z-10 flex flex-col items-center gap-5 text-center">
-                <motion.div
-                  animate={{ y: [0, -8, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                <div
                   className="size-20 rounded-[1.6rem] border flex items-center justify-center"
                   style={{
                     background: 'var(--cx-accent-wash)',
@@ -809,7 +753,7 @@ export function ChatWindow({
                   }}
                 >
                   <UploadCloud size={32} style={{ color: 'var(--cx-accent)' }} />
-                </motion.div>
+                </div>
                 <div>
                   <p className="cx-display text-[19px] font-bold tracking-[-0.01em]" style={{ color: 'var(--cx-ink)' }}>
                     Upload your first document to get started
@@ -863,39 +807,16 @@ export function ChatWindow({
               />
 
               <div className="relative z-10 flex flex-col items-center gap-5">
-                <motion.div
-                  animate={{ y: [0, -10, 0] }}
-                  transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut' }}
-                  className="relative"
+                <div
+                  className="size-[68px] rounded-[1.35rem] border flex items-center justify-center"
+                  style={{
+                    background: 'var(--cx-surface)',
+                    borderColor: 'var(--cx-line)',
+                    boxShadow: '0 8px 32px rgba(161,98,7,0.12), 0 1px 0 rgba(255,255,255,0.85) inset',
+                  }}
                 >
-                  <div
-                    className="size-[68px] rounded-[1.35rem] border flex items-center justify-center"
-                    style={{
-                      background: 'var(--cx-surface)',
-                      borderColor: 'var(--cx-line)',
-                      boxShadow: '0 8px 32px rgba(161,98,7,0.12), 0 1px 0 rgba(255,255,255,0.85) inset',
-                    }}
-                  >
-                    <Image src="/CortexLogo.png" alt="Cortex" width={36} height={36} className="object-contain" />
-                  </div>
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-                    className="absolute pointer-events-none"
-                    style={{ inset: -12, borderRadius: 'calc(1.35rem + 12px)', border: '1px dashed var(--cx-line-2)' }}
-                  />
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
-                    className="absolute pointer-events-none"
-                    style={{ inset: -12 }}
-                  >
-                    <div
-                      className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 size-2 rounded-full border-[1.5px]"
-                      style={{ background: 'var(--cx-accent)', borderColor: 'var(--cx-paper)' }}
-                    />
-                  </motion.div>
-                </motion.div>
+                  <Image src="/CortexLogo.png" alt="Cortex" width={36} height={36} className="object-contain" />
+                </div>
 
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
@@ -981,21 +902,13 @@ export function ChatWindow({
                           <motion.div
                             className="size-[9px] rounded-full"
                             style={{ background: 'rgba(255,255,255,0.85)' }}
-                            animate={{ scale: [1, 0.55, 1], opacity: [1, 0.55, 1] }}
+                            animate={reduceMotion ? undefined : { scale: [1, 0.55, 1], opacity: [1, 0.55, 1] }}
                             transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
                           />
                         ) : (
                           <Image src="/CortexLogo.png" alt="Cortex" width={15} height={15} className="object-contain opacity-75" />
                         )}
                       </div>
-                      {isLastAssistant && (
-                        <motion.div
-                          className="absolute inset-0 rounded-full pointer-events-none"
-                          style={{ border: '2px solid rgba(161,98,7,0.4)' }}
-                          animate={{ scale: [1, 1.6], opacity: [0.7, 0] }}
-                          transition={{ duration: 1.3, repeat: Infinity, ease: 'easeOut' }}
-                        />
-                      )}
                     </div>
 
                     <div className="flex-1 min-w-0 space-y-2.5 pt-0.5">
@@ -1046,7 +959,7 @@ export function ChatWindow({
                             <span className="inline">
                               <StreamingContent content={msg.content} />
                               <motion.span
-                                animate={{ opacity: [1, 0, 1] }}
+                                animate={reduceMotion ? undefined : { opacity: [1, 0, 1] }}
                                 transition={{ repeat: Infinity, duration: 0.85, ease: 'easeInOut' }}
                                 className="inline-block w-[2px] h-[15px] ml-0.5 rounded-full"
                                 style={{ background: 'var(--cx-accent)', verticalAlign: '-3px' }}
@@ -1174,25 +1087,14 @@ export function ChatWindow({
           style={{ borderColor: 'var(--cx-line)' }}
         >
           <div className="max-w-[720px] mx-auto">
-            <motion.div
-              animate={{
-                boxShadow: focused
-                  ? [
-                      '0 0 0 3px var(--cx-accent-wash), 0 4px 24px rgba(161,98,7,0.09)',
-                      '0 0 0 4.5px var(--cx-accent-wash), 0 8px 32px rgba(161,98,7,0.16)',
-                      '0 0 0 3px var(--cx-accent-wash), 0 4px 24px rgba(161,98,7,0.09)',
-                    ]
-                  : '0 2px 8px rgba(10,10,10,0.04)',
-              }}
-              transition={
-                focused
-                  ? { duration: 2.6, repeat: Infinity, ease: 'easeInOut' }
-                  : { duration: 0.25 }
-              }
-              className="rounded-2xl overflow-hidden transition-colors duration-200"
+            <div
+              className="rounded-2xl overflow-hidden transition-all duration-200"
               style={{
                 background:  focused ? 'var(--cx-surface)' : 'var(--cx-paper-2)',
                 border:      `1.5px solid ${focused ? 'var(--cx-accent-line)' : 'var(--cx-line)'}`,
+                boxShadow:   focused
+                  ? '0 0 0 3px var(--cx-accent-wash), 0 4px 20px rgba(161,98,7,0.10)'
+                  : '0 2px 8px rgba(10,10,10,0.04)',
               }}
             >
               <label htmlFor="cx-composer" className="sr-only">Ask a question about your documents</label>
@@ -1245,10 +1147,9 @@ export function ChatWindow({
                       <Square size={13} strokeWidth={2.5} fill="currentColor" />
                     </button>
                   ) : (
-                    <MagneticButton strength={input.trim() ? 0.4 : 0}>
+                    <MagneticButton>
                       <motion.button
-                        whileTap={{ scale: 0.82 }}
-                        whileHover={input.trim() ? { scale: 1.07 } : {}}
+                        whileTap={{ scale: 0.94 }}
                         onClick={() => handleSubmit()}
                         disabled={!input.trim()}
                         aria-label="Send message"
@@ -1267,10 +1168,10 @@ export function ChatWindow({
                   )}
                 </div>
               </div>
-            </motion.div>
+            </div>
 
             <p className="text-center text-[11.5px] mt-2.5" style={{ color: 'var(--cx-mute-1)' }}>
-              Cortex can be wrong — verify important details against the cited sources.
+              Cortex can be wrong - verify important details against the cited sources.
             </p>
           </div>
         </div>

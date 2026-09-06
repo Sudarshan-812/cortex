@@ -56,10 +56,10 @@ export default async function Dashboard() {
               <Image src="/CortexLogo.png" alt="Cortex" width={40} height={40} className="object-contain" />
             </div>
             <h1 className="cx-display text-2xl font-bold tracking-[-0.01em] mb-1" style={{ color: "var(--cx-ink)" }}>
-              Initialize Cortex
+              Create your workspace
             </h1>
             <p className="text-sm mb-8" style={{ color: "var(--cx-mute-1)" }}>
-              Set up your secure enterprise knowledge base.
+              Give it a name and you&apos;re ready to add documents.
             </p>
             <form action={initWorkspace} className="space-y-5">
               <div className="space-y-2">
@@ -76,7 +76,7 @@ export default async function Dashboard() {
                 type="submit"
                 className="cx-btn-ink w-full h-11 rounded-xl font-semibold text-[14px]"
               >
-                Deploy Workspace
+                Create workspace
               </button>
             </form>
           </div>
@@ -124,19 +124,14 @@ export default async function Dashboard() {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div>
             <div className="flex items-center gap-2.5 mb-5">
-              <span className="cx-dot cx-pulse-dot" style={{ background: "var(--cx-ok)" }} />
-              <span className="cx-rule-label">Workspace · owner</span>
-              <span className="cx-hdiv w-10 hidden sm:block" />
-              <span className="cx-num text-[10.5px] hidden sm:inline" style={{ color: "var(--cx-mute-2)" }}>
-                ws_{workspace.id.slice(0, 8)}
-              </span>
+              <span className="cx-dot" style={{ background: "var(--cx-ok)" }} />
+              <span className="cx-rule-label">Workspace</span>
             </div>
             <h1
-              className="cx-display text-[36px] md:text-[44px] font-bold tracking-[-0.03em] leading-[1.02] cx-fade-up"
+              className="cx-display text-[36px] md:text-[44px] font-bold tracking-[-0.03em] leading-[1.02]"
               style={{ color: "var(--cx-ink)" }}
             >
               {workspace.name}
-              <span className="cx-serif italic font-normal" style={{ color: "var(--cx-mute-1)" }}>.</span>
             </h1>
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13.5px]">
               <span style={{ color: "var(--cx-mute-1)" }}>
@@ -158,7 +153,7 @@ export default async function Dashboard() {
           <div className="flex items-center gap-2 flex-shrink-0">
             {isEmpty ? (
               <>
-                <MagneticButton strength={0.3}>
+                <MagneticButton>
                   <UploadTriggerButton
                     label="Upload documents"
                     className="cx-btn-ink h-9 px-4 rounded-full text-[12.5px] font-medium flex items-center gap-1.5"
@@ -170,7 +165,7 @@ export default async function Dashboard() {
                 <UploadTriggerButton
                   className="cx-btn-ghost h-9 px-4 rounded-full text-[12.5px] font-medium flex items-center gap-1.5"
                 />
-                <MagneticButton strength={0.3}>
+                <MagneticButton>
                   <Link href="/chat" className="cx-btn-ink h-9 px-4 rounded-full text-[12.5px] font-medium flex items-center gap-1.5">
                     <Search size={13} /> Query knowledge base
                   </Link>
@@ -234,19 +229,15 @@ export default async function Dashboard() {
           />
         )}
 
-        {/* Upload zone + knowledge graph - paired side by side on desktop */}
-        {hasKnowledgeGraph ? (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-6 items-stretch">
-            <div className="lg:col-span-5" id="upload-zone">
-              <UploadZoneNew workspaceId={workspace.id} />
-            </div>
-            <div className="lg:col-span-7">
-              <KnowledgeGraph documents={documents!} />
-            </div>
-          </div>
-        ) : (
-          <div className="mb-6" id="upload-zone">
-            <UploadZoneNew workspaceId={workspace.id} />
+        {/* Upload zone - consistent full width so the layout doesn't reflow
+            when the first document finishes analysing. */}
+        <div className="mb-6" id="upload-zone">
+          <UploadZoneNew workspaceId={workspace.id} />
+        </div>
+
+        {hasKnowledgeGraph && (
+          <div className="mb-6">
+            <KnowledgeGraph documents={documents!} />
           </div>
         )}
 
@@ -265,14 +256,9 @@ export default async function Dashboard() {
             <span className="text-[12px] font-semibold" style={{ color: "var(--cx-ink-2)" }}>Cortex</span>
             <span className="cx-num text-[10.5px]" style={{ color: "var(--cx-mute-2)" }}>v2.0</span>
           </div>
-          <div className="flex items-center gap-5 text-[10.5px] font-mono" style={{ color: "var(--cx-mute-2)" }}>
-            <span>pgvector · BM25 · RRF</span>
-            <span>Gemini</span>
-            <span>Supabase</span>
-            <span className="flex items-center gap-1.5">
-              <span className="cx-dot cx-pulse-dot" style={{ background: "var(--cx-ok)" }} />
-              <span>production</span>
-            </span>
+          <div className="flex items-center gap-2 text-[10.5px] font-mono" style={{ color: "var(--cx-mute-2)" }}>
+            <span className="cx-dot" style={{ background: "var(--cx-ok)" }} />
+            <span>All systems operational</span>
           </div>
         </footer>
       </div>

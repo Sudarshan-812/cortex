@@ -6,8 +6,6 @@ import { Spotlight } from "./Spotlight";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-const streamWords = "Q3 revenue reached $4.2M - up 23% YoY from enterprise contract growth in APAC.".split(" ");
-
 function TileHeader({ icon: Icon, label }: { icon: typeof Search; label: string }) {
   return (
     <div className="flex items-center gap-2 mb-4">
@@ -29,20 +27,18 @@ function TileHeader({ icon: Icon, label }: { icon: typeof Search; label: string 
 
 function Tile({
   className,
-  delay,
   children,
 }: {
   className?: string;
-  delay: number;
+  delay?: number;
   children: React.ReactNode;
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
       viewport={{ once: true, margin: "-60px" }}
-      transition={{ delay, duration: 0.5, ease }}
-      whileHover={{ y: -3 }}
+      transition={{ duration: 0.25, ease }}
       className={`lp-panel relative overflow-hidden rounded-[1.75rem] group h-full ${className ?? ""}`}
     >
       <Spotlight className="relative rounded-[1.75rem] p-7 h-full block">
@@ -60,10 +56,10 @@ export function Features() {
   return (
     <section id="features" className="lp-font relative z-10 max-w-7xl mx-auto px-6 pb-28 pt-4">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 12 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-80px" }}
-        transition={{ duration: 0.5, ease }}
+        transition={{ duration: 0.35, ease }}
         className="text-center mb-12"
       >
         <p className="lp-rule-label mb-3">Under the hood</p>
@@ -130,18 +126,7 @@ export function Features() {
             className="text-[13.5px] leading-relaxed p-3 rounded-xl border"
             style={{ background: "var(--lp-surface-2)", borderColor: "var(--lp-border)", color: "var(--lp-ink-2)" }}
           >
-            {streamWords.map((word, i) => (
-              <motion.span
-                key={i}
-                initial={{ opacity: 0, filter: "blur(5px)" }}
-                whileInView={{ opacity: 1, filter: "blur(0px)" }}
-                viewport={{ once: true, margin: "-60px" }}
-                transition={{ delay: 0.3 + i * 0.045, duration: 0.28, ease: "easeOut" }}
-                className="inline-block mr-[0.3em]"
-              >
-                {word}
-              </motion.span>
-            ))}
+            Q3 revenue reached $4.2M - up 23% YoY from enterprise contract growth in APAC.
           </div>
         </Tile>
 

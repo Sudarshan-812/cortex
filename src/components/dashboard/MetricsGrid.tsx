@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect, useId, useRef, useState } from 'react'
-import { motion } from 'framer-motion'
+import { useId } from 'react'
 import { ArrowUpRight } from 'lucide-react'
 
 type MetricTileProps = {
@@ -11,7 +10,6 @@ type MetricTileProps = {
   trend?: string
   spark?: number[]
   sparkColor: string
-  delay?: number
 }
 
 function Sparkline({ data, color }: { data: number[]; color: string }) {
@@ -40,39 +38,12 @@ function Sparkline({ data, color }: { data: number[]; color: string }) {
   )
 }
 
-function useCountUp(target: number, duration = 1200) {
-  const [val, setVal] = useState(0)
-  const prev = useRef(0)
-  useEffect(() => {
-    const from = prev.current
-    prev.current = target
-    let start: number, raf: number
-    function step(ts: number) {
-      if (!start) start = ts
-      const t = Math.min(1, (ts - start) / duration)
-      const eased = 1 - Math.pow(1 - t, 4)
-      setVal(Math.round(from + (target - from) * eased))
-      if (t < 1) raf = requestAnimationFrame(step)
-    }
-    raf = requestAnimationFrame(step)
-    return () => cancelAnimationFrame(raf)
-  }, [target, duration])
-  return val
-}
-
-function MetricTile({ label, value, sub, trend, spark, sparkColor, delay = 0 }: MetricTileProps) {
-  const isNum = typeof value === 'number'
-  const counted = useCountUp(isNum ? value : 0)
-  const display = isNum ? counted.toLocaleString() : value
+function MetricTile({ label, value, sub, trend, spark, sparkColor }: MetricTileProps) {
+  const display = typeof value === 'number' ? value.toLocaleString() : value
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="cx-panel cx-panel-hover p-5"
-    >
-      <div className="flex items-start justify-between mb-4">
+    <div className="cx-panel cx-panel-hover p-5">
+      <div className="flex items-start justify-between mb-4 min-h-[24px]">
         <span className="cx-rule-label">{sub}</span>
         {spark && <Sparkline data={spark} color={sparkColor} />}
       </div>
@@ -87,7 +58,7 @@ function MetricTile({ label, value, sub, trend, spark, sparkColor, delay = 0 }: 
         )}
       </div>
       <div className="text-[13px] mt-2" style={{ color: 'var(--cx-mute-1)' }}>{label}</div>
-    </motion.div>
+    </div>
   )
 }
 
@@ -113,33 +84,29 @@ export function MetricsGrid({
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <MetricTile
-        delay={0}
-        label="Documents embedded"
+        label="Total indexed"
         value={docs}
-        sub="Corpus"
+        sub="Documents"
         sparkColor="var(--cx-accent)"
         spark={docsSpark && docsSpark.length > 1 ? docsSpark : undefined}
         trend={docsTrend}
       />
       <MetricTile
-        delay={0.05}
-        label="Vector embeddings"
+        label="Vector chunks, 768-dim"
         value={embeddings}
-        sub="pgvector · 768-dim"
+        sub="Embeddings"
         sparkColor="var(--cx-accent)"
       />
       <MetricTile
-        delay={0.1}
-        label="Storage used"
+        label="Megabytes used"
         value={storageMB}
-        sub="Storage · MB"
+        sub="Storage"
         sparkColor="var(--cx-ok)"
       />
       <MetricTile
-        delay={0.15}
-        label="Chat sessions"
+        label="Conversations started"
         value={sessions ?? 0}
-        sub="Sessions · all time"
+        sub="Chat sessions"
         sparkColor="var(--cx-ok)"
         spark={sessionsSpark && sessionsSpark.length > 1 ? sessionsSpark : undefined}
         trend={sessionsTrend}
