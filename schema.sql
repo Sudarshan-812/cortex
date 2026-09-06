@@ -174,31 +174,64 @@ ALTER TABLE chat_sessions     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE chat_messages     ENABLE ROW LEVEL SECURITY;
 
 -- Workspaces: owner only
+DROP POLICY IF EXISTS "workspaces_select" ON workspaces;
 CREATE POLICY "workspaces_select" ON workspaces FOR SELECT USING (owner_id = auth.uid());
+DROP POLICY IF EXISTS "workspaces_insert" ON workspaces;
 CREATE POLICY "workspaces_insert" ON workspaces FOR INSERT WITH CHECK (owner_id = auth.uid());
+-- UPDATE was missing — a workspace could never be renamed under RLS.
+DROP POLICY IF EXISTS "workspaces_update" ON workspaces;
+CREATE POLICY "workspaces_update" ON workspaces FOR UPDATE
+  USING (owner_id = auth.uid())
+  WITH CHECK (owner_id = auth.uid());
+DROP POLICY IF EXISTS "workspaces_delete" ON workspaces;
 CREATE POLICY "workspaces_delete" ON workspaces FOR DELETE USING (owner_id = auth.uid());
 
--- Workspace members: members of the workspace
+-- Workspace members: a user sees their own membership rows; the workspace owner
+-- manages the roster (insert / change role / remove).
+DROP POLICY IF EXISTS "members_select" ON workspace_members;
 CREATE POLICY "members_select" ON workspace_members FOR SELECT
   USING (user_id = auth.uid());
+DROP POLICY IF EXISTS "members_insert" ON workspace_members;
 CREATE POLICY "members_insert" ON workspace_members FOR INSERT
   WITH CHECK (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
+-- UPDATE / DELETE were missing — deleteWorkspace() (src/app/actions.ts) removes
+-- member rows by workspace_id, which silently no-ops without a DELETE policy.
+DROP POLICY IF EXISTS "members_update" ON workspace_members;
+CREATE POLICY "members_update" ON workspace_members FOR UPDATE
+  USING (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()))
+  WITH CHECK (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
+DROP POLICY IF EXISTS "members_delete" ON workspace_members;
+CREATE POLICY "members_delete" ON workspace_members FOR DELETE
+  USING (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
 
 -- Documents: users who own the workspace
+DROP POLICY IF EXISTS "documents_select" ON documents;
 CREATE POLICY "documents_select" ON documents FOR SELECT
   USING (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
+DROP POLICY IF EXISTS "documents_insert" ON documents;
 CREATE POLICY "documents_insert" ON documents FOR INSERT
   WITH CHECK (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
+-- UPDATE was missing — the auto-summary / topics writer (src/app/actions.ts and
+-- src/app/api/upload/route.ts) runs under the caller's RLS context, so without
+-- this policy every documents.update({summary, topics}) silently touched 0 rows
+-- and Document Intelligence never persisted.
+DROP POLICY IF EXISTS "documents_update" ON documents;
+CREATE POLICY "documents_update" ON documents FOR UPDATE
+  USING (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()))
+  WITH CHECK (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
+DROP POLICY IF EXISTS "documents_delete" ON documents;
 CREATE POLICY "documents_delete" ON documents FOR DELETE
   USING (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
 
 -- Chunks: same ownership chain
+DROP POLICY IF EXISTS "chunks_select" ON document_chunks;
 CREATE POLICY "chunks_select" ON document_chunks FOR SELECT
   USING (document_id IN (
     SELECT d.id FROM documents d
     JOIN workspaces w ON d.workspace_id = w.id
     WHERE w.owner_id = auth.uid()
   ));
+DROP POLICY IF EXISTS "chunks_insert" ON document_chunks;
 CREATE POLICY "chunks_insert" ON document_chunks FOR INSERT
   WITH CHECK (document_id IN (
     SELECT d.id FROM documents d
@@ -228,24 +261,39 @@ CREATE POLICY "chunks_delete" ON document_chunks FOR DELETE
   ));
 
 -- Chat sessions: workspace owner
+DROP POLICY IF EXISTS "chat_sessions_select" ON chat_sessions;
 CREATE POLICY "chat_sessions_select" ON chat_sessions FOR SELECT
   USING (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
+DROP POLICY IF EXISTS "chat_sessions_insert" ON chat_sessions;
 CREATE POLICY "chat_sessions_insert" ON chat_sessions FOR INSERT
   WITH CHECK (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
+DROP POLICY IF EXISTS "chat_sessions_update" ON chat_sessions;
 CREATE POLICY "chat_sessions_update" ON chat_sessions FOR UPDATE
-  USING (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
+  USING (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()))
+  WITH CHECK (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
+DROP POLICY IF EXISTS "chat_sessions_delete" ON chat_sessions;
 CREATE POLICY "chat_sessions_delete" ON chat_sessions FOR DELETE
   USING (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
 
 -- Chat messages: via session → workspace → owner
+DROP POLICY IF EXISTS "chat_messages_select" ON chat_messages;
 CREATE POLICY "chat_messages_select" ON chat_messages FOR SELECT
   USING (session_id IN (
     SELECT cs.id FROM chat_sessions cs
     JOIN workspaces w ON cs.workspace_id = w.id
     WHERE w.owner_id = auth.uid()
   ));
+DROP POLICY IF EXISTS "chat_messages_insert" ON chat_messages;
 CREATE POLICY "chat_messages_insert" ON chat_messages FOR INSERT
   WITH CHECK (session_id IN (
+    SELECT cs.id FROM chat_sessions cs
+    JOIN workspaces w ON cs.workspace_id = w.id
+    WHERE w.owner_id = auth.uid()
+  ));
+-- DELETE for explicit message cleanup (session drop already cascades).
+DROP POLICY IF EXISTS "chat_messages_delete" ON chat_messages;
+CREATE POLICY "chat_messages_delete" ON chat_messages FOR DELETE
+  USING (session_id IN (
     SELECT cs.id FROM chat_sessions cs
     JOIN workspaces w ON cs.workspace_id = w.id
     WHERE w.owner_id = auth.uid()
