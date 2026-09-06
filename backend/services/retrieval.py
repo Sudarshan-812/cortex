@@ -18,7 +18,7 @@ from models.retrieval import (
 )
 from services.embeddings import GeminiEmbedder
 from services.gemini import GeminiStructured
-from services.synthesis import ClaudeSynthesizer
+from services.synthesis import GeminiSynthesizer
 
 logger = logging.getLogger("cortex.retrieval")
 
@@ -321,7 +321,7 @@ class RAGOrchestrator:
         self._retriever = retriever or HybridRetriever(pool, self._s)
         self._reranker = reranker or Reranker(settings=self._s)
         self._crag = crag or CragEvaluator(settings=self._s)
-        self._synth = synthesizer or ClaudeSynthesizer(settings=self._s)
+        self._synth = synthesizer or GeminiSynthesizer(settings=self._s)
 
     async def run(self, request: QueryRequest, auth_uid: str) -> AsyncIterator[dict]:
         n = self._s.retrieval_candidates

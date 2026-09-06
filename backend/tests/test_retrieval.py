@@ -1,18 +1,20 @@
 """Part-4 unit tests — RRF math, rerank + CRAG fallbacks, orchestrator event
-flow, citation parsing. Live DB / Claude / Gemini calls are Part 5."""
+flow, citation parsing, Gemini SSE synthesis. Live DB / model calls are Part 5."""
 from __future__ import annotations
 
 import pytest
 
 from models.chunk import ChunkMetadata
 from models.retrieval import CragVerdict, QueryRequest, RankedChunk, RetrievedChunk
+import httpx
+
 from services.retrieval import (
     CragEvaluator,
     RAGOrchestrator,
     Reranker,
     reciprocal_rank_fusion,
 )
-from services.synthesis import cited_ids
+from services.synthesis import GeminiSynthesizer, cited_ids
 
 
 def _rc(cid: str, score: float = 0.0, page: int = 1) -> RetrievedChunk:
@@ -254,3 +256,43 @@ async def test_orchestrator_no_candidates_short_circuits():
 def test_cited_ids_extracts_bracketed_ids():
     text = "Revenue rose [a1b2c3d4] but margin fell [ff00aa11-2233]. Not [x]."
     assert cited_ids(text) == {"a1b2c3d4", "ff00aa11-2233"}
+
+
+# ---- Gemini synthesizer (SSE) ----
+
+_SSE_OK = (
+    'data: {"candidates":[{"content":{"parts":[{"text":"Hello "}]}}]}\n\n'
+    'data: {"candidates":[{"content":{"parts":[{"text":"world [a1b2c3d4]"}]}}]}\n\n'
+)
+
+
+@pytest.mark.asyncio
+async def test_gemini_synthesizer_streams_sse_text():
+    def handler(request):
+        return httpx.Response(
+            200, content=_SSE_OK, headers={"content-type": "text/event-stream"}, request=request
+        )
+
+    syn = GeminiSynthesizer(client=httpx.AsyncClient(transport=httpx.MockTransport(handler)))
+    out = "".join([t async for t in syn.stream("q", [_ranked("a1b2c3d4")])])
+    assert out == "Hello world [a1b2c3d4]"
+
+
+@pytest.mark.asyncio
+async def test_gemini_synthesizer_retries_before_first_token(no_backoff):
+    calls = {"n": 0}
+
+    def handler(request):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return httpx.Response(429, json={}, request=request)
+        return httpx.Response(
+            200,
+            content='data: {"candidates":[{"content":{"parts":[{"text":"ok"}]}}]}\n\n',
+            headers={"content-type": "text/event-stream"},
+            request=request,
+        )
+
+    syn = GeminiSynthesizer(client=httpx.AsyncClient(transport=httpx.MockTransport(handler)))
+    out = "".join([t async for t in syn.stream("q", [_ranked("a")])])
+    assert out == "ok" and calls["n"] == 2

@@ -1,13 +1,24 @@
-"""ClaudeSynthesizer — streamed answer from the Anthropic API with a strict
-citation contract (page_number, source_name, chunk_id come from the orchestrator's
-`citations` event; Claude references chunk ids inline)."""
+"""GeminiSynthesizer — streamed answer from the Gemini API (free tier) with a
+strict citation contract. Same model the Next.js app uses for its chat stream.
+
+The authoritative citation list (chunk_id / source_name / page_number) is emitted
+by the orchestrator's `citations` event; the model only references chunk ids
+inline as [id], and `cited_ids()` can post-validate them.
+"""
 from __future__ import annotations
 
+import asyncio
+import json
 import re
 from collections.abc import AsyncIterator, Sequence
 
+import httpx
+
 from core.config import Settings, get_settings
 from models.retrieval import RankedChunk
+
+_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent"
+_RETRYABLE = frozenset({429, 500, 502, 503, 504})
 
 _SYSTEM = (
     "You are Cortex, a document-intelligence assistant. Answer ONLY from the "
@@ -33,7 +44,25 @@ def _format_context(ranked: Sequence[RankedChunk]) -> str:
     return "\n".join(out)
 
 
-class ClaudeSynthesizer:
+def _parse_sse_line(line: str) -> list[str]:
+    if not line.startswith("data:"):
+        return []
+    payload = line[5:].strip()
+    if not payload or payload == "[DONE]":
+        return []
+    try:
+        data = json.loads(payload)
+    except json.JSONDecodeError:
+        return []
+    return [
+        part["text"]
+        for cand in data.get("candidates", [])
+        for part in cand.get("content", {}).get("parts", [])
+        if part.get("text")
+    ]
+
+
+class GeminiSynthesizer:
     def __init__(
         self,
         *,
@@ -41,20 +70,29 @@ class ClaudeSynthesizer:
         api_key: str | None = None,
         model: str | None = None,
         max_tokens: int | None = None,
-        client=None,
+        client: httpx.AsyncClient | None = None,
     ) -> None:
         s = settings or get_settings()
         self._model = model or s.synthesis_model
         self._max_tokens = max_tokens or s.synthesis_max_tokens
-        self._api_key = api_key or s.anthropic_api_key
-        self._client = client
+        self._key = api_key or s.gemini_api_key
+        self._retries = s.http_max_retries
+        self._client = client or httpx.AsyncClient(timeout=60)
+        self._owns_client = client is None
 
-    def _get_client(self):
-        if self._client is None:
-            from anthropic import AsyncAnthropic
+    async def aclose(self) -> None:
+        if self._owns_client:
+            await self._client.aclose()
 
-            self._client = AsyncAnthropic(api_key=self._api_key or None)
-        return self._client
+    def _body(self, query: str, ranked: Sequence[RankedChunk], original_query: str | None) -> dict:
+        user = f"{_format_context(ranked)}\n\nQuestion: {original_query or query}"
+        if original_query and original_query != query:
+            user += f"\n(Interpretation used for retrieval: {query})"
+        return {
+            "systemInstruction": {"parts": [{"text": _SYSTEM}]},
+            "contents": [{"role": "user", "parts": [{"text": user}]}],
+            "generationConfig": {"temperature": 0.2, "maxOutputTokens": self._max_tokens},
+        }
 
     async def stream(
         self,
@@ -63,14 +101,25 @@ class ClaudeSynthesizer:
         *,
         original_query: str | None = None,
     ) -> AsyncIterator[str]:
-        user = f"{_format_context(ranked)}\n\nQuestion: {original_query or query}"
-        if original_query and original_query != query:
-            user += f"\n(Interpretation used for retrieval: {query})"
-        async with self._get_client().messages.stream(
-            model=self._model,
-            max_tokens=self._max_tokens,
-            system=_SYSTEM,
-            messages=[{"role": "user", "content": user}],
-        ) as stream:
-            async for text in stream.text_stream:
-                yield text
+        body = self._body(query, ranked, original_query)
+        url = _URL.format(model=self._model)
+        for attempt in range(self._retries + 1):
+            started = False
+            try:
+                async with self._client.stream(
+                    "POST", url, params={"key": self._key, "alt": "sse"}, json=body
+                ) as resp:
+                    resp.raise_for_status()
+                    async for line in resp.aiter_lines():
+                        for text in _parse_sse_line(line):
+                            started = True
+                            yield text
+                return
+            except httpx.HTTPStatusError as exc:
+                retryable = exc.response.status_code in _RETRYABLE
+                if started or not retryable or attempt == self._retries:
+                    raise
+            except httpx.TransportError:
+                if started or attempt == self._retries:
+                    raise
+            await asyncio.sleep(0.5 * (2**attempt))

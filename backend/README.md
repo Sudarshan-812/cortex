@@ -17,7 +17,7 @@ Status: **Part 5 — integration test harness complete (48 tests).**
 | `integrations/gdrive.py` | 3 — Drive client, Vault token store, `DriveSyncer` |
 | `services/gemini.py` | 4 — `GeminiStructured` (rerank + CRAG) |
 | `services/retrieval.py` | 4 — RRF, `HybridRetriever`, `Reranker`, `CragEvaluator`, `RAGOrchestrator` |
-| `services/synthesis.py` | 4 — `ClaudeSynthesizer` (streamed answer + citation contract) |
+| `services/synthesis.py` | 4 — `GeminiSynthesizer` (streamed answer + citation contract) |
 | `api/` | 4 — FastAPI `POST /v1/query` (SSE), Supabase JWT verify |
 | `tests/test_pipeline.py` | 5 — integration harness: atomic cleanup, ACL non-leak (rpc+app), rate-limit fallback |
 | `tests/_fakes.py` | shared `FakeDB` (ACL predicate + txn snapshot), Drive/HTTP doubles |
@@ -33,9 +33,10 @@ Config: copy `.env.example` to `.env`. Migrations `0001`/`0002` apply via
 
 Pipeline: hybrid retrieve (RPC `match_hybrid_documents`, or `RETRIEVAL_MODE=app`
 for parallel dense+BM25 + Python RRF) → Gemini rerank to Top-K → CRAG relevance
-grade (rewrite + re-retrieve once if mean < `CRAG_THRESHOLD`) → streamed answer
-from Claude with a `citations` event carrying `chunk_id` / `source_name` /
-`page_number`.
+grade (rewrite + re-retrieve once if mean < `CRAG_THRESHOLD`) → answer streamed
+from `gemini-2.5-flash` with a `citations` event carrying `chunk_id` /
+`source_name` / `page_number`. Every model call is Gemini (free tier) — one
+`GEMINI_API_KEY`, no paid API.
 
 ## Setup
 

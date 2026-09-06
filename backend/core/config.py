@@ -39,8 +39,7 @@ class Settings(BaseSettings):
     rerank_model: str = "gemini-3.1-flash-lite"
     crag_model: str = "gemini-3.1-flash-lite"
     crag_threshold: float = 0.65
-    anthropic_api_key: str = ""
-    synthesis_model: str = "claude-opus-5"
+    synthesis_model: str = "gemini-2.5-flash"  # free-tier; same model the Next.js chat stream uses
     synthesis_max_tokens: int = 2048
     supabase_jwt_secret: str = ""
 
