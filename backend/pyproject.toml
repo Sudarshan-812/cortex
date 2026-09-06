@@ -1,0 +1,33 @@
+[project]
+name = "cortex-backend"
+version = "0.1.0"
+description = "Cortex document-intelligence backend — parsing, sync, retrieval."
+requires-python = ">=3.11"
+dependencies = [
+  "pydantic>=2.7",
+  "pydantic-settings>=2.2",
+  "docling>=2.15",          # structural PDF/DOCX/XLSX parsing (Part 2)
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.2", "pytest-asyncio>=0.23", "ruff>=0.6"]
+# Later workstreams append their own deps:
+#   Part 3  google-api-python-client, google-auth-oauthlib, httpx
+#   Part 4  fastapi, uvicorn[standard], anthropic, cohere, asyncpg, python-jose[cryptography]
+#   Parts 3-4  supabase>=2.7
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["models", "services"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
