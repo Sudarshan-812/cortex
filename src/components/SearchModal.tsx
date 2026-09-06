@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { Search, FileText, Loader2, X, ArrowUp, Hash } from 'lucide-react'
+import { useModalA11y } from '@/lib/useModalA11y'
 
 type Result = {
   chunk_id: string
@@ -35,9 +36,11 @@ export function SearchModal({
   const [results, setResults] = useState<Result[]>([])
   const [loading, setLoading] = useState(false)
   const [selected, setSelected] = useState(0)
+  const [kbNav,   setKbNav]   = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const router   = useRouter()
   const debouncedQuery = useDebounce(query, 320)
+  const panelRef = useModalA11y<HTMLDivElement>(open, onClose)
 
   // Focus input when opened
   useEffect(() => {
@@ -66,31 +69,32 @@ export function SearchModal({
     return () => { cancelled = true }
   }, [debouncedQuery, open, workspaceId])
 
-  // Keyboard navigation
+  // Arrow-key navigation (Escape is handled by useModalA11y)
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (!open) return
-      if (e.key === 'Escape') { onClose(); return }
-      if (e.key === 'ArrowDown') { e.preventDefault(); setSelected(s => Math.min(s + 1, results.length - 1)) }
-      if (e.key === 'ArrowUp')   { e.preventDefault(); setSelected(s => Math.max(s - 1, 0)) }
-      if (e.key === 'Enter' && results.length > 0) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); setKbNav(true); setSelected(s => Math.min(s + 1, results.length - 1)) }
+      if (e.key === 'ArrowUp')   { e.preventDefault(); setKbNav(true); setSelected(s => Math.max(s - 1, 0)) }
+      if (e.key === 'Enter' && (query.trim() || results.length > 0)) {
         e.preventDefault()
-        openInChat(results[selected]?.content ?? query)
+        openInChat()
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, results, selected, query])
 
-  function openInChat(q: string) {
+  function openInChat() {
+    const q = query.trim()
+    if (!q) return
     onClose()
     router.push(`/chat?q=${encodeURIComponent(q)}`)
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!query.trim()) return
-    openInChat(query)
+    openInChat()
   }
 
   return (
@@ -112,11 +116,16 @@ export function SearchModal({
           {/* Modal */}
           <motion.div
             key="modal"
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Search your knowledge base"
+            onMouseMove={() => kbNav && setKbNav(false)}
             initial={{ opacity: 0, y: -24, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -16, scale: 0.97 }}
             transition={{ type: 'spring', stiffness: 380, damping: 32 }}
-            className="fixed left-1/2 -translate-x-1/2 top-[14vh] z-50 w-full max-w-[580px] cx-panel overflow-hidden"
+            className="fixed left-1/2 -translate-x-1/2 top-[14vh] z-50 w-[calc(100%-2rem)] max-w-[580px] cx-panel overflow-hidden"
             style={{ boxShadow: '0 24px 80px rgba(10,8,6,0.22)' }}
           >
             {/* Search bar */}
@@ -134,6 +143,7 @@ export function SearchModal({
                   value={query}
                   onChange={e => { setQuery(e.target.value); setSelected(0) }}
                   placeholder="Search your knowledge base…"
+                  aria-label="Search your knowledge base"
                   className="flex-1 bg-transparent text-[15px] outline-none"
                   style={{ color: 'var(--cx-ink)' }}
                 />
@@ -141,10 +151,9 @@ export function SearchModal({
                   <button
                     type="button"
                     onClick={() => { setQuery(''); setResults([]); inputRef.current?.focus() }}
-                    className="size-6 rounded flex items-center justify-center flex-shrink-0"
+                    aria-label="Clear search"
+                    className="size-8 -m-1 rounded flex items-center justify-center flex-shrink-0 hover:bg-[var(--cx-paper-2)]"
                     style={{ color: 'var(--cx-mute-2)' }}
-                    onMouseEnter={e => (e.currentTarget.style.color = 'var(--cx-ink)')}
-                    onMouseLeave={e => (e.currentTarget.style.color = 'var(--cx-mute-2)')}
                   >
                     <X size={13} />
                   </button>
@@ -161,6 +170,12 @@ export function SearchModal({
 
             {/* Results */}
             <AnimatePresence mode="wait">
+              {loading && results.length === 0 && query.trim() && (
+                <motion.div key="searching" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="px-4 py-6 flex items-center gap-2.5">
+                  <Loader2 size={13} className="animate-spin" style={{ color: 'var(--cx-accent)' }} />
+                  <span className="text-[12.5px]" style={{ color: 'var(--cx-mute-1)' }}>Searching…</span>
+                </motion.div>
+              )}
               {results.length > 0 && (
                 <motion.div
                   key="results"
@@ -177,8 +192,8 @@ export function SearchModal({
                         key={r.chunk_id}
                         className="w-full flex items-start gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-150 mb-0.5"
                         style={{ background: selected === i ? 'var(--cx-paper-2)' : 'transparent' }}
-                        onMouseEnter={() => setSelected(i)}
-                        onClick={() => openInChat(r.content.slice(0, 120))}
+                        onMouseEnter={() => { if (!kbNav) setSelected(i) }}
+                        onClick={openInChat}
                       >
                         <div
                           className="size-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 border"
@@ -228,7 +243,7 @@ export function SearchModal({
                     <button
                       className="underline underline-offset-2"
                       style={{ color: 'var(--cx-accent)' }}
-                      onClick={() => openInChat(query)}
+                      onClick={openInChat}
                     >
                       ask Cortex directly
                     </button>

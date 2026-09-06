@@ -213,6 +213,17 @@ def test_sync_route_404_without_connector(client):
     assert r.status_code == 404
 
 
+def test_disconnect_route_removes_connector(client):
+    client.db.add_workspace("U", "ws-1")
+    client.db.connectors[("U", "gdrive")] = {
+        "id": "acc-1", "user_id": "U", "workspace_id": "ws-1", "provider": "gdrive",
+        "external_account_email": "me@example.com", "refresh_token_secret_id": "sid",
+    }
+    r = client.delete("/v1/connectors/google-drive")
+    assert r.status_code == 200 and r.json()["disconnected"] is True
+    assert ("U", "gdrive") not in client.db.connectors
+
+
 def test_status_route_disconnected_then_connected(client):
     assert client.get("/v1/connectors/google-drive/status").json() == {"connected": False}
     client.db.add_workspace("U", "ws-1")

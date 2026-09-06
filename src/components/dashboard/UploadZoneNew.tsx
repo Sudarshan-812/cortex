@@ -6,13 +6,12 @@ import { FileText, Loader2, Check, UploadCloud, AlertCircle } from 'lucide-react
 import { useRouter } from 'next/navigation'
 
 const STAGES = [
-  { key: 'processing', label: 'Process' },
-  { key: 'chunking',   label: 'Chunk'   },
+  { key: 'processing', label: 'Parse'   },
   { key: 'embedding',  label: 'Embed'   },
   { key: 'embedded',   label: 'Indexed' },
 ] as const
 
-type StageName = typeof STAGES[number]['key']
+type StageName = 'processing' | 'chunking' | 'embedding' | 'embedded'
 
 type QueueItem = {
   id: string
@@ -24,8 +23,10 @@ type QueueItem = {
 }
 
 function UploadRow({ file }: { file: QueueItem }) {
-  const stageIdx = STAGES.findIndex(s => s.key === file.stage)
-  const isDone   = file.stage === 'embedded'
+  // `chunking` is legacy; fold it into the parse stage.
+  const stage = file.stage === 'chunking' ? 'processing' : file.stage
+  const stageIdx = STAGES.findIndex(s => s.key === stage)
+  const isDone   = stage === 'embedded'
   const hasError = !!file.error
 
   return (
@@ -54,38 +55,41 @@ function UploadRow({ file }: { file: QueueItem }) {
       </div>
 
       {hasError ? (
-        <p className="text-[10.5px] leading-relaxed px-0.5 mt-1" style={{ color: 'var(--cx-err)' }}>
+        <p className="text-[11px] leading-relaxed px-0.5 mt-1" style={{ color: 'var(--cx-err)' }}>
           {file.error}
         </p>
       ) : (
-        <div className="grid grid-cols-4 gap-1">
-          {STAGES.map((s, i) => {
-            const isActive = i === stageIdx
-            const done = i < stageIdx || isDone
-            const fillWidth = done ? '100%'
-              : isActive ? `${Math.min(100, Math.max(0, ((file.pct - i * 25) / 25) * 100))}%`
-              : '0%'
-            return (
-              <div key={s.key} className="flex flex-col gap-1">
-                <div className="h-[2px] rounded-full overflow-hidden" style={{ background: 'var(--cx-line)' }}>
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{ width: fillWidth, background: done ? 'var(--cx-ok)' : 'var(--cx-accent)' }}
-                  />
-                </div>
+        <>
+          {/* Continuous progress bar */}
+          <div className="h-[3px] rounded-full overflow-hidden" style={{ background: 'var(--cx-line)' }}>
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${isDone ? 100 : Math.min(100, Math.max(4, file.pct))}%`,
+                background: isDone ? 'var(--cx-ok)' : 'var(--cx-accent)',
+              }}
+            />
+          </div>
+          {/* Stage ticks */}
+          <div className="flex items-center gap-4 mt-1.5">
+            {STAGES.map((s, i) => {
+              const active = i === stageIdx
+              const passed = i < stageIdx || isDone
+              return (
                 <span
-                  className="text-[9.5px] font-mono uppercase tracking-[.1em]"
+                  key={s.key}
+                  className="text-[10.5px] font-mono uppercase tracking-[.1em]"
                   style={{
-                    color: isActive ? 'var(--cx-ink-2)' : done ? 'var(--cx-mute-1)' : 'var(--cx-mute-2)',
-                    fontWeight: isActive ? 600 : 500,
+                    color: active ? 'var(--cx-ink-2)' : passed ? 'var(--cx-ok)' : 'var(--cx-mute-2)',
+                    fontWeight: active ? 600 : 500,
                   }}
                 >
                   {s.label}
                 </span>
-              </div>
-            )
-          })}
-        </div>
+              )
+            })}
+          </div>
+        </>
       )}
 
       {!hasError && file.label && !isDone && (
@@ -202,19 +206,20 @@ export function UploadZoneNew({ workspaceId }: { workspaceId: string }) {
           }}
         >
           <input
+            id="cx-upload-input"
             ref={fileRef}
             type="file"
             multiple
             className="hidden"
             onChange={e => handleFiles(e.target.files)}
-            accept=".pdf,.docx,.doc,.txt,.md,.csv"
+            accept=".pdf,.docx,.xlsx"
           />
           <UploadCloud size={20} className="mb-2" style={{ color: 'var(--cx-mute-1)' }} />
           <p className="text-[12.5px] font-medium mb-0.5" style={{ color: 'var(--cx-ink)' }}>
             Drop a file or click to browse
           </p>
           <p className="text-[10.5px] font-mono" style={{ color: 'var(--cx-mute-2)' }}>
-            PDF · DOCX · TXT · MD · CSV · up to 50 MB
+            PDF · DOCX · XLSX · up to 50 MB
           </p>
         </div>
       </div>

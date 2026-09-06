@@ -19,10 +19,10 @@ export default function NotFound() {
           The page you&apos;re looking for doesn&apos;t exist or has been moved.
         </p>
         <Link
-          href="/dashboard"
+          href="/"
           className="cx-btn-ink h-9 px-5 rounded-full text-[13px] font-medium inline-flex items-center"
         >
-          Back to dashboard
+          Back to home
         </Link>
       </div>
     </div>

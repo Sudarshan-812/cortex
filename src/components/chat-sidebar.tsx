@@ -7,12 +7,12 @@ import { createChatSession, deleteChatSession, renameChatSession } from '@/app/s
 import { switchWorkspace } from '@/app/actions'
 import {
   Plus, MessageSquare, Trash2, LayoutDashboard,
-  Loader2, PanelLeftClose, PanelLeftOpen,
+  Loader2, PanelLeftClose, PanelLeftOpen, Pencil, X,
   ChevronDown, Check, Building2, UploadCloud,
 } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { uploadDocument } from '@/app/actions'
+import { useMobileNav } from '@/components/MobileNavContext'
 
 type Session  = { id: string; title: string; updated_at: string }
 type Workspace = { id: string; name: string }
@@ -31,6 +31,7 @@ export function ChatSidebar({
   const router  = useRouter()
   const params  = useParams()
   const activeId = params?.sessionId as string | undefined
+  const { open: navOpen, setOpen: setNavOpen } = useMobileNav()
 
   const [sessions,    setSessions]    = useState<Session[]>(initialSessions)
   const [creating,    setCreating]    = useState(false)
@@ -53,7 +54,18 @@ export function ChatSidebar({
     return () => document.removeEventListener('mousedown', onClickOutside)
   }, [wsOpen])
 
+  useEffect(() => {
+    try { if (localStorage.getItem('cx-sidebar-collapsed') === '1') setCollapsed(true) } catch {}
+  }, [])
+  useEffect(() => {
+    try { localStorage.setItem('cx-sidebar-collapsed', collapsed ? '1' : '0') } catch {}
+  }, [collapsed])
+
   async function handleNewChat() {
+    setNavOpen(false)
+    // Reuse an untouched "New Chat" instead of spawning a duplicate.
+    const existingEmpty = sessions.find(s => s.title === 'New Chat')
+    if (existingEmpty) { router.push(`/chat/${existingEmpty.id}`); return }
     setCreating(true)
     const result = await createChatSession(workspaceId)
     if (result.session) {
@@ -76,12 +88,18 @@ export function ChatSidebar({
     const file = e.target.files?.[0]
     if (!file) return
     setUploading(true)
-    const fd = new FormData()
-    fd.append('file', file)
-    fd.append('workspaceId', workspaceId)
-    await uploadDocument(fd)
-    setUploading(false)
-    if (uploadRef.current) uploadRef.current.value = ''
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('workspaceId', workspaceId)
+      const res = await fetch('/api/upload', { method: 'POST', body: fd })
+      const reader = res.body?.getReader()
+      if (reader) { while (!(await reader.read()).done) { /* drain to completion */ } }
+      router.refresh()
+    } finally {
+      setUploading(false)
+      if (uploadRef.current) uploadRef.current.value = ''
+    }
   }
 
   function startRename(session: Session, e: React.MouseEvent) {
@@ -110,20 +128,35 @@ export function ChatSidebar({
   }
 
   return (
-    <motion.aside
-      animate={{ width: collapsed ? 60 : 256 }}
-      transition={{ type: 'spring', stiffness: 280, damping: 28 }}
-      className="flex flex-col h-full flex-shrink-0 overflow-hidden border-r"
-      style={{
-        background: 'var(--cx-paper)',
-        borderColor: 'var(--cx-line)',
-      }}
+    <>
+      <div
+        onClick={() => setNavOpen(false)}
+        className={`md:hidden fixed inset-0 z-40 transition-opacity duration-200 ${navOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        style={{ background: 'rgba(10,8,6,0.4)' }}
+        aria-hidden="true"
+      />
+    <aside
+      style={{ width: collapsed ? 60 : 256, background: 'var(--cx-paper)', borderColor: 'var(--cx-line)' }}
+      className={
+        'flex flex-col h-full flex-shrink-0 overflow-hidden border-r transition-[width,transform] duration-300 ease-out ' +
+        'md:translate-x-0 ' +
+        'max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-50 max-md:!w-[264px] max-md:shadow-2xl ' +
+        (navOpen ? 'max-md:translate-x-0' : 'max-md:-translate-x-full')
+      }
     >
       {/* ── Header ──────────────────────────────────────────── */}
       <div
-        className={`flex items-center h-[58px] px-3 border-b flex-shrink-0 ${collapsed ? 'justify-center' : 'justify-between gap-2'}`}
+        className={`flex items-center h-[58px] px-3 border-b flex-shrink-0 ${collapsed ? 'md:justify-center' : 'justify-between gap-2'}`}
         style={{ borderColor: 'var(--cx-line)' }}
       >
+        <button
+          onClick={() => setNavOpen(false)}
+          className="md:hidden flex-shrink-0 size-9 rounded-lg flex items-center justify-center hover:bg-[var(--cx-paper-2)] order-last"
+          style={{ color: 'var(--cx-mute-2)' }}
+          aria-label="Close navigation menu"
+        >
+          <X size={16} />
+        </button>
         {!collapsed && (
           <div ref={wsRef} className="relative min-w-0 flex-1">
             <button
@@ -190,7 +223,7 @@ export function ChatSidebar({
         <motion.button
           whileTap={{ scale: 0.88 }}
           onClick={() => setCollapsed(v => !v)}
-          className="flex-shrink-0 size-8 rounded-lg flex items-center justify-center transition-colors"
+          className="hidden md:flex flex-shrink-0 size-8 rounded-lg items-center justify-center transition-colors"
           style={{ color: 'var(--cx-mute-2)' }}
           onMouseEnter={e => { e.currentTarget.style.background = 'var(--cx-paper-2)'; e.currentTarget.style.color = 'var(--cx-ink)' }}
           onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'var(--cx-mute-2)' }}
@@ -212,7 +245,7 @@ export function ChatSidebar({
           ref={uploadRef}
           type="file"
           className="hidden"
-          accept=".pdf,.docx,.doc,.txt,.md,.csv"
+          accept=".pdf,.docx,.xlsx"
           onChange={handleUpload}
         />
         {collapsed ? (
@@ -382,21 +415,29 @@ export function ChatSidebar({
                         {session.title}
                       </span>
                     )}
-                    <motion.button
-                      initial={false}
-                      animate={{ opacity: 0 }}
-                      whileHover={{ opacity: 1 }}
-                      onClick={e => handleDelete(session.id, e)}
-                      disabled={deletingId === session.id}
-                      className="opacity-0 group-hover:opacity-100 flex-shrink-0 transition-colors rounded p-0.5"
-                      style={{ color: isActive ? 'rgba(255,255,255,0.35)' : 'var(--cx-mute-2)' }}
-                      onMouseEnter={e => (e.currentTarget.style.color = isActive ? 'rgba(255,255,255,0.85)' : 'var(--cx-err)')}
-                      onMouseLeave={e => (e.currentTarget.style.color = isActive ? 'rgba(255,255,255,0.35)' : 'var(--cx-mute-2)')}
-                    >
-                      {deletingId === session.id
-                        ? <Loader2 size={12} className="animate-spin" />
-                        : <Trash2 size={12} />}
-                    </motion.button>
+                    {renamingId !== session.id && (
+                      <div className="flex-shrink-0 flex items-center gap-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity">
+                        <button
+                          onClick={e => startRename(session, e)}
+                          aria-label={`Rename "${session.title}"`}
+                          className="rounded p-1.5 hover:bg-black/10"
+                          style={{ color: isActive ? 'rgba(255,255,255,0.55)' : 'var(--cx-mute-2)' }}
+                        >
+                          <Pencil size={12} />
+                        </button>
+                        <button
+                          onClick={e => handleDelete(session.id, e)}
+                          disabled={deletingId === session.id}
+                          aria-label={`Delete "${session.title}"`}
+                          className="rounded p-1.5 hover:bg-black/10"
+                          style={{ color: isActive ? 'rgba(255,255,255,0.55)' : 'var(--cx-mute-2)' }}
+                        >
+                          {deletingId === session.id
+                            ? <Loader2 size={12} className="animate-spin" />
+                            : <Trash2 size={12} />}
+                        </button>
+                      </div>
+                    )}
                   </>
                 )}
               </motion.div>
@@ -435,6 +476,7 @@ export function ChatSidebar({
           </div>
         )}
       </div>
-    </motion.aside>
+    </aside>
+    </>
   )
 }

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, FileText, Loader2, BookOpen } from 'lucide-react'
 import { fetchChunkContext } from '@/app/session-actions'
+import { useModalA11y } from '@/lib/useModalA11y'
 
 type ChunkContext = {
   documentName: string
@@ -22,6 +23,7 @@ export function DocumentReaderPanel({
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState<string | null>(null)
   const targetRef = useRef<HTMLDivElement>(null)
+  const panelRef  = useModalA11y<HTMLDivElement>(!!chunkId, onClose)
 
   useEffect(() => {
     if (!chunkId) { setData(null); return }
@@ -62,11 +64,15 @@ export function DocumentReaderPanel({
           {/* Panel */}
           <motion.div
             key="panel"
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Source passage"
             initial={{ x: '100%', opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             exit={{ x: '100%', opacity: 0 }}
             transition={{ type: 'spring', stiffness: 340, damping: 34 }}
-            className="fixed right-0 top-0 bottom-0 z-50 flex flex-col w-[420px] max-w-[90vw]"
+            className="fixed right-0 top-0 bottom-0 z-50 flex flex-col w-[440px] max-w-[calc(100vw-2.5rem)]"
             style={{
               background: 'var(--cx-surface)',
               borderLeft: '1px solid var(--cx-line)',
@@ -94,10 +100,9 @@ export function DocumentReaderPanel({
               </div>
               <button
                 onClick={onClose}
-                className="size-8 rounded-lg flex items-center justify-center transition-colors flex-shrink-0"
+                aria-label="Close panel"
+                className="size-9 rounded-lg flex items-center justify-center transition-colors flex-shrink-0 hover:bg-[var(--cx-paper-2)]"
                 style={{ color: 'var(--cx-mute-2)' }}
-                onMouseEnter={e => { e.currentTarget.style.background = 'var(--cx-paper-2)'; e.currentTarget.style.color = 'var(--cx-ink)' }}
-                onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'var(--cx-mute-2)' }}
               >
                 <X size={15} />
               </button>
@@ -146,7 +151,7 @@ export function DocumentReaderPanel({
                         {isTarget && (
                           <div className="flex items-center gap-1.5 mb-2">
                             <div
-                              className="inline-flex items-center gap-1 h-4 px-1.5 rounded text-[9.5px] font-bold uppercase tracking-[.12em]"
+                              className="inline-flex items-center gap-1 h-4 px-1.5 rounded text-[10.5px] font-bold uppercase tracking-[.12em]"
                               style={{ background: 'var(--cx-accent)', color: '#fff' }}
                             >
                               Cited passage

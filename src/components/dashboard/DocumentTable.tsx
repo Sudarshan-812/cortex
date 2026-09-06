@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { FileText, Loader2, Trash2, Info } from 'lucide-react'
 import { deleteDocument } from '@/app/actions'
@@ -46,9 +46,12 @@ function SummaryPopover({ summary }: { summary: string }) {
   return (
     <div className="relative inline-flex">
       <button
+        onClick={() => setShow(v => !v)}
         onMouseEnter={() => setShow(true)}
         onMouseLeave={() => setShow(false)}
-        className="size-5 rounded flex items-center justify-center transition-colors"
+        aria-label="Show document summary"
+        aria-expanded={show}
+        className="size-7 -m-1 rounded flex items-center justify-center transition-colors"
         style={{ color: 'var(--cx-mute-2)' }}
         onFocus={() => setShow(true)}
         onBlur={() => setShow(false)}
@@ -87,6 +90,13 @@ export function DocumentTable({
   const [docs,       setDocs]       = useState(initial)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [confirmId,  setConfirmId]  = useState<string | null>(null)
+  const [, forceTick] = useState(0)
+
+  // Keep the "x m ago" column fresh.
+  useEffect(() => {
+    const id = setInterval(() => forceTick(t => t + 1), 60_000)
+    return () => clearInterval(id)
+  }, [])
 
   async function handleDelete(id: string) {
     setDeletingId(id)
@@ -125,6 +135,8 @@ export function DocumentTable({
         </div>
       </div>
 
+      <div className="overflow-x-auto cx-scroll-thin">
+      <div className="min-w-[600px]">
       {/* Column headers */}
       <div
         className="grid gap-4 px-6 py-2.5 cx-rule-label border-b"
@@ -244,12 +256,11 @@ export function DocumentTable({
                         </span>
                         <button
                           onClick={() => setConfirmId(doc.id)}
-                          className="opacity-0 group-hover:opacity-100 size-6 rounded flex items-center justify-center transition-all"
+                          aria-label={`Delete ${doc.name}`}
+                          className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 size-8 rounded flex items-center justify-center transition-all hover:bg-[var(--cx-paper-2)]"
                           style={{ color: 'var(--cx-mute-2)' }}
-                          onMouseEnter={e => { e.currentTarget.style.background = 'var(--cx-paper-2)'; e.currentTarget.style.color = 'var(--cx-err)' }}
-                          onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'var(--cx-mute-2)' }}
                         >
-                          <Trash2 size={11} />
+                          <Trash2 size={12} />
                         </button>
                       </motion.div>
                     )}
@@ -259,6 +270,8 @@ export function DocumentTable({
             )
           })}
         </AnimatePresence>
+      </div>
+      </div>
       </div>
     </motion.div>
   )

@@ -2,6 +2,8 @@ import { createClient } from "@/utils/supabase/server"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { AppSidebar } from "@/components/dashboard/AppSidebar"
+import { MobileNavProvider } from "@/components/MobileNavContext"
+import { MobileHeader } from "@/components/MobileHeader"
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
@@ -29,13 +31,19 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   return (
-    <div className="flex min-h-screen" style={{ background: "var(--cx-paper)", color: "var(--cx-ink)" }}>
-      <AppSidebar
-        workspace={workspace}
-        workspaces={workspaces}
-        user={{ name: userName, email: userEmail, avatarUrl }}
-      />
-      <main className="flex-1 min-w-0">{children}</main>
-    </div>
+    <MobileNavProvider>
+      <a href="#main-content" className="cx-skip-link">Skip to content</a>
+      <div className="flex min-h-screen" style={{ background: "var(--cx-paper)", color: "var(--cx-ink)" }}>
+        <AppSidebar
+          workspace={workspace}
+          workspaces={workspaces}
+          user={{ name: userName, email: userEmail, avatarUrl }}
+        />
+        <div className="flex-1 min-w-0 flex flex-col">
+          <MobileHeader title={workspace.name} />
+          <main id="main-content" className="flex-1 min-w-0">{children}</main>
+        </div>
+      </div>
+    </MobileNavProvider>
   )
 }

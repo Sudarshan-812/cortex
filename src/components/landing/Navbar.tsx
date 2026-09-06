@@ -7,27 +7,10 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Database, FileSearch, BrainCircuit, Zap,
-  ChevronDown, MessageSquare, ShieldCheck, Layers, LogOut,
-  LayoutDashboard, Settings, Menu, X,
+  ChevronDown, LogOut, LayoutDashboard, Settings, Menu, X,
 } from "lucide-react";
 
-const featuresMenu = [
-  { icon: Database,      title: "Enterprise RAG Pipeline", description: "768-dim Matryoshka embeddings stored in pgvector", href: "#features" },
-  { icon: FileSearch,   title: "Hybrid Search",            description: "Vector cosine + BM25 keyword fusion via RRF",      href: "#features" },
-  { icon: BrainCircuit, title: "AI Re-ranking",            description: "Gemini-powered relevance scoring on top chunks",   href: "#features" },
-  { icon: Zap,          title: "Zero-Latency Streaming",   description: "Server-Sent Events for instant token delivery",    href: "#features" },
-  { icon: MessageSquare,title: "Cited Answers",            description: "Every response backed by exact source citations",  href: "#features" },
-  { icon: ShieldCheck,  title: "Workspace Isolation",      description: "Fully private, tenant-isolated document stores",  href: "#features" },
-];
-
-const useCasesMenu = [
-  { icon: Layers,        title: "Research & Analysis",     description: "Query large document libraries instantly",         href: "#features" },
-  { icon: ShieldCheck,   title: "Legal & Compliance",      description: "Find clauses and policies across contracts",        href: "#features" },
-  { icon: MessageSquare, title: "Internal Knowledge Base", description: "Turn company docs into a smart assistant",          href: "#features" },
-];
-
-type DropdownKey = "features" | "usecases" | "avatar" | null;
+type DropdownKey = "avatar" | null;
 
 interface NavbarProps {
   isLoggedIn?: boolean;
@@ -81,6 +64,13 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
+
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [mobileOpen]);
 
   const toggle = (key: DropdownKey) => setOpen(prev => prev === key ? null : key);
 
@@ -144,101 +134,17 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
 
           {/* Desktop nav */}
           <nav ref={navRef} className="hidden md:flex items-center gap-0.5 relative">
-
-            <Link href="#features"
-              className="px-3.5 py-2 text-[13.5px] font-medium rounded-xl transition-colors outline-none"
-              style={{ color: 'var(--lp-ink)' }} {...linkHover}>
-              Product
-            </Link>
-
-            {/* Features dropdown */}
-            <div className="relative">
-              <button onClick={() => toggle("features")}
-                className="flex items-center gap-1 px-3.5 py-2 text-[13.5px] font-medium rounded-xl transition-colors outline-none"
-                style={{ color: 'var(--lp-ink)' }}>
-                Features
-                <motion.span animate={{ rotate: open === "features" ? 180 : 0 }} transition={{ duration: 0.2 }} className="flex">
-                  <ChevronDown size={13} />
-                </motion.span>
-              </button>
-              <AnimatePresence>
-                {open === "features" && (
-                  <motion.div {...dropPop} role="menu"
-                    className="absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 w-[380px] border rounded-2xl p-2 z-50"
-                    style={{ transformOrigin: 'top center', background: 'var(--lp-surface)', borderColor: 'var(--lp-border)', boxShadow: '0 20px 60px rgba(28,25,23,0.14)' }}>
-                    {featuresMenu.map(item => {
-                      const Icon = item.icon;
-                      return (
-                        <Link key={item.title} href={item.href} role="menuitem" onClick={() => setOpen(null)}
-                          className="flex items-start gap-3 p-3 rounded-xl transition-colors outline-none"
-                          {...rowHover}>
-                          <div className="size-8 rounded-xl flex items-center justify-center flex-shrink-0 border"
-                            style={{ background: 'var(--lp-primary-wash)', borderColor: 'var(--lp-primary-line)' }}>
-                            <Icon size={14} style={{ color: 'var(--lp-primary)' }} />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-[12.5px] font-semibold" style={{ color: 'var(--lp-ink)' }}>{item.title}</p>
-                            <p className="text-[11.5px] mt-0.5 leading-snug" style={{ color: 'var(--lp-mute-1)' }}>{item.description}</p>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                    <div className="border-t mt-1.5 pt-1.5 px-1" style={{ borderColor: 'var(--lp-border)' }}>
-                      <Link href="#features" onClick={() => setOpen(null)}
-                        className="flex items-center justify-center py-2 text-[12px] font-semibold transition-colors rounded-lg outline-none"
-                        style={{ color: 'var(--lp-mute-1)' }}
-                        onMouseEnter={e => (e.currentTarget.style.color = 'var(--lp-primary)')}
-                        onMouseLeave={e => (e.currentTarget.style.color = 'var(--lp-mute-1)')}>
-                        View all features →
-                      </Link>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            {/* Use Cases dropdown */}
-            <div className="relative">
-              <button onClick={() => toggle("usecases")}
-                className="flex items-center gap-1 px-3.5 py-2 text-[13.5px] font-medium rounded-xl transition-colors outline-none"
-                style={{ color: 'var(--lp-ink)' }}>
-                Use Cases
-                <motion.span animate={{ rotate: open === "usecases" ? 180 : 0 }} transition={{ duration: 0.2 }} className="flex">
-                  <ChevronDown size={13} />
-                </motion.span>
-              </button>
-              <AnimatePresence>
-                {open === "usecases" && (
-                  <motion.div {...dropPop} role="menu"
-                    className="absolute top-[calc(100%+8px)] left-1/2 -translate-x-1/2 w-[300px] border rounded-2xl p-2 z-50"
-                    style={{ transformOrigin: 'top center', background: 'var(--lp-surface)', borderColor: 'var(--lp-border)', boxShadow: '0 20px 60px rgba(28,25,23,0.14)' }}>
-                    {useCasesMenu.map(item => {
-                      const Icon = item.icon;
-                      return (
-                        <Link key={item.title} href={item.href} role="menuitem" onClick={() => setOpen(null)}
-                          className="flex items-start gap-3 p-3 rounded-xl transition-colors outline-none"
-                          {...rowHover}>
-                          <div className="size-8 rounded-xl flex items-center justify-center flex-shrink-0 border"
-                            style={{ background: 'var(--lp-primary-wash)', borderColor: 'var(--lp-primary-line)' }}>
-                            <Icon size={14} style={{ color: 'var(--lp-primary)' }} />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-[12.5px] font-semibold" style={{ color: 'var(--lp-ink)' }}>{item.title}</p>
-                            <p className="text-[11.5px] mt-0.5 leading-snug" style={{ color: 'var(--lp-mute-1)' }}>{item.description}</p>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-
-            <Link href="/docs"
-              className="px-3.5 py-2 text-[13.5px] font-medium rounded-xl transition-colors outline-none"
-              style={{ color: 'var(--lp-ink)' }} {...linkHover}>
-              Docs
-            </Link>
+            {[
+              { label: 'Features', href: '#features' },
+              { label: 'Architecture', href: '#architecture' },
+              { label: 'Docs', href: '/docs' },
+            ].map(l => (
+              <Link key={l.label} href={l.href}
+                className="px-3.5 py-2 text-[13.5px] font-medium rounded-xl transition-colors outline-none"
+                style={{ color: 'var(--lp-ink)' }} {...linkHover}>
+                {l.label}
+              </Link>
+            ))}
           </nav>
 
           {/* Right side */}
@@ -326,25 +232,15 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
             className="fixed inset-x-0 top-16 z-40 md:hidden border-b"
             style={{ background: 'var(--lp-surface)', borderColor: 'var(--lp-border)' }}>
             <nav className="max-w-[1200px] mx-auto px-6 py-4 flex flex-col gap-0.5">
-              {[{ label: "Product", href: "#features" }, { label: "Docs", href: "/docs" }].map(({ label, href }) => (
+              {[
+                { label: "Features", href: "#features" },
+                { label: "Architecture", href: "#architecture" },
+                { label: "Docs", href: "/docs" },
+              ].map(({ label, href }) => (
                 <Link key={label} href={href} onClick={() => setMobileOpen(false)}
-                  className="flex items-center px-3 py-2.5 text-[14px] font-medium rounded-xl transition-colors"
+                  className="flex items-center px-3 py-3 text-[14px] font-medium rounded-xl transition-colors"
                   style={{ color: 'var(--lp-ink-2)' }} {...rowHover}>{label}</Link>
               ))}
-
-              <div className="px-3 pt-3 pb-1">
-                <p className="text-[10.5px] font-semibold uppercase tracking-widest cx-num" style={{ color: 'var(--lp-mute-2)' }}>Features</p>
-              </div>
-              {featuresMenu.map(item => {
-                const Icon = item.icon;
-                return (
-                  <Link key={item.title} href={item.href} onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-3 px-3 py-2 text-[13.5px] font-medium rounded-xl transition-colors"
-                    style={{ color: 'var(--lp-ink-2)' }} {...rowHover}>
-                    <Icon size={14} style={{ color: 'var(--lp-mute-2)' }} />{item.title}
-                  </Link>
-                );
-              })}
 
               <div className="border-t my-2" style={{ borderColor: 'var(--lp-border)' }} />
 

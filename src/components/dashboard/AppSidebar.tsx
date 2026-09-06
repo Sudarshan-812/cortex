@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -10,9 +10,10 @@ import {
   ChevronDown, Check, Building2, Plus, Loader2, X, LogOut,
   PanelLeftClose, PanelLeftOpen,
 } from 'lucide-react'
-import { switchWorkspace, createNewWorkspace, deleteWorkspace } from '@/app/actions'
+import { switchWorkspace, createNewWorkspace } from '@/app/actions'
 import { SearchModal } from '@/components/SearchModal'
 import { DropdownMenu } from '@/components/dashboard/DropdownMenu'
+import { useMobileNav } from '@/components/MobileNavContext'
 
 type Workspace = { id: string; name: string; created_at: string }
 type User = { name: string; email: string; avatarUrl?: string }
@@ -35,6 +36,7 @@ export function AppSidebar({
 }) {
   const pathname = usePathname()
   const router = useRouter()
+  const { open: navOpen, setOpen: setNavOpen } = useMobileNav()
   const [collapsed, setCollapsed] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [switching, setSwitching] = useState<string | null>(null)
@@ -44,13 +46,34 @@ export function AppSidebar({
 
   const initials = user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
 
+  // Persist collapse preference.
+  useEffect(() => {
+    try { if (localStorage.getItem('cx-sidebar-collapsed') === '1') setCollapsed(true) } catch {}
+  }, [])
+  useEffect(() => {
+    try { localStorage.setItem('cx-sidebar-collapsed', collapsed ? '1' : '0') } catch {}
+  }, [collapsed])
+
+  // ⌘K / Ctrl+K opens the search palette.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setSearchOpen(true)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
+
   async function handleSwitch(id: string, close: () => void) {
     if (id === workspace.id || switching) return
     setSwitching(id)
-    close()
     await switchWorkspace(id)
-    router.refresh()
     setSwitching(null)
+    close()
+    router.push('/dashboard')
+    router.refresh()
   }
 
   async function handleCreate() {
@@ -63,11 +86,6 @@ export function AppSidebar({
     router.refresh()
   }
 
-  async function handleDelete(id: string) {
-    await deleteWorkspace(id)
-    router.refresh()
-  }
-
   const rowHover = {
     onMouseEnter: (e: React.MouseEvent<HTMLElement>) => (e.currentTarget.style.background = 'var(--cx-paper-2)'),
     onMouseLeave: (e: React.MouseEvent<HTMLElement>) => (e.currentTarget.style.background = ''),
@@ -75,14 +93,24 @@ export function AppSidebar({
 
   return (
     <>
-      <motion.aside
-        animate={{ width: collapsed ? 64 : 240 }}
-        transition={{ type: 'spring', stiffness: 280, damping: 28 }}
-        className="flex flex-col h-screen sticky top-0 flex-shrink-0 overflow-hidden border-r"
-        style={{ background: 'var(--cx-paper)', borderColor: 'var(--cx-line)' }}
+      {/* Mobile drawer backdrop */}
+      <div
+        onClick={() => setNavOpen(false)}
+        className={`md:hidden fixed inset-0 z-40 transition-opacity duration-200 ${navOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        style={{ background: 'rgba(10,8,6,0.4)' }}
+        aria-hidden="true"
+      />
+      <aside
+        style={{ width: collapsed ? 64 : 240, background: 'var(--cx-paper)', borderColor: 'var(--cx-line)' }}
+        className={
+          'flex flex-col h-screen flex-shrink-0 overflow-hidden border-r transition-[width,transform] duration-300 ease-out ' +
+          'md:sticky md:top-0 md:translate-x-0 ' +
+          'max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-50 max-md:!w-[264px] max-md:shadow-2xl ' +
+          (navOpen ? 'max-md:translate-x-0' : 'max-md:-translate-x-full')
+        }
       >
         {/* Logo + collapse */}
-        <div className={`flex items-center h-[58px] px-3.5 border-b flex-shrink-0 ${collapsed ? 'justify-center' : 'justify-between'}`}
+        <div className={`flex items-center h-[58px] px-3.5 border-b flex-shrink-0 ${collapsed ? 'md:justify-center' : 'justify-between'}`}
           style={{ borderColor: 'var(--cx-line)' }}>
           {!collapsed && (
             <Link href="/dashboard" className="flex items-center gap-2 min-w-0">
@@ -90,10 +118,18 @@ export function AppSidebar({
               <span className="text-[14px] font-semibold tracking-tight truncate" style={{ color: 'var(--cx-ink)' }}>Cortex</span>
             </Link>
           )}
+          <button
+            onClick={() => setNavOpen(false)}
+            className="md:hidden flex-shrink-0 size-9 rounded-lg flex items-center justify-center hover:bg-[var(--cx-paper-2)]"
+            style={{ color: 'var(--cx-mute-2)' }}
+            aria-label="Close navigation menu"
+          >
+            <X size={16} />
+          </button>
           <motion.button
             whileTap={{ scale: 0.88 }}
             onClick={() => setCollapsed(v => !v)}
-            className="flex-shrink-0 size-8 rounded-lg flex items-center justify-center transition-colors"
+            className="hidden md:flex flex-shrink-0 size-8 rounded-lg items-center justify-center transition-colors"
             style={{ color: 'var(--cx-mute-2)' }}
             {...rowHover}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
@@ -327,7 +363,7 @@ export function AppSidebar({
             )}
           </DropdownMenu>
         </div>
-      </motion.aside>
+      </aside>
 
       <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} workspaceId={workspace.id} />
     </>

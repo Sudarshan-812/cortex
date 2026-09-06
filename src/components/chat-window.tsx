@@ -1,14 +1,16 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion'
+import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence, useMotionValue, useTransform, useSpring, useReducedMotion } from 'framer-motion'
 import Image from 'next/image'
 import {
-  FileText, ArrowUp, Plus,
-  ChevronDown, Sparkles, CheckCircle2, UploadCloud, Copy, Check, Database, ExternalLink, Download,
+  FileText, ArrowUp, Plus, Square,
+  ChevronDown, Sparkles, CheckCircle2, UploadCloud, Copy, Check, Database, ExternalLink, Download, RotateCcw,
 } from 'lucide-react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { DynamicGreeting } from '@/components/DynamicGreeting'
-import { uploadDocument } from '@/app/actions'
 import { DocumentReaderPanel } from '@/components/DocumentReaderPanel'
 import { ChatTopBar } from '@/components/ChatTopBar'
 import { MagneticButton } from '@/components/MagneticButton'
@@ -22,7 +24,7 @@ type Source = {
   similarity: number
 }
 type ToolEvent = { name: string; status: 'running' | 'done'; count?: number }
-type Message   = { id?: string; role: 'user' | 'assistant'; content: string; sources?: Source[]; created_at?: string; answered_from?: 'documents' | 'web' | 'both' | 'none' }
+type Message   = { id?: string; role: 'user' | 'assistant'; content: string; sources?: Source[]; created_at?: string; answered_from?: 'documents' | 'web' | 'both' | 'none'; error?: string }
 
 function buildSuggestedPrompts(docNames: string[]): string[] {
   if (docNames.length === 0) return [
@@ -87,20 +89,24 @@ function formatTime(iso?: string): string {
 
 /* ── Streaming text - per-chunk blur reveal ─────────────────────── */
 function StreamingContent({ content }: { content: string }) {
-  const chunksRef = useRef<string[]>([])
-  const lenRef    = useRef(0)
+  const [chunks, setChunks] = useState<string[]>(content ? [content] : [])
+  const lenRef = useRef(content.length)
 
-  if (content.length > lenRef.current) {
-    chunksRef.current = [...chunksRef.current, content.slice(lenRef.current)]
+  useEffect(() => {
+    if (content.length > lenRef.current) {
+      setChunks(c => [...c, content.slice(lenRef.current)])
+    } else if (content.length < lenRef.current) {
+      setChunks(content ? [content] : [])
+    }
     lenRef.current = content.length
-  }
+  }, [content])
 
   return (
     <span
       className="whitespace-pre-wrap break-words text-[15px] leading-[1.85]"
       style={{ color: 'var(--cx-ink-2)' }}
     >
-      {chunksRef.current.map((chunk, i) => (
+      {chunks.map((chunk, i) => (
         <span key={i} className="cx-token">{chunk}</span>
       ))}
     </span>
@@ -313,10 +319,10 @@ function SourceCitations({ sources, onViewChunk }: { sources: Source[]; onViewCh
 /* ── Answer grounding badge ─────────────────────────────────────── */
 function AnsweredFromBadge({ kind }: { kind: NonNullable<Message['answered_from']> }) {
   const map = {
-    documents: { label: 'Answered from your documents', ok: true },
-    web:       { label: 'Answered from web search',     ok: false },
-    both:      { label: 'Answered from your documents + web', ok: true },
-    none:      { label: 'Not found in your documents',  ok: false },
+    documents: { label: 'Grounded in your documents', ok: true },
+    web:       { label: 'Grounded in your documents', ok: true },
+    both:      { label: 'Grounded in your documents', ok: true },
+    none:      { label: 'Not found in your documents', ok: false },
   } as const
   const { label, ok } = map[kind]
   return (
@@ -331,6 +337,35 @@ function AnsweredFromBadge({ kind }: { kind: NonNullable<Message['answered_from'
       {ok ? <FileText size={10} /> : <ExternalLink size={10} />}
       {label}
     </span>
+  )
+}
+
+/* ── Assistant message actions (copy / regenerate) ─────────────── */
+function MsgActions({ content, onRegenerate }: { content: string; onRegenerate: () => void }) {
+  const [copied, setCopied] = useState(false)
+  return (
+    <div className="flex items-center gap-0.5">
+      <button
+        onClick={() => {
+          navigator.clipboard.writeText(content)
+          setCopied(true)
+          setTimeout(() => setCopied(false), 1600)
+        }}
+        aria-label={copied ? 'Copied' : 'Copy answer'}
+        className="size-8 rounded-lg flex items-center justify-center transition-colors hover:bg-[var(--cx-paper-2)]"
+        style={{ color: copied ? 'var(--cx-ok)' : 'var(--cx-mute-2)' }}
+      >
+        {copied ? <Check size={13} /> : <Copy size={13} />}
+      </button>
+      <button
+        onClick={onRegenerate}
+        aria-label="Regenerate answer"
+        className="size-8 rounded-lg flex items-center justify-center transition-colors hover:bg-[var(--cx-paper-2)]"
+        style={{ color: 'var(--cx-mute-2)' }}
+      >
+        <RotateCcw size={13} />
+      </button>
+    </div>
   )
 }
 
@@ -402,104 +437,62 @@ function PromptCard({
   )
 }
 
-/* ── Markdown renderer ──────────────────────────────────────────── */
-function renderMarkdown(text: string) {
-  const lines    = text.split('\n')
-  const elements: React.ReactNode[] = []
-  let i = 0, k = 0
+/* ── Markdown renderer (react-markdown + gfm; clickable [chunk_id] citations) ── */
+const CITE = /\[([0-9a-fA-F][0-9a-fA-F-]{7,})\]/g
 
-  while (i < lines.length) {
-    const line = lines[i]
-
-    if (line.startsWith('# ')) {
-      elements.push(
-        <h1 key={k++} className="text-xl font-semibold tracking-tight mt-5 mb-2" style={{ color: 'var(--cx-ink)' }}>
-          {inlineFormat(line.slice(2))}
-        </h1>
-      )
-    } else if (line.startsWith('## ')) {
-      elements.push(
-        <h2 key={k++} className="text-[17px] font-semibold tracking-tight mt-4 mb-1.5" style={{ color: 'var(--cx-ink)' }}>
-          {inlineFormat(line.slice(3))}
-        </h2>
-      )
-    } else if (line.startsWith('### ')) {
-      elements.push(
-        <h3 key={k++} className="text-[15px] font-semibold mt-3 mb-1" style={{ color: 'var(--cx-ink-2)' }}>
-          {inlineFormat(line.slice(4))}
-        </h3>
-      )
-    } else if (line.startsWith('```')) {
-      const lang = line.slice(3).trim()
-      const codeLines: string[] = []
-      i++
-      while (i < lines.length && !lines[i].startsWith('```')) { codeLines.push(lines[i]); i++ }
-      elements.push(
-        <CodeBlock key={k++} lang={lang} code={codeLines.join('\n')} />
-      )
-    } else if (line.match(/^[-*•]\s/)) {
-      const items: string[] = []
-      while (i < lines.length && lines[i].match(/^[-*•]\s/)) { items.push(lines[i].slice(2)); i++ }
-      elements.push(
-        <ul key={k++} className="my-2 space-y-1.5">
-          {items.map((item, j) => (
-            <li key={j} className="flex items-start gap-2.5 leading-relaxed text-[15px]" style={{ color: 'var(--cx-ink-2)' }}>
-              <span className="mt-2.5 size-1 rounded-full flex-shrink-0" style={{ background: 'var(--cx-mute-2)' }} />
-              <span>{inlineFormat(item)}</span>
-            </li>
-          ))}
-        </ul>
-      )
-      continue
-    } else if (line.match(/^\d+\.\s/)) {
-      const items: string[] = []
-      while (i < lines.length && lines[i].match(/^\d+\.\s/)) { items.push(lines[i].replace(/^\d+\.\s/, '')); i++ }
-      elements.push(
-        <ol key={k++} className="my-2 space-y-1.5">
-          {items.map((item, j) => (
-            <li key={j} className="flex items-start gap-3 leading-relaxed text-[15px]" style={{ color: 'var(--cx-ink-2)' }}>
-              <span className="mt-0.5 min-w-[1.25rem] text-[12px] font-bold cx-num flex-shrink-0" style={{ color: 'var(--cx-accent)' }}>
-                {j + 1}.
-              </span>
-              <span>{inlineFormat(item)}</span>
-            </li>
-          ))}
-        </ol>
-      )
-      continue
-    } else if (line.match(/^---+$/)) {
-      elements.push(<hr key={k++} className="my-4" style={{ borderColor: 'var(--cx-line)' }} />)
-    } else if (line.startsWith('> ')) {
-      elements.push(
-        <blockquote key={k++} className="my-3 pl-4 border-l-2 text-[15px] cx-serif italic" style={{ borderColor: 'var(--cx-accent-line)', color: 'var(--cx-mute-1)' }}>
-          {inlineFormat(line.slice(2))}
-        </blockquote>
-      )
-    } else if (line.trim() === '') {
-      elements.push(<div key={k++} className="h-2" />)
-    } else {
-      elements.push(
-        <p key={k++} className="leading-[1.85] my-0.5 text-[15px]" style={{ color: 'var(--cx-ink-2)' }}>
-          {inlineFormat(line)}
-        </p>
-      )
-    }
-    i++
-  }
-  return elements
-}
-
-function inlineFormat(text: string): React.ReactNode {
-  const parts = text.split(/(\*\*[^*]+\*\*|\*[^*]+\*|`[^`]+`)/g)
-  return parts.map((part, i) => {
-    if (part.startsWith('**') && part.endsWith('**'))
-      return <strong key={i} className="font-semibold" style={{ color: 'var(--cx-ink)' }}>{part.slice(2, -2)}</strong>
-    if (part.startsWith('*') && part.endsWith('*'))
-      return <em key={i} className="cx-serif italic" style={{ color: 'var(--cx-mute-1)' }}>{part.slice(1, -1)}</em>
-    if (part.startsWith('`') && part.endsWith('`'))
-      return <code key={i} className="font-mono text-[13px] px-1.5 py-0.5 rounded cx-num" style={{ background: 'var(--cx-paper-2)', color: 'var(--cx-ink-2)', border: '1px solid var(--cx-line)' }}>{part.slice(1, -1)}</code>
-    return part
-  })
+function Markdown({ content, onCite }: { content: string; onCite?: (id: string) => void }) {
+  // Turn [<id>] tokens into links the `a` renderer picks up as citation chips.
+  const src = content.replace(CITE, (_m, id) => `[[${id}]](#cite-${id})`)
+  return (
+    <div className="text-[15px] leading-[1.85]" style={{ color: 'var(--cx-ink-2)' }}>
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        components={{
+          h1: p => <h1 className="text-xl font-semibold tracking-tight mt-5 mb-2" style={{ color: 'var(--cx-ink)' }} {...p} />,
+          h2: p => <h2 className="text-[17px] font-semibold tracking-tight mt-4 mb-1.5" style={{ color: 'var(--cx-ink)' }} {...p} />,
+          h3: p => <h3 className="text-[15px] font-semibold mt-3 mb-1" style={{ color: 'var(--cx-ink-2)' }} {...p} />,
+          p:  p => <p className="my-2 leading-[1.85]" {...p} />,
+          ul: p => <ul className="my-2 pl-5 space-y-1.5 list-disc marker:text-[var(--cx-mute-2)]" {...p} />,
+          ol: p => <ol className="my-2 pl-5 space-y-1.5 list-decimal marker:text-[var(--cx-accent)] marker:font-semibold" {...p} />,
+          li: p => <li className="leading-relaxed" {...p} />,
+          hr: () => <hr className="my-4" style={{ borderColor: 'var(--cx-line)' }} />,
+          strong: p => <strong className="font-semibold" style={{ color: 'var(--cx-ink)' }} {...p} />,
+          em: p => <em className="cx-serif italic" style={{ color: 'var(--cx-mute-1)' }} {...p} />,
+          blockquote: p => <blockquote className="my-3 pl-4 border-l-2 cx-serif italic" style={{ borderColor: 'var(--cx-accent-line)', color: 'var(--cx-mute-1)' }} {...p} />,
+          a: ({ href, children, ...rest }) => {
+            if (href?.startsWith('#cite-')) {
+              const id = href.slice(6)
+              return (
+                <button
+                  type="button"
+                  onClick={() => onCite?.(id)}
+                  className="cx-cite"
+                  title="View source passage"
+                >
+                  {String(children).replace(/^\[|\]$/g, '')}
+                </button>
+              )
+            }
+            return <a href={href} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2" style={{ color: 'var(--cx-accent)' }} {...rest}>{children}</a>
+          },
+          table: p => <div className="my-3 overflow-x-auto cx-scroll-thin"><table className="w-full text-[13px] border-collapse" {...p} /></div>,
+          th: p => <th className="text-left font-semibold px-3 py-1.5 border" style={{ borderColor: 'var(--cx-line)', background: 'var(--cx-paper-2)' }} {...p} />,
+          td: p => <td className="px-3 py-1.5 border align-top" style={{ borderColor: 'var(--cx-line)' }} {...p} />,
+          code: ({ className, children, ...rest }) => {
+            const lang = /language-(\w+)/.exec(className || '')?.[1]
+            const text = String(children).replace(/\n$/, '')
+            if (!className && !text.includes('\n')) {
+              return <code className="font-mono text-[13px] px-1.5 py-0.5 rounded cx-num" style={{ background: 'var(--cx-paper-2)', color: 'var(--cx-ink-2)', border: '1px solid var(--cx-line)' }} {...rest}>{children}</code>
+            }
+            return <CodeBlock lang={lang || ''} code={text} />
+          },
+          pre: ({ children }) => <>{children}</>,
+        }}
+      >
+        {src}
+      </ReactMarkdown>
+    </div>
+  )
 }
 
 /* ── Main ChatWindow ────────────────────────────────────────────── */
@@ -526,15 +519,26 @@ export function ChatWindow({
   const [activeChunkId, setActiveChunkId] = useState<string | null>(null)
   const [focused,       setFocused]       = useState(false)
   const [uploading,   setUploading]   = useState(false)
+  const [uploadNote,  setUploadNote]  = useState<string | null>(null)
   const bottomRef   = useRef<HTMLDivElement>(null)
+  const scrollRef   = useRef<HTMLDivElement>(null)
   const inputRef    = useRef<HTMLTextAreaElement>(null)
   const emptyUploadRef = useRef<HTMLInputElement>(null)
+  const composerUploadRef = useRef<HTMLInputElement>(null)
+  const abortRef    = useRef<AbortController | null>(null)
+  const router      = useRouter()
+  const reduceMotion = useReducedMotion()
 
   const SUGGESTED = buildSuggestedPrompts(docNames)
 
+  // Only auto-scroll when the user is already near the bottom, so scrolling up
+  // to re-read an earlier message isn't yanked back down on every token.
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, loading])
+    const el = scrollRef.current
+    if (!el) return
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 120
+    if (nearBottom) bottomRef.current?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' })
+  }, [messages, loading, reduceMotion])
 
   function handleInputChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     setInput(e.target.value)
@@ -543,19 +547,55 @@ export function ChatWindow({
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit() }
+    // On touch keyboards Enter should insert a newline; send is the button.
+    const touch = typeof window !== 'undefined' && window.matchMedia?.('(pointer: coarse)').matches
+    if (e.key === 'Enter' && !e.shiftKey && !touch) { e.preventDefault(); handleSubmit() }
   }
 
-  async function handleEmptyUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
+  async function uploadFile(file: File) {
     setUploading(true)
-    const fd = new FormData()
-    fd.append('file', file)
-    fd.append('workspaceId', workspaceId)
-    await uploadDocument(fd)
-    setUploading(false)
-    if (emptyUploadRef.current) emptyUploadRef.current.value = ''
+    setUploadNote(`Uploading ${file.name}…`)
+    try {
+      const fd = new FormData()
+      fd.append('file', file)
+      fd.append('workspaceId', workspaceId)
+      const res = await fetch('/api/upload', { method: 'POST', body: fd })
+      if (!res.ok || !res.body) { setUploadNote('Upload failed. Try again.'); return }
+      const reader = res.body.getReader()
+      const decoder = new TextDecoder()
+      let buf = ''
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        buf += decoder.decode(value, { stream: true })
+        const parts = buf.split('\n\n'); buf = parts.pop() ?? ''
+        for (const p of parts) {
+          if (!p.startsWith('data:')) continue
+          try {
+            const evt = JSON.parse(p.slice(p.indexOf(':') + 1).trim())
+            if (evt.error) setUploadNote(`Error: ${evt.error}`)
+            else if (evt.stage === 'embedded') { setUploadNote(`${file.name} indexed`); router.refresh() }
+            else if (evt.label) setUploadNote(evt.label)
+          } catch {}
+        }
+      }
+    } catch {
+      setUploadNote('Network error during upload.')
+    } finally {
+      setUploading(false)
+      if (emptyUploadRef.current) emptyUploadRef.current.value = ''
+      if (composerUploadRef.current) composerUploadRef.current.value = ''
+      setTimeout(() => setUploadNote(null), 4000)
+    }
+  }
+
+  function handleUploadInput(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) uploadFile(file)
+  }
+
+  function handleStop() {
+    abortRef.current?.abort()
   }
 
   async function handleSubmit(overrideInput?: string) {
@@ -569,17 +609,23 @@ export function ChatWindow({
     setFollowUps([])
 
     const now = new Date().toISOString()
+    const assistantId = `a-${Date.now()}-${Math.random().toString(36).slice(2)}`
     setMessages(prev => [
       ...prev,
-      { role: 'user',      content: query,  created_at: now },
-      { role: 'assistant', content: '', sources: [] },
+      { id: `u-${Date.now()}`, role: 'user', content: query, created_at: now },
+      { id: assistantId, role: 'assistant', content: '', sources: [] },
     ])
+
+    const controller = new AbortController()
+    abortRef.current = controller
+    let streamedAny = false
 
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId, workspaceId, query }),
+        signal: controller.signal,
       })
       if (!response.ok) {
         const body = await response.text().catch(() => '')
@@ -614,6 +660,7 @@ export function ChatWindow({
                 return [...prev, { name: event.name, status: event.status, count: event.count }]
               })
             } else if (event.type === 'token') {
+              streamedAny = true
               setMessages(prev => {
                 const msgs = [...prev]
                 const last = msgs[msgs.length - 1]
@@ -638,7 +685,7 @@ export function ChatWindow({
             } else if (event.type === 'error') {
               setMessages(prev => {
                 const msgs = [...prev]
-                msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], content: `**Error:** ${event.message}` }
+                msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], error: event.message || 'Something went wrong.' }
                 return msgs
               })
             }
@@ -646,19 +693,26 @@ export function ChatWindow({
         }
       }
     } catch (err: any) {
+      const aborted = err?.name === 'AbortError'
       const msg = err?.message ?? ''
-      const content =
-        msg === 'rate_limit'
-          ? '**Rate limit reached.** You can send 20 messages per minute. Wait a moment and try again.'
+      const errText = aborted
+        ? 'Stopped.'
+        : msg === 'rate_limit'
+          ? 'Rate limit reached — 20 messages per minute. Wait a moment and retry.'
           : msg === 'unauthorized'
-          ? '**Session expired.** Please refresh the page and try again.'
-          : `**Something went wrong.** ${msg ? `(${msg})` : 'Please try again.'}`
+            ? 'Session expired. Refresh the page and try again.'
+            : `Something went wrong.${msg ? ` (${msg})` : ' Please try again.'}`
       setMessages(prev => {
         const msgs = [...prev]
-        msgs[msgs.length - 1] = { ...msgs[msgs.length - 1], content }
+        const last = msgs[msgs.length - 1]
+        // Keep any partial text; attach the notice below it.
+        msgs[msgs.length - 1] = streamedAny || last.content
+          ? { ...last, error: errText }
+          : { ...last, content: '', error: errText }
         return msgs
       })
     } finally {
+      abortRef.current = null
       setLoading(false)
       setActiveTools([])
     }
@@ -666,8 +720,24 @@ export function ChatWindow({
 
   const isEmpty = messages.length === 0
 
+  // Prefill / auto-submit from ?q= (e.g. opened from global search).
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const q = new URLSearchParams(window.location.search).get('q')
+    if (!q) return
+    window.history.replaceState({}, '', window.location.pathname)
+    setInput(q)
+    inputRef.current?.focus()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   return (
     <div className="flex flex-col h-full" style={{ background: 'var(--cx-paper)' }}>
+
+      {/* Screen-reader announcement of the streaming answer */}
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        {loading ? 'Cortex is responding…' : messages.at(-1)?.role === 'assistant' ? messages.at(-1)?.content : ''}
+      </div>
 
       {/* ── Top bar ───────────────────────────────────────────────── */}
       <ChatTopBar subtitle={workspaceName}>
@@ -686,16 +756,15 @@ export function ChatWindow({
           <button
             onClick={() => exportConversation(messages, workspaceName)}
             title="Export conversation as Markdown"
-            className="size-7 rounded-lg flex items-center justify-center transition-colors"
+            aria-label="Export conversation as Markdown"
+            className="size-9 -m-1 rounded-lg flex items-center justify-center transition-colors hover:bg-[var(--cx-paper-2)]"
             style={{ color: 'var(--cx-mute-2)' }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'var(--cx-paper-2)'; e.currentTarget.style.color = 'var(--cx-ink)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'var(--cx-mute-2)' }}
           >
             <Download size={13} />
           </button>
         )}
         <span className="size-1.5 rounded-full flex-shrink-0" style={{ background: 'var(--cx-ok)' }} />
-        <span className="text-[11.5px] cx-num" style={{ color: 'var(--cx-mute-1)' }}>Gemini 2.5 Flash</span>
+        <span className="text-[11.5px] cx-num" style={{ color: 'var(--cx-mute-1)' }}>Gemini Flash</span>
         <span
           className="hidden sm:block text-[11px] px-1.5 py-0.5 rounded border cx-num"
           style={{ color: 'var(--cx-mute-2)', borderColor: 'var(--cx-line)', background: 'var(--cx-paper-2)' }}
@@ -705,7 +774,7 @@ export function ChatWindow({
       </ChatTopBar>
 
       {/* ── Message area ──────────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto cx-scroll-thin scroll-smooth">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto cx-scroll-thin scroll-smooth">
 
         {/* Empty state - no documents */}
         <AnimatePresence>
@@ -725,8 +794,8 @@ export function ChatWindow({
                 ref={emptyUploadRef}
                 type="file"
                 className="hidden"
-                accept=".pdf,.docx,.doc,.txt,.md,.csv"
-                onChange={handleEmptyUpload}
+                accept=".pdf,.docx,.xlsx"
+                onChange={handleUploadInput}
               />
               <div className="relative z-10 flex flex-col items-center gap-5 text-center">
                 <motion.div
@@ -767,8 +836,11 @@ export function ChatWindow({
                     ? <><span className="size-4 border-2 border-current border-t-transparent rounded-full animate-spin" />Uploading…</>
                     : <><UploadCloud size={15} />Upload Document</>}
                 </motion.button>
+                {uploadNote && (
+                  <p className="text-[12px]" style={{ color: 'var(--cx-mute-1)' }}>{uploadNote}</p>
+                )}
                 <p className="text-[11px] font-mono" style={{ color: 'var(--cx-mute-2)' }}>
-                  PDF · DOCX · TXT · MD · CSV · up to 50 MB
+                  PDF · DOCX · XLSX · up to 50 MB
                 </p>
               </div>
             </motion.div>
@@ -835,7 +907,7 @@ export function ChatWindow({
               </div>
 
               {/* Document-aware suggested prompts */}
-              <div className="relative z-10 grid grid-cols-2 gap-2.5 w-full max-w-[500px]">
+              <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full max-w-[500px]">
                 {SUGGESTED.map((s, i) => (
                   <PromptCard
                     key={s}
@@ -856,11 +928,12 @@ export function ChatWindow({
               {messages.map((msg, i) => {
                 const isLastAssistant = msg.role === 'assistant' && i === messages.length - 1 && loading
                 const timeStr = formatTime(msg.created_at)
+                const key = msg.id ?? `idx-${i}`
 
                 if (msg.role === 'user') {
                   return (
                     <motion.div
-                      key={i}
+                      key={key}
                       initial={{ opacity: 0, y: 12, scale: 0.98 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
@@ -888,7 +961,7 @@ export function ChatWindow({
 
                 return (
                   <motion.div
-                    key={i}
+                    key={key}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
@@ -980,17 +1053,35 @@ export function ChatWindow({
                               />
                             </span>
                           ) : (
-                            <div className="text-[15px] leading-[1.85]">
-                              {renderMarkdown(msg.content)}
-                            </div>
+                            <Markdown content={msg.content} onCite={id => setActiveChunkId(id)} />
                           )}
                         </div>
                       )}
 
-                      {/* Grounding badge */}
-                      {!loading && msg.content && msg.answered_from && (
-                        <div className="pt-1">
-                          <AnsweredFromBadge kind={msg.answered_from} />
+                      {/* Inline error notice (keeps any streamed partial above) */}
+                      {msg.error && (
+                        <div
+                          className="flex items-start gap-2 mt-1 px-3 py-2 rounded-lg border text-[12.5px]"
+                          style={{ color: 'var(--cx-err)', borderColor: 'rgba(166,68,58,0.25)', background: 'rgba(166,68,58,0.05)' }}
+                        >
+                          <span className="flex-1">{msg.error}</span>
+                          <button
+                            onClick={() => handleSubmit(messages[i - 1]?.content)}
+                            className="font-semibold underline underline-offset-2 flex-shrink-0"
+                          >
+                            Retry
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Grounding badge + message actions */}
+                      {!loading && msg.content && !isLastAssistant && (
+                        <div className="flex items-center gap-2 pt-1">
+                          {msg.answered_from && <AnsweredFromBadge kind={msg.answered_from} />}
+                          <MsgActions
+                            content={msg.content}
+                            onRegenerate={() => handleSubmit(messages[i - 1]?.content)}
+                          />
                         </div>
                       )}
 
@@ -1104,7 +1195,9 @@ export function ChatWindow({
                 border:      `1.5px solid ${focused ? 'var(--cx-accent-line)' : 'var(--cx-line)'}`,
               }}
             >
+              <label htmlFor="cx-composer" className="sr-only">Ask a question about your documents</label>
               <textarea
+                id="cx-composer"
                 ref={inputRef}
                 rows={1}
                 value={input}
@@ -1114,19 +1207,26 @@ export function ChatWindow({
                 onBlur={() => setFocused(false)}
                 placeholder="Ask Cortex anything about your documents…"
                 disabled={loading}
-                autoFocus
                 className="w-full resize-none bg-transparent text-[14.5px] outline-none leading-relaxed px-5 pt-4 pb-3 disabled:opacity-60 max-h-[180px] font-[inherit]"
                 style={{ color: 'var(--cx-ink)', caretColor: 'var(--cx-accent)' }}
+              />
+
+              <input
+                ref={composerUploadRef}
+                type="file"
+                className="hidden"
+                accept=".pdf,.docx,.xlsx"
+                onChange={handleUploadInput}
               />
 
               <div className="flex items-center justify-between px-3 pb-3">
                 <button
                   type="button"
-                  title="Attach file"
-                  className="size-8 rounded-full flex items-center justify-center transition-all duration-150"
-                  style={{ color: 'var(--cx-mute-2)' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = 'var(--cx-paper-2)'; e.currentTarget.style.color = 'var(--cx-ink)' }}
-                  onMouseLeave={e => { e.currentTarget.style.background = '';                   e.currentTarget.style.color = 'var(--cx-mute-2)' }}
+                  aria-label="Attach a document"
+                  onClick={() => composerUploadRef.current?.click()}
+                  disabled={uploading}
+                  className="size-9 rounded-full flex items-center justify-center transition-colors disabled:opacity-50 hover:bg-[var(--cx-paper-2)]"
+                  style={{ color: 'var(--cx-mute-1)' }}
                 >
                   <Plus size={15} />
                 </button>
@@ -1135,31 +1235,42 @@ export function ChatWindow({
                   <span className="text-[11px] font-medium hidden sm:block" style={{ color: 'var(--cx-mute-2)' }}>
                     Shift ↵ new line
                   </span>
-                  <MagneticButton strength={input.trim() && !loading ? 0.4 : 0}>
-                    <motion.button
-                      whileTap={{ scale: 0.82 }}
-                      whileHover={input.trim() && !loading ? { scale: 1.07 } : {}}
-                      onClick={() => handleSubmit()}
-                      disabled={loading || !input.trim()}
-                      className="size-8 rounded-full flex items-center justify-center transition-all duration-200"
-                      style={{
-                        background: input.trim() && !loading ? 'var(--cx-ink)' : 'var(--cx-line)',
-                        color:      input.trim() && !loading ? '#f9f8f5'       : 'var(--cx-mute-2)',
-                        cursor:     input.trim() && !loading ? 'pointer'       : 'not-allowed',
-                        boxShadow:  input.trim() && !loading
-                          ? '0 4px 14px rgba(10,10,10,0.28)'
-                          : 'none',
-                      }}
+                  {loading ? (
+                    <button
+                      onClick={handleStop}
+                      aria-label="Stop generating"
+                      className="size-9 rounded-full flex items-center justify-center transition-transform active:scale-90"
+                      style={{ background: 'var(--cx-ink)', color: '#f9f8f5' }}
                     >
-                      <ArrowUp size={15} strokeWidth={2.25} />
-                    </motion.button>
-                  </MagneticButton>
+                      <Square size={13} strokeWidth={2.5} fill="currentColor" />
+                    </button>
+                  ) : (
+                    <MagneticButton strength={input.trim() ? 0.4 : 0}>
+                      <motion.button
+                        whileTap={{ scale: 0.82 }}
+                        whileHover={input.trim() ? { scale: 1.07 } : {}}
+                        onClick={() => handleSubmit()}
+                        disabled={!input.trim()}
+                        aria-label="Send message"
+                        className="size-9 rounded-full flex items-center justify-center transition-all duration-200"
+                        style={{
+                          background: input.trim() ? 'var(--cx-ink)' : 'var(--cx-paper-2)',
+                          color:      input.trim() ? '#f9f8f5'       : 'var(--cx-mute-1)',
+                          border:     input.trim() ? 'none'          : '1px solid var(--cx-line)',
+                          cursor:     input.trim() ? 'pointer'       : 'not-allowed',
+                          boxShadow:  input.trim() ? '0 4px 14px rgba(10,10,10,0.28)' : 'none',
+                        }}
+                      >
+                        <ArrowUp size={15} strokeWidth={2.25} />
+                      </motion.button>
+                    </MagneticButton>
+                  )}
                 </div>
               </div>
             </motion.div>
 
-            <p className="text-center text-[11px] mt-2.5 cx-num" style={{ color: 'var(--cx-mute-2)' }}>
-              Always verify important information from source documents
+            <p className="text-center text-[11.5px] mt-2.5" style={{ color: 'var(--cx-mute-1)' }}>
+              Cortex can be wrong — verify important details against the cited sources.
             </p>
           </div>
         </div>

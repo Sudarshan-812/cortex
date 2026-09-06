@@ -245,6 +245,8 @@ class FakeConn:
             }
         elif s.startswith("UPDATE connector_accounts"):
             self.db.saved_tokens.append((args[0], args[1], args[2]))
+        elif s.startswith("DELETE FROM connector_accounts"):
+            self.db.connectors.pop((args[0], "gdrive"), None)
         elif s.startswith("CREATE TABLE"):
             pass
         else:

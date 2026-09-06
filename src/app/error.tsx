@@ -39,10 +39,10 @@ export default function Error({
             Try again
           </button>
           <Link
-            href="/dashboard"
+            href="/"
             className="cx-btn-ink h-9 px-5 rounded-full text-[13px] font-medium flex items-center"
           >
-            Dashboard
+            Go home
           </Link>
         </div>
       </div>

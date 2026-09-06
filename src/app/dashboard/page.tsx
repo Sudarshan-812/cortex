@@ -3,9 +3,10 @@ import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
-import { Search, UploadCloud, FileText, MessageSquare, Zap } from "lucide-react"
+import { Search, FileText, MessageSquare, Zap } from "lucide-react"
 
 import { MagneticButton }   from "@/components/MagneticButton"
+import { UploadTriggerButton } from "@/components/dashboard/UploadTriggerButton"
 import { MetricsGrid }      from "@/components/dashboard/MetricsGrid"
 import { UploadZoneNew }    from "@/components/dashboard/UploadZoneNew"
 import { DocumentTable }    from "@/components/dashboard/DocumentTable"
@@ -155,18 +156,27 @@ export default async function Dashboard() {
             </div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
-            <a
-              href="#upload-zone"
-              className="cx-btn-ghost h-9 px-4 rounded-full text-[12.5px] font-medium flex items-center gap-1.5"
-              style={{ color: "var(--cx-ink-2)" }}
-            >
-              <UploadCloud size={13} /> Upload
-            </a>
-            <MagneticButton strength={0.3}>
-              <Link href="/chat" className="cx-btn-ink h-9 px-4 rounded-full text-[12.5px] font-medium flex items-center gap-1.5">
-                <Search size={13} /> Query knowledge base
-              </Link>
-            </MagneticButton>
+            {isEmpty ? (
+              <>
+                <MagneticButton strength={0.3}>
+                  <UploadTriggerButton
+                    label="Upload documents"
+                    className="cx-btn-ink h-9 px-4 rounded-full text-[12.5px] font-medium flex items-center gap-1.5"
+                  />
+                </MagneticButton>
+              </>
+            ) : (
+              <>
+                <UploadTriggerButton
+                  className="cx-btn-ghost h-9 px-4 rounded-full text-[12.5px] font-medium flex items-center gap-1.5"
+                />
+                <MagneticButton strength={0.3}>
+                  <Link href="/chat" className="cx-btn-ink h-9 px-4 rounded-full text-[12.5px] font-medium flex items-center gap-1.5">
+                    <Search size={13} /> Query knowledge base
+                  </Link>
+                </MagneticButton>
+              </>
+            )}
           </div>
         </div>
 
@@ -180,7 +190,7 @@ export default async function Dashboard() {
                   icon: <FileText size={16} />,
                   step: "01",
                   title: "Upload your documents",
-                  desc: "Add PDFs, Word docs, spreadsheets, or plain text. Cortex accepts files up to 50 MB.",
+                  desc: "Add PDF, Word (DOCX) or Excel (XLSX) files, up to 50 MB each.",
                 },
                 {
                   icon: <Zap size={16} />,
@@ -243,29 +253,6 @@ export default async function Dashboard() {
         {/* Document table */}
         {documents && documents.length > 0 && (
           <DocumentTable documents={documents} storageMB={storageMB} />
-        )}
-        {isEmpty && (
-          <div
-            className="cx-panel p-10 text-center border-dashed"
-            style={{ borderStyle: "dashed" }}
-          >
-            <div className="cx-icon-chip cx-icon-chip-xl mx-auto mb-4">
-              <UploadCloud size={22} />
-            </div>
-            <p className="cx-display text-[16px] font-bold tracking-[-0.01em] mb-1" style={{ color: "var(--cx-ink)" }}>
-              No documents yet
-            </p>
-            <p className="text-[12.5px] mb-4" style={{ color: "var(--cx-mute-2)" }}>
-              Upload a file above to start building your knowledge base.
-            </p>
-            <a
-              href="#upload-zone"
-              className="inline-flex items-center gap-1.5 h-8 px-4 rounded-full text-[12.5px] font-medium border transition-colors duration-150"
-              style={{ borderColor: "var(--cx-line)", color: "var(--cx-ink-2)", background: "var(--cx-paper-2)" }}
-            >
-              <UploadCloud size={12} /> Upload your first document
-            </a>
-          </div>
         )}
 
         {/* Footer */}

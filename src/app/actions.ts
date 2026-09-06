@@ -52,6 +52,33 @@ export async function switchWorkspace(workspaceId: string) {
   revalidatePath('/chat')
 }
 
+export async function renameWorkspace(workspaceId: string, name: string) {
+  const trimmed = name.trim().slice(0, 80)
+  if (!trimmed) return { error: 'Name cannot be empty' }
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Not authenticated' }
+  const { error } = await supabase
+    .from('workspaces')
+    .update({ name: trimmed })
+    .eq('id', workspaceId)
+    .eq('owner_id', user.id)
+  if (error) return { error: error.message }
+  revalidatePath('/dashboard')
+  revalidatePath('/chat')
+  return { success: true, name: trimmed }
+}
+
+export async function updateDisplayName(name: string) {
+  const trimmed = name.trim().slice(0, 80)
+  if (!trimmed) return { error: 'Name cannot be empty' }
+  const supabase = await createClient()
+  const { error } = await supabase.auth.updateUser({ data: { full_name: trimmed } })
+  if (error) return { error: error.message }
+  revalidatePath('/dashboard')
+  return { success: true, name: trimmed }
+}
+
 export async function deleteWorkspace(workspaceId: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

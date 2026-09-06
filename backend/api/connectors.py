@@ -85,6 +85,18 @@ async def sync(req: SyncRequest, auth_uid: str = Depends(require_user)) -> dict:
     return report.model_dump(mode="json")
 
 
+@router.delete("")
+async def disconnect(auth_uid: str = Depends(require_user)) -> dict:
+    """Remove the Google Drive connector for this user (cascades sync state)."""
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        await conn.execute(
+            "DELETE FROM connector_accounts WHERE user_id = $1 AND provider = 'gdrive'",
+            auth_uid,
+        )
+    return {"disconnected": True}
+
+
 @router.get("/status")
 async def status(auth_uid: str = Depends(require_user)) -> dict:
     pool = await get_pool()

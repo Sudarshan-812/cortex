@@ -132,8 +132,8 @@
   --cx-surface:      #ffffff;
   --cx-ink:          #0a0a0a;
   --cx-ink-2:        #1a1a1a;
-  --cx-mute-1:       #6b6b68;
-  --cx-mute-2:       #97958f;
+  --cx-mute-1:       #57534e;  /* AA on paper (~5.5:1) */
+  --cx-mute-2:       #6f6b64;  /* AA-ish for >=12px (~4.6:1) */
   --cx-line:         #e8e5dd;
   --cx-line-2:       #d9d5cb;
   --cx-accent:       #a16207;
@@ -156,7 +156,7 @@
   --lp-ink:          #1c1917;
   --lp-ink-2:        #292524;
   --lp-mute-1:       #57534e;
-  --lp-mute-2:       #8b8580;
+  --lp-mute-2:       #736e67;
   --lp-border:       rgba(28,25,23,0.09);
   --lp-border-2:     rgba(28,25,23,0.16);
   --lp-primary:      #a16207;
@@ -487,4 +487,57 @@
   border-color: var(--cx-accent-line);
   color: var(--cx-ink);
   box-shadow: 0 4px 20px rgba(161,98,7,0.09);
+}
+
+/* ── Accessibility foundation ──────────────────────────────────── */
+
+/* Light-only product; keep OS form controls / scrollbars light. */
+:root { color-scheme: light; }
+
+/* Visible keyboard focus for every interactive element. Pointer users
+   never see it (:focus-visible), so it doesn't disturb the visual design. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible,
+[role="button"]:focus-visible,
+[role="menuitem"]:focus-visible,
+[role="option"]:focus-visible {
+  outline: 2px solid var(--cx-accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+/* Inputs that draw their own focus ring on the landing/login screens */
+.lp-font input:focus-visible,
+.lp-font textarea:focus-visible { outline-color: var(--lp-primary); }
+
+/* Firefox scrollbars (WebKit handled by .cx-scroll-thin) */
+* { scrollbar-width: thin; scrollbar-color: var(--cx-line-2) transparent; }
+
+/* Screen-reader-only utility + skip link */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.cx-skip-link {
+  position: fixed; top: 8px; left: 8px; z-index: 200;
+  padding: 8px 14px; border-radius: 8px;
+  background: var(--cx-ink); color: #f9f8f5;
+  font-size: 13px; font-weight: 600;
+  transform: translateY(-160%);
+  transition: transform .18s ease;
+}
+.cx-skip-link:focus { transform: translateY(0); }
+
+/* Respect reduced-motion: neutralise the many infinite loops + transitions. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

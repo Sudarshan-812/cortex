@@ -54,7 +54,7 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
             <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ background: 'var(--lp-primary-2)' }} />
           </span>
           <span className="text-[11.5px] font-medium tracking-wide" style={{ color: 'var(--lp-primary-2)' }}>
-            Now with agentic web fallback
+            Now with Corrective RAG &amp; Google Drive sync
           </span>
         </motion.div>
 
@@ -82,7 +82,7 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
           className="text-[17px] md:text-[19px] leading-relaxed max-w-2xl mx-auto mb-9"
           style={{ color: 'var(--lp-mute-1)' }}
         >
-          Cortex turns your PDFs, documents, and notes into a smart, conversational knowledge base &mdash; hybrid search, AI re-ranking, and source citations on every answer.
+          Cortex turns your PDFs, documents, and notes into a smart, conversational knowledge base - hybrid search, AI re-ranking, and source citations on every answer.
         </motion.p>
 
         {/* CTA buttons */}
@@ -170,7 +170,7 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
             {/* Sidebar */}
             <div className="w-[170px] sm:w-[210px] flex-shrink-0 border-r p-3 flex flex-col gap-1"
               style={{ background: 'rgba(28,25,23,0.012)', borderColor: 'var(--lp-border)' }}>
-              <p className="text-[9.5px] font-semibold uppercase tracking-widest px-2 mb-1 cx-num"
+              <p className="text-[10.5px] font-semibold uppercase tracking-widest px-2 mb-1 cx-num"
                 style={{ color: 'var(--lp-mute-2)' }}>Workspace</p>
 
               {[

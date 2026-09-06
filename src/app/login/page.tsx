@@ -11,12 +11,11 @@ import {
   AlertCircle, CheckCircle2,
 } from 'lucide-react';
 
-import SoftAurora from "@/components/SoftAurora";
-
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,24 +71,17 @@ export default function LoginPage() {
   return (
     <div className="grid h-screen w-screen overflow-hidden lg:grid-cols-2" style={{ background: 'var(--cx-paper)' }}>
       <div className="relative hidden h-full flex-col border-r p-10 lg:flex overflow-hidden" style={{ background: 'var(--cx-paper-2)', borderColor: 'var(--cx-line)' }}>
-        <div className="absolute inset-0 z-0">
-          <SoftAurora
-            speed={0.45}
-            scale={1.25}
-            brightness={0.85}
-            color1="#f8fafc"
-            color2="#c026d3"
-            noiseFrequency={2.1}
-            noiseAmplitude={0.75}
-            bandHeight={0.55}
-            bandSpread={1.15}
-            octaveDecay={0.18}
-            layerOffset={0.12}
-            colorSpeed={0.6}
-            enableMouseInteraction
-            mouseInfluence={0.2}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                'radial-gradient(120% 90% at 15% 10%, rgba(192,38,211,0.14), transparent 55%),' +
+                'radial-gradient(120% 90% at 90% 90%, rgba(161,98,7,0.14), transparent 55%),' +
+                'linear-gradient(160deg, var(--cx-paper-2), var(--cx-paper))',
+            }}
           />
-          <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+          <div className="absolute inset-0 cx-grain opacity-40" />
         </div>
 
         <div className="relative z-10 flex flex-col h-full">
@@ -205,6 +197,8 @@ export default function LoginPage() {
                 <input
                   type="email"
                   required
+                  autoFocus
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@company.com"
@@ -226,22 +220,23 @@ export default function LoginPage() {
                 {!isSignUp && (
                   <button
                     type="button"
+                    disabled={resetting}
                     onClick={async () => {
                       if (!email) { setError("Enter your email above first."); return; }
-                      setIsLoading(true); setError(null);
+                      setResetting(true); setError(null);
                       const { error } = await supabase.auth.resetPasswordForEmail(email, {
                         redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
                       });
-                      setIsLoading(false);
+                      setResetting(false);
                       if (error) setError(error.message);
                       else setSuccessMsg("Password reset email sent - check your inbox.");
                     }}
-                    className="text-[12px] font-semibold transition-colors"
+                    className="text-[12px] font-semibold transition-colors disabled:opacity-50"
                     style={{ color: 'var(--cx-mute-1)' }}
                     onMouseEnter={e => (e.currentTarget.style.color = 'var(--cx-accent)')}
                     onMouseLeave={e => (e.currentTarget.style.color = 'var(--cx-mute-1)')}
                   >
-                    Forgot password?
+                    {resetting ? 'Sending…' : 'Forgot password?'}
                   </button>
                 )}
               </div>
@@ -250,6 +245,8 @@ export default function LoginPage() {
                 <input
                   type={showPassword ? "text" : "password"}
                   required
+                  minLength={isSignUp ? 8 : undefined}
+                  autoComplete={isSignUp ? "new-password" : "current-password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
@@ -273,6 +270,11 @@ export default function LoginPage() {
                   {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                 </button>
               </div>
+              {isSignUp && (
+                <p className="text-[11.5px] mt-1.5" style={{ color: 'var(--cx-mute-1)' }}>
+                  At least 8 characters.
+                </p>
+              )}
             </div>
 
             <AnimatePresence mode="wait">

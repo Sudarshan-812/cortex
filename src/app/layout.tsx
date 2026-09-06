@@ -41,7 +41,7 @@ const jetbrainsMono = JetBrains_Mono({
   weight: ["400", "500", "600"],
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://cortex.ai";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://cortex.sudarshank.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
