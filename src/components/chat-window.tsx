@@ -955,7 +955,11 @@ export function ChatWindow({
                                 <CheckCircle2 size={10} strokeWidth={2.5} />
                                 {t.name === 'search_documents'
                                   ? `${t.count ?? 0} sources found`
-                                  : 'Web search done'}
+                                  : t.name === 'relevance_check'
+                                    ? 'Relevance checked'
+                                    : t.name === 'query_rewrite'
+                                      ? 'Query refined'
+                                      : 'Done'}
                               </div>
                             ))}
                           </motion.div>

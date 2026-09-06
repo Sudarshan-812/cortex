@@ -1,5 +1,6 @@
 'use client'
 
+import type { ReactNode } from 'react'
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 import { User, Shield, Trash2, Building2, LucideIcon } from 'lucide-react'
@@ -19,11 +20,13 @@ export function SettingsContent({
   email,
   avatarUrl,
   sections,
+  extra,
 }: {
   userName: string
   email: string
   avatarUrl?: string
   sections: { iconName: string; title: string; description: string; items: { label: string; value: string }[] }[]
+  extra?: ReactNode
 }) {
   return (
     <div className="min-h-screen">
@@ -113,6 +116,8 @@ export function SettingsContent({
               </motion.div>
             )
           })}
+
+          {extra}
 
           {/* Danger zone */}
           <motion.div

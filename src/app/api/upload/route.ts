@@ -1,13 +1,9 @@
 import { createClient } from '@/utils/supabase/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
-import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters'
-import { extractText, isSupportedFile } from '@/lib/parsers'
+import { isSupportedFile } from '@/lib/parsers'
 import * as Sentry from '@sentry/nextjs'
-
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY!)
+import { backendFetch, getAccessToken } from '@/lib/backend'
 
 const MAX_FILE_BYTES = 50 * 1024 * 1024
-const EMBED_BATCH = 5
 
 function sse(data: object): string {
   return `data: ${JSON.stringify(data)}\n\n`
@@ -18,9 +14,7 @@ export async function POST(req: Request) {
 
   const stream = new ReadableStream({
     async start(controller) {
-      function emit(data: object) {
-        controller.enqueue(encoder.encode(sse(data)))
-      }
+      const emit = (data: object) => controller.enqueue(encoder.encode(sse(data)))
 
       try {
         const formData = await req.formData()
@@ -38,7 +32,7 @@ export async function POST(req: Request) {
           return
         }
         if (!isSupportedFile(file)) {
-          emit({ error: 'Unsupported file type. Use PDF, DOCX, TXT, MD, or CSV.' })
+          emit({ error: 'Unsupported file type. Use PDF, DOCX, or XLSX.' })
           controller.close()
           return
         }
@@ -63,8 +57,7 @@ export async function POST(req: Request) {
           return
         }
 
-        // Stage 1: Upload to storage
-        emit({ stage: 'processing', pct: 8, label: 'Uploading file…' })
+        emit({ stage: 'processing', pct: 5, label: 'Uploading file…' })
 
         const safeName = file.name
           .replace(/[^a-zA-Z0-9._-]/g, '_')
@@ -98,88 +91,85 @@ export async function POST(req: Request) {
           return
         }
 
-        // Stage 2: Extract text
-        emit({ stage: 'processing', pct: 18, label: 'Extracting text…' })
-        const rawText = await extractText(file)
-        if (!rawText?.trim()) {
-          emit({ error: 'Extracted text is empty.' })
+        const { data: signed, error: signErr } = await supabase.storage
+          .from('synapse-uploads')
+          .createSignedUrl(filePath, 600)
+        if (signErr || !signed) {
+          emit({ error: `Signed URL error: ${signErr?.message ?? 'unknown'}` })
           controller.close()
           return
         }
 
-        // Stage 3: Chunk
-        emit({ stage: 'chunking', pct: 30, label: 'Chunking document…' })
-        const splitter = new RecursiveCharacterTextSplitter({ chunkSize: 1000, chunkOverlap: 200 })
-        const splitDocs = await splitter.createDocuments([rawText])
-        const totalBatches = Math.ceil(splitDocs.length / EMBED_BATCH)
-
-        emit({ stage: 'chunking', pct: 38, label: `${splitDocs.length} chunks ready` })
-
-        // Stage 4: Embed (real per-batch progress)
-        const embeddingModel = genAI.getGenerativeModel({ model: 'gemini-embedding-001' })
-        const chunksData: { document_id: string; content: string; embedding: number[] }[] = []
-
-        for (let batchIdx = 0; batchIdx < totalBatches; batchIdx++) {
-          const batch = splitDocs.slice(batchIdx * EMBED_BATCH, (batchIdx + 1) * EMBED_BATCH)
-          const results = await Promise.all(
-            batch.map(async (chunk) => {
-              const content = chunk.pageContent.replace(/\n/g, ' ')
-              const result = await embeddingModel.embedContent(content)
-              return { document_id: docData.id, content, embedding: result.embedding.values.slice(0, 768) }
-            })
-          )
-          chunksData.push(...results)
-          const pct = 40 + Math.round(((batchIdx + 1) / totalBatches) * 48)
-          emit({
-            stage: 'embedding',
-            pct,
-            label: `Embedding batch ${batchIdx + 1}/${totalBatches}`,
-            chunk: batchIdx + 1,
-            total: totalBatches,
-          })
-        }
-
-        // Stage 5: Insert chunks
-        emit({ stage: 'embedding', pct: 90, label: 'Indexing vectors…' })
-        const { error: vectorError } = await supabase.from('document_chunks').insert(chunksData)
-        if (vectorError) {
-          emit({ error: `Vector DB error: ${vectorError.message}` })
+        const token = await getAccessToken()
+        if (!token) {
+          emit({ error: 'Not authenticated' })
           controller.close()
           return
         }
 
-        // Done — close the stream; summary runs after
-        emit({ stage: 'embedded', pct: 100, label: 'Indexed', docId: docData.id })
-        controller.close()
+        const res = await backendFetch('/v1/ingest', token, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            document_id: docData.id,
+            source_url: signed.signedUrl,
+            filename: file.name,
+            workspace_id: workspaceId,
+          }),
+        })
+        if (!res.ok || !res.body) {
+          const body = await res.text().catch(() => '')
+          emit({ error: `Ingest failed: ${res.status} ${body}` })
+          controller.close()
+          return
+        }
 
-        // Auto-summary: fire-and-forget after stream is closed
-        ;(async () => {
-          try {
-            const summaryModel = genAI.getGenerativeModel({ model: 'gemini-3.1-flash-lite' })
-            const preview = rawText.slice(0, 4000)
-            const summaryResult = await summaryModel.generateContent(
-              `Summarize this document in exactly 2 sentences, then list exactly 5 key topics.\n` +
-              `Return ONLY valid JSON: {"summary":"...","topics":["t1","t2","t3","t4","t5"]}\n\nDocument:\n${preview}`
-            )
-            const text = summaryResult.response.text()
-            const jsonMatch = text.match(/\{[\s\S]*\}/)
-            if (jsonMatch) {
-              const parsed = JSON.parse(jsonMatch[0])
-              if (parsed.summary && Array.isArray(parsed.topics)) {
-                await supabase
-                  .from('documents')
-                  .update({ summary: parsed.summary, topics: parsed.topics })
-                  .eq('id', docData.id)
-              }
+        const reader = res.body.getReader()
+        const decoder = new TextDecoder()
+        let buf = ''
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
+          buf += decoder.decode(value, { stream: true })
+          const parts = buf.split('\n\n')
+          buf = parts.pop() ?? ''
+          for (const part of parts) {
+            if (!part.startsWith('data:')) continue
+            let evt: {
+              stage?: string
+              message?: string
+              chunks?: number
+              pages?: number
+              pct?: number
+              label?: string
             }
-          } catch (err) {
-            Sentry.captureException(err, { tags: { stage: 'auto_summary' }, extra: { docId: docData.id } })
+            try {
+              evt = JSON.parse(part.slice(part.indexOf(':') + 1).trim())
+            } catch {
+              continue
+            }
+            if (evt.stage === 'error') {
+              emit({ error: evt.message ?? 'Ingest error' })
+            } else if (evt.stage === 'done') {
+              emit({
+                stage: 'embedded',
+                pct: 100,
+                label: 'Indexed',
+                docId: docData.id,
+                chunks: evt.chunks,
+                pages: evt.pages,
+              })
+            } else {
+              emit(evt) // processing / embedding progress passthrough
+            }
           }
-        })()
-      } catch (err: any) {
-        Sentry.captureException(err, { tags: { stage: 'upload_sse' } })
+        }
+        controller.close()
+      } catch (err) {
+        Sentry.captureException(err, { tags: { stage: 'upload_proxy' } })
         try {
-          controller.enqueue(encoder.encode(sse({ error: err.message ?? 'Upload failed' })))
+          const message = err instanceof Error ? err.message : 'Upload failed'
+          controller.enqueue(encoder.encode(sse({ error: message })))
           controller.close()
         } catch {}
       }

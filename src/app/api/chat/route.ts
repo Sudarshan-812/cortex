@@ -22,6 +22,20 @@ function sse(data: object) {
 }
 
 type Citation = { chunk_id: string; source_name: string; page_number: number | null; score: number }
+type ChunkRow = {
+  id: string
+  content: string | null
+  document_id: string | null
+  documents: { name: string } | { name: string }[] | null
+}
+type BackendEvent = {
+  type?: string
+  text?: string
+  candidates?: number
+  citations?: Citation[]
+  grounded?: boolean
+  message?: string
+}
 
 async function enrichCitations(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -33,14 +47,16 @@ async function enrichCitations(
     .from("document_chunks")
     .select("id, content, document_id, documents(name)")
     .in("id", ids)
+  const rows = (data ?? []) as unknown as ChunkRow[]
 
   return citations.map(c => {
-    const d = data?.find((x: any) => x.id === c.chunk_id)
+    const d = rows.find(x => x.id === c.chunk_id)
+    const docName = Array.isArray(d?.documents) ? d?.documents[0]?.name : d?.documents?.name
     return {
       chunk_id: c.chunk_id,
-      document_id: (d as any)?.document_id ?? null,
-      document_name: ((d as any)?.documents as any)?.name ?? c.source_name ?? "Unknown",
-      content: (d as any)?.content ?? "",
+      document_id: d?.document_id ?? null,
+      document_name: docName ?? c.source_name ?? "Unknown",
+      content: d?.content ?? "",
       similarity: Math.round((c.score ?? 0) * 100),
       page_number: c.page_number ?? null,
     }
@@ -100,10 +116,10 @@ export async function POST(req: NextRequest) {
     .eq("session_id", sessionId)
     .order("created_at", { ascending: false })
     .limit(6)
-  const priorTurns = (history ?? [])
+  const priorTurns = ((history ?? []) as { role: string; content: string }[])
     .reverse()
-    .filter((m: any) => m.content?.trim())
-    .map((m: any) => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
+    .filter(m => m.content?.trim())
+    .map(m => `${m.role === "user" ? "User" : "Assistant"}: ${m.content}`)
     .join("\n")
   const backendQuery = priorTurns
     ? `Conversation so far:\n${priorTurns}\n\nCurrent question: ${query}`
@@ -111,7 +127,7 @@ export async function POST(req: NextRequest) {
 
   let fullText = ""
   let assistantPersisted = false
-  let sources: any[] = []
+  let sources: Awaited<ReturnType<typeof enrichCitations>> = []
   let answeredFrom: "documents" | "none" = "none"
 
   async function persistAssistant() {
@@ -165,9 +181,9 @@ export async function POST(req: NextRequest) {
 
           for (const part of parts) {
             if (!part.startsWith("data:")) continue
-            let evt: any
+            let evt: BackendEvent
             try {
-              evt = JSON.parse(part.slice(part.indexOf(":") + 1).trim())
+              evt = JSON.parse(part.slice(part.indexOf(":") + 1).trim()) as BackendEvent
             } catch {
               continue
             }
@@ -187,10 +203,12 @@ export async function POST(req: NextRequest) {
               case "citations":
                 citations = evt.citations ?? []
                 break
-              case "token":
-                fullText += evt.text
-                controller.enqueue(sse({ type: "token", text: evt.text }))
+              case "token": {
+                const text = evt.text ?? ""
+                fullText += text
+                controller.enqueue(sse({ type: "token", text }))
                 break
+              }
               case "done": {
                 answeredFrom = evt.grounded ? "documents" : "none"
                 sources = await enrichCitations(supabase, citations)
@@ -239,11 +257,12 @@ export async function POST(req: NextRequest) {
         }
 
         controller.close()
-      } catch (err: any) {
+      } catch (err) {
         Sentry.captureException(err, { tags: { stage: "chat_proxy" }, extra: { sessionId, workspaceId } })
         await persistAssistant()
         try {
-          controller.enqueue(sse({ type: "error", message: err?.message ?? "Unknown error" }))
+          const message = err instanceof Error ? err.message : "Unknown error"
+          controller.enqueue(sse({ type: "error", message }))
           controller.close()
         } catch {}
       }

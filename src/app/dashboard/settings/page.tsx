@@ -1,6 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { SettingsContent } from "@/components/dashboard/SettingsContent";
+import { GoogleDriveCard } from "@/components/dashboard/GoogleDriveCard";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -62,6 +63,7 @@ export default async function SettingsPage() {
       email={user.email ?? ""}
       avatarUrl={avatarUrl}
       sections={sections}
+      extra={<GoogleDriveCard workspaceId={workspace?.id} />}
     />
   );
 }

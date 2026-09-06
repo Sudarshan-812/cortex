@@ -2,22 +2,16 @@ import PDFParser from "pdf2json"
 import mammoth from "mammoth"
 import Papa from "papaparse"
 
+// The Python backend parses with docling: PDF / DOCX / XLSX only.
 const SUPPORTED_TYPES = new Set([
   "application/pdf",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-  "application/msword",
-  "text/plain",
-  "text/markdown",
-  "text/csv",
-  "application/csv",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
 ])
 
 export function isSupportedFile(file: File): boolean {
   const ext = file.name.split(".").pop()?.toLowerCase() ?? ""
-  return (
-    SUPPORTED_TYPES.has(file.type) ||
-    ["pdf", "docx", "doc", "txt", "md", "csv"].includes(ext)
-  )
+  return SUPPORTED_TYPES.has(file.type) || ["pdf", "docx", "xlsx"].includes(ext)
 }
 
 export async function extractText(file: File): Promise<string> {

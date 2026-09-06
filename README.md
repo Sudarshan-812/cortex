@@ -38,9 +38,37 @@ For every message sent, Cortex executes a strict, multi-step orchestration:
 3. **Agentic Decision:** Gemini evaluates the context and decides if external Web Search is required to supplement the data.
 4. **SSE Stream:** The final answer is streamed back to the client, attaching the exact document metadata (JSONB) as clickable source citations.
 
+## 🐍 Python backend (`backend/`)
+
+Chat, upload, and Google Drive sync are served by a FastAPI service the Next.js
+routes proxy to. See `backend/README.md`. Run both:
+
+```bash
+# terminal 1 — Python backend
+cd backend && uvicorn api.app:app --port 8000
+
+# terminal 2 — Next.js app
+npm run dev
+```
+
+`.env.local` needs `BACKEND_URL=http://localhost:8000`; `backend/.env` needs
+`SUPABASE_DB_URL`, `GEMINI_API_KEY`, `SUPABASE_URL`, and (for Drive) the
+`GOOGLE_OAUTH_*` + `CONNECTOR_STATE_SECRET` vars. Every model call is Gemini
+(free tier) — no paid API.
+
+- `POST /api/chat` → backend `/v1/query`: hybrid retrieve (`match_hybrid_documents`,
+  ACL-filtered) → Gemini rerank → Corrective-RAG (rewrite + re-retrieve if weak) →
+  streamed answer with structured citations. The Next route keeps message
+  persistence, session titles, follow-ups, and rate limiting.
+- `POST /api/upload` → Storage upload (Next) → signed URL → backend `/v1/ingest`:
+  docling structural parse (PDF/DOCX/XLSX, tables + headings) → embed → atomic
+  chunk write → auto-summary.
+- `/api/connectors/google-drive/*` → OAuth connect, folder sync (delta by
+  `modifiedTime`, atomic per-file replace), status. Refresh token in Supabase Vault.
+
 ## 🛡️ Security & Database Schema
 
-This project relies on strict Row Level Security (RLS) in Supabase. A user can only read, embed, and query chunks belonging to their authenticated `workspace_id`. The schema includes triggers for auto-updating `tsvector` columns for Full Text Search (FTS) upon chunk insertion.
+This project relies on strict Row Level Security (RLS) in Supabase. A user can only read, embed, and query chunks belonging to their authenticated `workspace_id`. The schema includes triggers for auto-updating `tsvector` columns for Full Text Search (FTS) upon chunk insertion. The `/v1/query` pipeline additionally enforces per-chunk ACLs (`acl_permissions`) inside the retrieval RPC before ranking.
 
 ## ⚖️ Copyright & License
 
