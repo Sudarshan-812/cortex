@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { motion } from 'framer-motion'
 import {
   LayoutDashboard, BarChart2, Settings, MessageSquare, Search,
   ChevronDown, Check, Building2, Plus, Loader2, X, LogOut,
@@ -101,11 +100,11 @@ export function AppSidebar({
         aria-hidden="true"
       />
       <aside
-        style={{ width: collapsed ? 64 : 240, background: 'var(--cx-paper)', borderColor: 'var(--cx-line)' }}
+        style={{ width: collapsed ? 60 : 232, background: 'var(--cx-paper)', borderColor: 'var(--cx-line)' }}
         className={
-          'flex flex-col h-screen flex-shrink-0 overflow-hidden border-r transition-[width,transform] duration-300 ease-out ' +
+          'flex flex-col h-screen flex-shrink-0 overflow-hidden border-r transition-[width,transform] duration-200 ease-out ' +
           'md:sticky md:top-0 md:translate-x-0 ' +
-          'max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-50 max-md:!w-[264px] max-md:shadow-2xl ' +
+          'max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-50 max-md:!w-[264px] max-md:shadow-xl ' +
           (navOpen ? 'max-md:translate-x-0' : 'max-md:-translate-x-full')
         }
       >
@@ -126,16 +125,15 @@ export function AppSidebar({
           >
             <X size={16} />
           </button>
-          <motion.button
-            whileTap={{ scale: 0.94 }}
+          <button
             onClick={() => setCollapsed(v => !v)}
-            className="hidden md:flex flex-shrink-0 size-8 rounded-lg items-center justify-center transition-colors"
+            className="hidden md:flex flex-shrink-0 size-8 rounded-md items-center justify-center transition-colors"
             style={{ color: 'var(--cx-mute-2)' }}
             {...rowHover}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
             {collapsed ? <PanelLeftOpen size={15} /> : <PanelLeftClose size={15} />}
-          </motion.button>
+          </button>
         </div>
 
         {/* Workspace switcher */}
@@ -159,8 +157,8 @@ export function AppSidebar({
                   {...rowHover}
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="cx-rule-label leading-none">Workspace</p>
-                    <p className="text-[13px] font-semibold truncate mt-1" style={{ color: 'var(--cx-ink)' }}>
+                    <p className="text-[10.5px] font-medium" style={{ color: 'var(--cx-mute-2)' }}>Workspace</p>
+                    <p className="text-[13px] font-semibold truncate mt-0.5" style={{ color: 'var(--cx-ink)' }}>
                       {workspace.name}
                     </p>
                   </div>
@@ -175,7 +173,7 @@ export function AppSidebar({
           >
             {({ close }) => (
               <>
-                <p className="px-2.5 pt-1.5 pb-1 cx-rule-label">Workspaces</p>
+                <p className="px-2.5 pt-1.5 pb-1 text-[10.5px] font-medium" style={{ color: 'var(--cx-mute-2)' }}>Workspaces</p>
                 {workspaces.map(ws => {
                   const active = ws.id === workspace.id
                   const isSwitching = switching === ws.id
@@ -183,23 +181,15 @@ export function AppSidebar({
                     <button
                       key={ws.id}
                       onClick={() => handleSwitch(ws.id, close)}
-                      className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-left transition-colors"
+                      className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-left transition-colors"
                       style={{ background: active ? 'var(--cx-paper-2)' : '' }}
                       {...(!active ? rowHover : {})}
                     >
-                      <span
-                        className="size-6 rounded-md flex items-center justify-center flex-shrink-0 border"
-                        style={{
-                          background: active ? 'var(--cx-accent-wash)' : 'var(--cx-paper)',
-                          borderColor: active ? 'var(--cx-accent-line)' : 'var(--cx-line)',
-                        }}
-                      >
-                        {isSwitching
-                          ? <Loader2 size={11} className="cx-spin" style={{ color: 'var(--cx-mute-1)' }} />
-                          : <Building2 size={12} style={{ color: active ? 'var(--cx-accent)' : 'var(--cx-mute-1)' }} />}
-                      </span>
-                      <p className="text-[12.5px] font-semibold truncate flex-1" style={{ color: 'var(--cx-ink)' }}>{ws.name}</p>
-                      {active && <Check size={12} style={{ color: 'var(--cx-accent)' }} strokeWidth={2.5} className="flex-shrink-0" />}
+                      <Building2 size={13} className="flex-shrink-0" style={{ color: active ? 'var(--cx-accent)' : 'var(--cx-mute-2)' }} />
+                      <p className="text-[12.5px] font-medium truncate flex-1" style={{ color: 'var(--cx-ink)' }}>{ws.name}</p>
+                      {isSwitching
+                        ? <Loader2 size={12} className="cx-spin flex-shrink-0" style={{ color: 'var(--cx-mute-1)' }} />
+                        : active && <Check size={12} style={{ color: 'var(--cx-accent)' }} strokeWidth={2.5} className="flex-shrink-0" />}
                     </button>
                   )
                 })}
@@ -263,9 +253,9 @@ export function AppSidebar({
           ) : (
             <button
               onClick={() => setSearchOpen(true)}
-              className="w-full flex items-center gap-2 h-9 px-2.5 rounded-lg border transition-colors text-[12.5px]"
-              style={{ borderColor: 'var(--cx-line)', background: 'rgba(255,255,255,0.5)', color: 'var(--cx-mute-1)' }}
-              onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--cx-accent-line)')}
+              className="w-full flex items-center gap-2 h-8 px-2.5 rounded-md border transition-colors text-[12.5px]"
+              style={{ borderColor: 'var(--cx-line)', background: 'var(--cx-surface)', color: 'var(--cx-mute-1)' }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--cx-line-2)')}
               onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--cx-line)')}
             >
               <Search size={13} className="flex-shrink-0" />
@@ -288,20 +278,21 @@ export function AppSidebar({
                 key={item.href}
                 href={item.href}
                 title={collapsed ? item.label : undefined}
-                className="flex items-center gap-2.5 rounded-lg text-[13px] font-medium transition-colors"
+                className="flex items-center gap-2.5 rounded-md text-[13px] transition-colors"
                 style={{
-                  padding: collapsed ? undefined : '8px 10px',
+                  padding: collapsed ? undefined : '7px 10px',
                   justifyContent: collapsed ? 'center' : undefined,
                   width: collapsed ? 36 : '100%',
                   height: collapsed ? 36 : undefined,
                   margin: collapsed ? '0 auto 2px' : undefined,
-                  background: isActive ? 'var(--cx-ink)' : '',
-                  color: isActive ? '#f2f0eb' : 'var(--cx-ink-2)',
+                  background: isActive ? 'var(--cx-paper-2)' : '',
+                  color: isActive ? 'var(--cx-ink)' : 'var(--cx-mute-1)',
+                  fontWeight: isActive ? 600 : 500,
                 }}
                 onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--cx-paper-2)' }}
                 onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = '' }}
               >
-                <Icon size={15} className="flex-shrink-0" style={{ color: isActive ? '#d9a441' : 'var(--cx-mute-2)' }} />
+                <Icon size={15} className="flex-shrink-0" style={{ color: isActive ? 'var(--cx-accent)' : 'var(--cx-mute-2)' }} />
                 {!collapsed && item.label}
               </Link>
             )

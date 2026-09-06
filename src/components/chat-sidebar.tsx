@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { createChatSession, deleteChatSession, renameChatSession } from '@/app/session-actions'
 import { switchWorkspace } from '@/app/actions'
 import {
@@ -11,7 +11,6 @@ import {
   ChevronDown, Check, Building2, UploadCloud,
 } from 'lucide-react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { useMobileNav } from '@/components/MobileNavContext'
 
 type Session  = { id: string; title: string; updated_at: string }
@@ -63,7 +62,6 @@ export function ChatSidebar({
 
   async function handleNewChat() {
     setNavOpen(false)
-    // Reuse an untouched "New Chat" instead of spawning a duplicate.
     const existingEmpty = sessions.find(s => s.title === 'New Chat')
     if (existingEmpty) { router.push(`/chat/${existingEmpty.id}`); return }
     setCreating(true)
@@ -127,6 +125,8 @@ export function ChatSidebar({
     setSwitchingWs(null)
   }
 
+  const iconBtn = 'size-8 rounded-md border flex items-center justify-center transition-colors'
+
   return (
     <>
       <div
@@ -136,22 +136,22 @@ export function ChatSidebar({
         aria-hidden="true"
       />
     <aside
-      style={{ width: collapsed ? 60 : 256, background: 'var(--cx-paper)', borderColor: 'var(--cx-line)' }}
+      style={{ width: collapsed ? 56 : 248, background: 'var(--cx-paper)', borderColor: 'var(--cx-line)' }}
       className={
-        'flex flex-col h-full flex-shrink-0 overflow-hidden border-r transition-[width,transform] duration-300 ease-out ' +
+        'flex flex-col h-full flex-shrink-0 overflow-hidden border-r transition-[width,transform] duration-200 ease-out ' +
         'md:translate-x-0 ' +
-        'max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-50 max-md:!w-[264px] max-md:shadow-2xl ' +
+        'max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-50 max-md:!w-[264px] max-md:shadow-xl ' +
         (navOpen ? 'max-md:translate-x-0' : 'max-md:-translate-x-full')
       }
     >
-      {/* ── Header ──────────────────────────────────────────── */}
+      {/* Header */}
       <div
-        className={`flex items-center h-[58px] px-3 border-b flex-shrink-0 ${collapsed ? 'md:justify-center' : 'justify-between gap-2'}`}
+        className={`flex items-center h-[50px] px-3 border-b flex-shrink-0 ${collapsed ? 'md:justify-center' : 'justify-between gap-2'}`}
         style={{ borderColor: 'var(--cx-line)' }}
       >
         <button
           onClick={() => setNavOpen(false)}
-          className="md:hidden flex-shrink-0 size-9 rounded-lg flex items-center justify-center hover:bg-[var(--cx-paper-2)] order-last"
+          className="md:hidden flex-shrink-0 size-8 rounded-md flex items-center justify-center hover:bg-[var(--cx-paper-2)] order-last"
           style={{ color: 'var(--cx-mute-2)' }}
           aria-label="Close navigation menu"
         >
@@ -163,14 +163,14 @@ export function ChatSidebar({
               onClick={() => workspaces.length > 1 && setWsOpen(v => !v)}
               className={`w-full text-left ${workspaces.length > 1 ? 'cursor-pointer' : 'cursor-default'}`}
             >
-              <p className="cx-rule-label leading-none">Workspace</p>
-              <div className="flex items-center gap-1 mt-1">
-                <p className="text-[13px] font-semibold truncate" style={{ color: 'var(--cx-ink)' }}>
+              <p className="text-[10px] font-medium leading-none" style={{ color: 'var(--cx-mute-2)' }}>Workspace</p>
+              <div className="flex items-center gap-1 mt-0.5">
+                <p className="text-[12.5px] font-semibold truncate" style={{ color: 'var(--cx-ink)' }}>
                   {workspaceName}
                 </p>
                 {workspaces.length > 1 && (
                   <ChevronDown
-                    size={12}
+                    size={11}
                     className={`flex-shrink-0 transition-transform duration-200 ${wsOpen ? 'rotate-180' : ''}`}
                     style={{ color: 'var(--cx-mute-2)' }}
                   />
@@ -179,10 +179,8 @@ export function ChatSidebar({
             </button>
 
             {wsOpen && workspaces.length > 1 && (
-              <div
-                className="absolute top-full left-0 mt-2 w-56 cx-panel p-1.5 z-50 cx-fade-up"
-              >
-                <p className="cx-rule-label px-2 pt-1 pb-1.5">Switch workspace</p>
+              <div className="absolute top-full left-0 mt-2 w-56 cx-panel p-1 z-50">
+                <p className="px-2 pt-1 pb-1 text-[10px] font-medium" style={{ color: 'var(--cx-mute-2)' }}>Switch workspace</p>
                 {workspaces.map(ws => {
                   const active     = ws.id === workspaceId
                   const isSwitching = switchingWs === ws.id
@@ -191,24 +189,16 @@ export function ChatSidebar({
                       key={ws.id}
                       onClick={() => handleSwitchWorkspace(ws.id)}
                       disabled={active || !!switchingWs}
-                      className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg text-left transition-colors"
+                      className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-left transition-colors"
                       style={{ background: active ? 'var(--cx-paper-2)' : '' }}
                       onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'var(--cx-paper-2)' }}
                       onMouseLeave={e => { if (!active) e.currentTarget.style.background = '' }}
                     >
-                      <span
-                        className="size-5 rounded-md flex items-center justify-center flex-shrink-0 border"
-                        style={{
-                          background: active ? 'var(--cx-accent-wash)' : 'var(--cx-paper)',
-                          borderColor: active ? 'var(--cx-accent-line)' : 'var(--cx-line)',
-                        }}
-                      >
-                        {isSwitching
-                          ? <Loader2 size={10} className="cx-spin" style={{ color: 'var(--cx-mute-1)' }} />
-                          : active
-                            ? <Check size={10} style={{ color: 'var(--cx-accent)' }} strokeWidth={2.5} />
-                            : <Building2 size={10} style={{ color: 'var(--cx-mute-2)' }} />}
-                      </span>
+                      {isSwitching
+                        ? <Loader2 size={12} className="cx-spin flex-shrink-0" style={{ color: 'var(--cx-mute-1)' }} />
+                        : active
+                          ? <Check size={12} className="flex-shrink-0" style={{ color: 'var(--cx-accent)' }} strokeWidth={2.5} />
+                          : <Building2 size={12} className="flex-shrink-0" style={{ color: 'var(--cx-mute-2)' }} />}
                       <span className="text-[12.5px] font-medium truncate" style={{ color: active ? 'var(--cx-ink)' : 'var(--cx-ink-2)' }}>
                         {ws.name}
                       </span>
@@ -220,170 +210,105 @@ export function ChatSidebar({
           </div>
         )}
 
-        <motion.button
-          whileTap={{ scale: 0.88 }}
+        <button
           onClick={() => setCollapsed(v => !v)}
-          className="hidden md:flex flex-shrink-0 size-8 rounded-lg items-center justify-center transition-colors"
+          className="hidden md:flex flex-shrink-0 size-8 rounded-md items-center justify-center transition-colors"
           style={{ color: 'var(--cx-mute-2)' }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'var(--cx-paper-2)'; e.currentTarget.style.color = 'var(--cx-ink)' }}
-          onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'var(--cx-mute-2)' }}
+          onMouseEnter={e => { e.currentTarget.style.background = 'var(--cx-paper-2)' }}
+          onMouseLeave={e => { e.currentTarget.style.background = '' }}
           aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
-          <motion.span
-            animate={{ rotate: collapsed ? 180 : 0 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 24 }}
-            className="flex"
-          >
-            {collapsed ? <PanelLeftOpen size={15} /> : <PanelLeftClose size={15} />}
-          </motion.span>
-        </motion.button>
+          {collapsed ? <PanelLeftOpen size={15} /> : <PanelLeftClose size={15} />}
+        </button>
       </div>
 
-      {/* ── Upload Document ──────────────────────────────────── */}
-      <div className={`px-2 pt-3 pb-1 flex-shrink-0 ${collapsed ? 'flex justify-center' : ''}`}>
-        <input
-          ref={uploadRef}
-          type="file"
-          className="hidden"
-          accept=".pdf,.docx,.xlsx"
-          onChange={handleUpload}
-        />
-        {collapsed ? (
-          <button
-            onClick={() => uploadRef.current?.click()}
-            disabled={uploading}
-            title="Upload Document"
-            className="size-9 rounded-lg border flex items-center justify-center transition-colors"
-            style={{ borderColor: 'var(--cx-line)', background: 'var(--cx-surface)', color: 'var(--cx-mute-1)' }}
-            onMouseEnter={e => { e.currentTarget.style.background = 'var(--cx-accent-wash)'; e.currentTarget.style.borderColor = 'var(--cx-accent-line)' }}
-            onMouseLeave={e => { e.currentTarget.style.background = 'var(--cx-surface)'; e.currentTarget.style.borderColor = 'var(--cx-line)' }}
-          >
-            {uploading
-              ? <Loader2 size={13} className="cx-spin" style={{ color: 'var(--cx-accent)' }} />
-              : <UploadCloud size={13} />}
-          </button>
-        ) : (
-          <motion.button
-            whileTap={{ scale: 0.96 }}
-            onClick={() => uploadRef.current?.click()}
-            disabled={uploading}
-            className="w-full flex items-center gap-2 rounded-full h-9 px-4 text-[12.5px] font-medium border transition-all duration-200 disabled:opacity-50"
-            style={{
-              borderColor: 'var(--cx-line)',
-              background: 'transparent',
-              color: 'var(--cx-mute-1)',
-            }}
-            onMouseEnter={e => {
-              const el = e.currentTarget
-              el.style.background = 'var(--cx-accent-wash)'
-              el.style.borderColor = 'var(--cx-accent-line)'
-              el.style.color = 'var(--cx-accent)'
-            }}
-            onMouseLeave={e => {
-              const el = e.currentTarget
-              el.style.background = 'transparent'
-              el.style.borderColor = 'var(--cx-line)'
-              el.style.color = 'var(--cx-mute-1)'
-            }}
-          >
-            {uploading
-              ? <Loader2 size={13} className="cx-spin flex-shrink-0" style={{ color: 'var(--cx-accent)' }} />
-              : <UploadCloud size={13} className="flex-shrink-0" />}
-            {uploading ? 'Uploading…' : 'Upload Document'}
-          </motion.button>
-        )}
-      </div>
+      {/* Actions */}
+      <div className={`px-2 pt-2.5 pb-2 flex-shrink-0 space-y-1.5 ${collapsed ? 'flex flex-col items-center' : ''}`}>
+        <input ref={uploadRef} type="file" className="hidden" accept=".pdf,.docx,.xlsx" onChange={handleUpload} />
 
-      {/* ── New Chat ─────────────────────────────────────────── */}
-      <div className={`px-2 pt-1 pb-2 flex-shrink-0 ${collapsed ? 'flex justify-center' : ''}`}>
         {collapsed ? (
           <button
             onClick={handleNewChat}
             disabled={creating}
-            title="New Chat"
-            className="size-9 rounded-lg border flex items-center justify-center transition-colors"
-            style={{ borderColor: 'var(--cx-line)', background: 'var(--cx-surface)', color: 'var(--cx-mute-1)' }}
-            onMouseEnter={e => (e.currentTarget.style.background = 'var(--cx-paper-2)')}
-            onMouseLeave={e => (e.currentTarget.style.background = 'var(--cx-surface)')}
+            title="New chat"
+            className={iconBtn + ' cx-btn-ink'}
           >
-            {creating
-              ? <Loader2 size={13} className="cx-spin" style={{ color: 'var(--cx-accent)' }} />
-              : <Plus size={13} />}
+            {creating ? <Loader2 size={13} className="cx-spin" /> : <Plus size={13} />}
           </button>
         ) : (
-          <motion.button
-            whileTap={{ scale: 0.96 }}
+          <button
             onClick={handleNewChat}
             disabled={creating}
-            className="cx-btn-ink w-full flex items-center gap-2 rounded-full h-9 px-4 text-[12.5px] font-medium disabled:opacity-50"
+            className="cx-btn-ink w-full flex items-center justify-center gap-2 rounded-md h-8 px-3 text-[12.5px] font-medium disabled:opacity-50"
           >
-            {creating
-              ? <Loader2 size={13} className="cx-spin flex-shrink-0" />
-              : <Plus size={13} className="flex-shrink-0" />}
-            {creating ? 'Creating…' : 'New Chat'}
-          </motion.button>
+            {creating ? <Loader2 size={13} className="cx-spin" /> : <Plus size={13} />}
+            {creating ? 'Creating…' : 'New chat'}
+          </button>
+        )}
+
+        {collapsed ? (
+          <button
+            onClick={() => uploadRef.current?.click()}
+            disabled={uploading}
+            title="Upload a file"
+            className={iconBtn}
+            style={{ borderColor: 'var(--cx-line)', background: 'var(--cx-surface)', color: 'var(--cx-mute-1)' }}
+          >
+            {uploading ? <Loader2 size={13} className="cx-spin" style={{ color: 'var(--cx-accent)' }} /> : <UploadCloud size={13} />}
+          </button>
+        ) : (
+          <button
+            onClick={() => uploadRef.current?.click()}
+            disabled={uploading}
+            className="cx-btn-ghost w-full flex items-center justify-center gap-2 rounded-md h-8 px-3 text-[12.5px] font-medium disabled:opacity-50"
+          >
+            {uploading ? <Loader2 size={13} className="cx-spin" style={{ color: 'var(--cx-accent)' }} /> : <UploadCloud size={13} />}
+            {uploading ? 'Uploading…' : 'Upload a file'}
+          </button>
         )}
       </div>
 
-      {/* ── Session list ─────────────────────────────────────── */}
-      <div className="flex-1 overflow-y-auto px-2 py-1 cx-scroll-thin space-y-0.5">
+      {/* Session list */}
+      <div className="flex-1 overflow-y-auto px-2 py-1 cx-scroll-thin space-y-px">
         {!collapsed && sessions.length === 0 && (
           <div className="py-10 text-center px-3">
-            <p className="cx-rule-label mb-1">No chats yet</p>
-            <p className="text-[12px]" style={{ color: 'var(--cx-mute-2)' }}>
-              Click New Chat to begin.
-            </p>
+            <p className="text-[12px] font-medium mb-1" style={{ color: 'var(--cx-mute-1)' }}>No chats yet</p>
+            <p className="text-[12px]" style={{ color: 'var(--cx-mute-2)' }}>Click New chat to begin.</p>
           </div>
         )}
 
         {!collapsed && sessions.length > 0 && (
-          <p className="cx-rule-label px-2 pt-1 pb-2">Recent</p>
+          <p className="px-2 pt-1.5 pb-1.5 text-[10px] font-medium" style={{ color: 'var(--cx-mute-2)' }}>Recent</p>
         )}
 
         <AnimatePresence initial={false}>
-          {sessions.map((session, idx) => {
+          {sessions.map(session => {
             const isActive = activeId === session.id
             return (
               <motion.div
                 key={session.id}
-                layout
-                initial={{ opacity: 0, x: -6 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -6, transition: { duration: 0.15 } }}
-                transition={{ duration: 0.28, delay: idx < 12 ? idx * 0.025 : 0, ease: [0.16, 1, 0.3, 1] }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0, height: 0, transition: { duration: 0.12 } }}
                 onClick={() => router.push(`/chat/${session.id}`)}
                 title={collapsed ? session.title : undefined}
-                className="group relative flex items-center gap-2.5 rounded-lg cursor-pointer transition-colors duration-150"
+                className="group relative flex items-center gap-2 rounded-md cursor-pointer transition-colors"
                 style={{
-                  padding:        collapsed ? undefined : '8px 10px',
+                  padding:        collapsed ? undefined : '6px 8px 6px 10px',
                   justifyContent: collapsed ? 'center'  : undefined,
                   width:          collapsed ? 36        : undefined,
                   height:         collapsed ? 36        : undefined,
                   margin:         collapsed ? '0 auto'  : undefined,
-                  background:     isActive  ? 'var(--cx-ink)' : '',
-                  color:          isActive  ? '#f2f0eb'       : 'var(--cx-ink-2)',
+                  background:     isActive  ? 'var(--cx-paper-2)' : '',
+                  boxShadow:      isActive && !collapsed ? 'inset 2px 0 0 var(--cx-accent)' : undefined,
                 }}
                 onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--cx-paper-2)' }}
                 onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = '' }}
               >
-                {/* Sliding active indicator bar */}
-                {isActive && !collapsed && (
-                  <motion.div
-                    layoutId="sidebar-active-bar"
-                    className="absolute left-0 rounded-full pointer-events-none"
-                    style={{
-                      top: '20%', bottom: '20%',
-                      width: 2,
-                      background: '#d9a441',
-                    }}
-                    transition={{ type: 'spring', stiffness: 420, damping: 30 }}
-                  />
-                )}
-
                 <MessageSquare
                   size={13}
                   className="flex-shrink-0"
-                  style={{ color: isActive ? '#d9a441' : 'var(--cx-mute-2)' }}
+                  style={{ color: isActive ? 'var(--cx-accent)' : 'var(--cx-mute-2)' }}
                 />
                 {!collapsed && (
                   <>
@@ -399,16 +324,14 @@ export function ChatSidebar({
                           if (e.key === 'Escape') setRenamingId(null)
                         }}
                         onBlur={() => commitRename(session.id)}
-                        className="flex-1 min-w-0 text-[12.5px] font-medium bg-transparent outline-none rounded px-1 -mx-1"
-                        style={{
-                          color: isActive ? '#f2f0eb' : 'var(--cx-ink)',
-                          border: `1px solid ${isActive ? 'rgba(255,255,255,0.25)' : 'var(--cx-accent-line)'}`,
-                        }}
+                        className="flex-1 min-w-0 text-[12.5px] bg-transparent outline-none rounded px-1 -mx-1"
+                        style={{ color: 'var(--cx-ink)', border: '1px solid var(--cx-line-2)' }}
                         maxLength={80}
                       />
                     ) : (
                       <span
-                        className="flex-1 text-[12.5px] font-medium truncate"
+                        className="flex-1 text-[12.5px] truncate"
+                        style={{ color: isActive ? 'var(--cx-ink)' : 'var(--cx-ink-2)', fontWeight: isActive ? 600 : 400 }}
                         onDoubleClick={e => startRename(session, e)}
                         title="Double-click to rename"
                       >
@@ -420,21 +343,21 @@ export function ChatSidebar({
                         <button
                           onClick={e => startRename(session, e)}
                           aria-label={`Rename "${session.title}"`}
-                          className="rounded p-1.5 hover:bg-black/10"
-                          style={{ color: isActive ? 'rgba(255,255,255,0.55)' : 'var(--cx-mute-2)' }}
+                          className="rounded p-1 hover:bg-[var(--cx-line)]"
+                          style={{ color: 'var(--cx-mute-2)' }}
                         >
-                          <Pencil size={12} />
+                          <Pencil size={11} />
                         </button>
                         <button
                           onClick={e => handleDelete(session.id, e)}
                           disabled={deletingId === session.id}
                           aria-label={`Delete "${session.title}"`}
-                          className="rounded p-1.5 hover:bg-black/10"
-                          style={{ color: isActive ? 'rgba(255,255,255,0.55)' : 'var(--cx-mute-2)' }}
+                          className="rounded p-1 hover:bg-[var(--cx-line)]"
+                          style={{ color: 'var(--cx-mute-2)' }}
                         >
                           {deletingId === session.id
-                            ? <Loader2 size={12} className="animate-spin" />
-                            : <Trash2 size={12} />}
+                            ? <Loader2 size={11} className="animate-spin" />
+                            : <Trash2 size={11} />}
                         </button>
                       </div>
                     )}
@@ -446,17 +369,17 @@ export function ChatSidebar({
         </AnimatePresence>
       </div>
 
-      {/* ── Footer ───────────────────────────────────────────── */}
+      {/* Footer */}
       <div
-        className={`p-2 border-t flex-shrink-0 ${collapsed ? 'flex flex-col items-center gap-1' : ''}`}
+        className={`p-2 border-t flex-shrink-0 ${collapsed ? 'flex flex-col items-center' : ''}`}
         style={{ borderColor: 'var(--cx-line)' }}
       >
         <Link
           href="/dashboard"
           title={collapsed ? 'Dashboard' : undefined}
-          className="flex items-center gap-2.5 rounded-lg text-[12.5px] font-medium transition-colors"
+          className="flex items-center gap-2 rounded-md text-[12.5px] transition-colors"
           style={{
-            padding: collapsed ? undefined : '8px 10px',
+            padding: collapsed ? undefined : '7px 10px',
             justifyContent: collapsed ? 'center' : undefined,
             width: collapsed ? 36 : '100%',
             height: collapsed ? 36 : undefined,
@@ -468,13 +391,6 @@ export function ChatSidebar({
           <LayoutDashboard size={14} className="flex-shrink-0" />
           {!collapsed && 'Dashboard'}
         </Link>
-
-        {!collapsed && (
-          <div className="flex items-center gap-2 px-2.5 pt-2 pb-1">
-            <Image src="/CortexLogo.png" alt="Cortex" width={14} height={14} className="object-contain opacity-40" />
-            <span className="cx-num text-[10px]" style={{ color: 'var(--cx-mute-2)' }}>Cortex v2.0</span>
-          </div>
-        )}
       </div>
     </aside>
     </>

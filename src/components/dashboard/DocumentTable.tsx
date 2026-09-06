@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
 import { FileText, Loader2, Trash2, Info, HardDrive, ExternalLink } from 'lucide-react'
 import { deleteDocument } from '@/app/actions'
 
@@ -23,24 +22,12 @@ function formatBytes(bytes: number) {
 }
 
 function timeAgo(dateStr: string) {
-  const diff = Date.now() - new Date(dateStr).getTime()
-  const mins = Math.floor(diff / 60000)
+  const mins = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000)
   if (mins < 1)  return 'just now'
-  if (mins < 60) return `${mins}m ago`
+  if (mins < 60) return `${mins}m`
   const hrs = Math.floor(mins / 60)
-  if (hrs < 24)  return `${hrs}h ago`
-  return `${Math.floor(hrs / 24)}d ago`
-}
-
-function TopicTag({ label }: { label: string }) {
-  return (
-    <span
-      className="inline-flex items-center h-5 px-2 rounded-full text-[10px] font-medium border whitespace-nowrap"
-      style={{ background: 'var(--cx-accent-wash)', borderColor: 'var(--cx-accent-line)', color: 'var(--cx-accent)' }}
-    >
-      {label}
-    </span>
-  )
+  if (hrs < 24)  return `${hrs}h`
+  return `${Math.floor(hrs / 24)}d`
 }
 
 function SummaryPopover({ summary }: { summary: string }) {
@@ -51,33 +38,24 @@ function SummaryPopover({ summary }: { summary: string }) {
         onClick={() => setShow(v => !v)}
         onMouseEnter={() => setShow(true)}
         onMouseLeave={() => setShow(false)}
-        aria-label="Show document summary"
-        aria-expanded={show}
-        className="size-7 -m-1 rounded flex items-center justify-center transition-colors"
-        style={{ color: 'var(--cx-mute-2)' }}
         onFocus={() => setShow(true)}
         onBlur={() => setShow(false)}
+        aria-label="Show document summary"
+        aria-expanded={show}
+        className="size-6 -m-1 rounded flex items-center justify-center"
+        style={{ color: 'var(--cx-mute-2)' }}
       >
-        <Info size={12} />
+        <Info size={11} />
       </button>
-      <AnimatePresence>
-        {show && (
-          <motion.div
-            initial={{ opacity: 0, y: 4, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 4, scale: 0.97 }}
-            transition={{ duration: 0.18 }}
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-[260px] cx-panel p-3 z-50 pointer-events-none"
-          >
-            <p className="cx-rule-label mb-1.5">Summary</p>
-            <p className="text-[12px] leading-relaxed" style={{ color: 'var(--cx-ink-2)' }}>{summary}</p>
-            <div
-              className="absolute top-full left-1/2 -translate-x-1/2 size-2 rotate-45 border-r border-b"
-              style={{ background: 'var(--cx-surface)', borderColor: 'var(--cx-line)', marginTop: -5 }}
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {show && (
+        <div
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-[260px] p-3 z-50 rounded-lg border pointer-events-none"
+          style={{ background: 'var(--cx-surface)', borderColor: 'var(--cx-line)' }}
+        >
+          <p className="text-[11px] font-medium mb-1" style={{ color: 'var(--cx-mute-2)' }}>Summary</p>
+          <p className="text-[12px] leading-relaxed" style={{ color: 'var(--cx-ink-2)' }}>{summary}</p>
+        </div>
+      )}
     </div>
   )
 }
@@ -94,7 +72,6 @@ export function DocumentTable({
   const [confirmId,  setConfirmId]  = useState<string | null>(null)
   const [, forceTick] = useState(0)
 
-  // Keep the "x m ago" column fresh.
   useEffect(() => {
     const id = setInterval(() => forceTick(t => t + 1), 60_000)
     return () => clearInterval(id)
@@ -112,185 +89,111 @@ export function DocumentTable({
 
   if (docs.length === 0) return null
 
+  const cols = 'minmax(0,2fr) minmax(0,1.2fr) 72px 64px 96px'
+
   return (
-    <motion.div
-      id="documents"
-      className="cx-panel overflow-hidden"
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-    >
-      {/* Header */}
-      <div
-        className="flex items-center gap-3 px-6 py-4 border-b"
-        style={{ borderColor: 'var(--cx-line)' }}
-      >
-        <div className="cx-icon-chip cx-icon-chip-sm">
-          <FileText size={15} />
-        </div>
-        <div>
-          <p className="cx-rule-label mb-1">Documents</p>
-          <h3 className="text-[15px] font-semibold tracking-tight" style={{ color: 'var(--cx-ink)' }}>
-            {docs.length} file{docs.length !== 1 ? 's' : ''} ·{' '}
-            <span className="cx-num" style={{ color: 'var(--cx-mute-1)' }}>{storageMB} MB</span>{' '}indexed
-          </h3>
-        </div>
+    <div id="documents" className="cx-panel overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'var(--cx-line)' }}>
+        <h3 className="text-[13px] font-semibold" style={{ color: 'var(--cx-ink)' }}>Documents</h3>
+        <span className="text-[12px]" style={{ color: 'var(--cx-mute-2)' }}>
+          {docs.length} file{docs.length !== 1 ? 's' : ''} · <span className="cx-num">{storageMB}</span> MB
+        </span>
       </div>
 
       <div className="overflow-x-auto cx-scroll-thin">
-      <div className="min-w-[600px]">
-      {/* Column headers */}
-      <div
-        className="grid gap-4 px-6 py-2.5 cx-rule-label border-b"
-        style={{
-          gridTemplateColumns: '2fr 1fr 80px 100px 120px',
-          background: 'var(--cx-paper)',
-          borderColor: 'var(--cx-line)',
-        }}
-      >
-        <span>Name</span>
-        <span>Topics</span>
-        <span>Size</span>
-        <span>Added</span>
-        <span>Status</span>
-      </div>
+        <div className="min-w-[560px]">
+          <div
+            className="grid gap-3 px-4 py-2 text-[11px] font-medium border-b"
+            style={{ gridTemplateColumns: cols, color: 'var(--cx-mute-2)', background: 'var(--cx-paper)', borderColor: 'var(--cx-line)' }}
+          >
+            <span>Name</span>
+            <span>Topics</span>
+            <span>Size</span>
+            <span>Added</span>
+            <span>Status</span>
+          </div>
 
-      {/* Rows */}
-      <div className="divide-y" style={{ borderColor: 'var(--cx-line)' }}>
-        <AnimatePresence initial={false}>
-          {docs.map((doc, idx) => {
-            const isDeleting   = deletingId === doc.id
-            const isConfirming = confirmId  === doc.id
-            const topics = Array.isArray(doc.topics) ? doc.topics : []
+          <div className="divide-y" style={{ borderColor: 'var(--cx-line)' }}>
+            {docs.map(doc => {
+              const isDeleting   = deletingId === doc.id
+              const isConfirming = confirmId  === doc.id
+              const topics = Array.isArray(doc.topics) ? doc.topics : []
+              const isDrive = doc.source_type === 'gdrive' && !!doc.external_id
 
-            return (
-              <motion.div
-                key={doc.id}
-                layout
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: isDeleting ? 0.3 : 1, y: 0 }}
-                exit={{ opacity: 0, height: 0, paddingTop: 0, paddingBottom: 0, overflow: 'hidden', transition: { duration: 0.22 } }}
-                transition={{ duration: 0.3, delay: idx * 0.03, ease: [0.16, 1, 0.3, 1] }}
-                className="grid gap-4 items-center px-6 py-3.5 group cursor-default transition-colors duration-150"
-                style={{ gridTemplateColumns: '2fr 1fr 80px 100px 120px' }}
-                onMouseEnter={e => (e.currentTarget.style.background = 'var(--cx-paper)')}
-                onMouseLeave={e => (e.currentTarget.style.background = '')}
-              >
-                {/* Name + source + summary icon */}
-                <div className="flex items-center gap-2.5 min-w-0">
-                  {doc.source_type === 'gdrive'
-                    ? <HardDrive size={14} className="flex-shrink-0" style={{ color: 'var(--cx-accent)' }} />
-                    : <FileText size={14} className="flex-shrink-0" style={{ color: 'var(--cx-mute-2)' }} />}
-                  {doc.source_type === 'gdrive' && doc.external_id ? (
-                    <a
-                      href={`https://drive.google.com/file/d/${doc.external_id}/view`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[13px] font-medium truncate inline-flex items-center gap-1 hover:underline"
-                      style={{ color: 'var(--cx-ink)' }}
-                      title="Open in Google Drive"
-                    >
-                      <span className="truncate">{doc.name}</span>
-                      <ExternalLink size={10} className="flex-shrink-0" style={{ color: 'var(--cx-mute-2)' }} />
-                    </a>
-                  ) : (
-                    <span className="text-[13px] font-medium truncate" style={{ color: 'var(--cx-ink)' }}>
-                      {doc.name}
-                    </span>
-                  )}
-                  {doc.summary && <SummaryPopover summary={doc.summary} />}
-                </div>
-
-                {/* Topics */}
-                <div className="flex items-center gap-1 overflow-hidden">
-                  {topics.length > 0 ? (
-                    <>
-                      {topics.slice(0, 2).map(t => <TopicTag key={t} label={t} />)}
-                      {topics.length > 2 && (
-                        <span className="text-[10px] cx-num flex-shrink-0" style={{ color: 'var(--cx-mute-2)' }}>
-                          +{topics.length - 2}
-                        </span>
-                      )}
-                    </>
-                  ) : (
-                    <span className="text-[11px]" style={{ color: 'var(--cx-mute-2)' }}>-</span>
-                  )}
-                </div>
-
-                {/* Size */}
-                <span className="cx-num text-[11.5px]" style={{ color: 'var(--cx-mute-1)' }}>
-                  {formatBytes(doc.size_bytes)}
-                </span>
-
-                {/* Added */}
-                <span className="cx-num text-[11.5px]" style={{ color: 'var(--cx-mute-1)' }}>
-                  {timeAgo(doc.created_at)}
-                </span>
-
-                {/* Status / actions */}
-                <div className="flex items-center gap-2">
-                  <AnimatePresence mode="wait">
-                    {isConfirming ? (
-                      <motion.div
-                        key="confirm"
-                        initial={{ opacity: 0, scale: 0.92 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.92 }}
-                        transition={{ duration: 0.15 }}
-                        className="flex items-center gap-1.5"
+              return (
+                <div
+                  key={doc.id}
+                  className="grid gap-3 items-center px-4 py-2.5 group transition-colors"
+                  style={{ gridTemplateColumns: cols, opacity: isDeleting ? 0.4 : 1 }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--cx-paper)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = '')}
+                >
+                  {/* Name */}
+                  <div className="flex items-center gap-2 min-w-0">
+                    {isDrive
+                      ? <HardDrive size={13} className="flex-shrink-0" style={{ color: 'var(--cx-accent)' }} />
+                      : <FileText size={13} className="flex-shrink-0" style={{ color: 'var(--cx-mute-2)' }} />}
+                    {isDrive ? (
+                      <a
+                        href={`https://drive.google.com/file/d/${doc.external_id}/view`}
+                        target="_blank" rel="noopener noreferrer"
+                        className="text-[12.5px] truncate inline-flex items-center gap-1 hover:underline"
+                        style={{ color: 'var(--cx-ink)' }}
+                        title="Open in Google Drive"
                       >
-                        <button
-                          onClick={() => handleDelete(doc.id)}
-                          className="text-[11px] font-bold"
-                          style={{ color: 'var(--cx-err)' }}
-                        >
-                          Delete
-                        </button>
-                        <span style={{ color: 'var(--cx-line-2)' }}>·</span>
-                        <button
-                          onClick={() => setConfirmId(null)}
-                          className="text-[11px] font-medium"
-                          style={{ color: 'var(--cx-mute-2)' }}
-                        >
-                          Cancel
-                        </button>
-                      </motion.div>
-                    ) : isDeleting ? (
-                      <motion.span key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                        <Loader2 size={12} className="animate-spin" style={{ color: 'var(--cx-mute-2)' }} />
-                      </motion.span>
+                        <span className="truncate">{doc.name}</span>
+                        <ExternalLink size={9} className="flex-shrink-0" style={{ color: 'var(--cx-mute-2)' }} />
+                      </a>
                     ) : (
-                      <motion.div
-                        key="actions"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="flex items-center gap-2"
-                      >
-                        <span
-                          className="inline-flex items-center gap-1.5 text-[10.5px] font-semibold uppercase tracking-[.14em] rounded-full px-2 py-0.5 border"
-                          style={{ color: 'var(--cx-ok)', background: 'var(--cx-ok-wash)', borderColor: 'rgba(60,110,71,0.2)' }}
-                        >
-                          {doc.summary ? 'Analysed' : 'Embedded'}
+                      <span className="text-[12.5px] truncate" style={{ color: 'var(--cx-ink)' }}>{doc.name}</span>
+                    )}
+                    {doc.summary && <SummaryPopover summary={doc.summary} />}
+                  </div>
+
+                  {/* Topics */}
+                  <span className="text-[12px] truncate" style={{ color: 'var(--cx-mute-1)' }}>
+                    {topics.length > 0 ? topics.slice(0, 3).join(', ') : <span style={{ color: 'var(--cx-mute-2)' }}>—</span>}
+                  </span>
+
+                  {/* Size */}
+                  <span className="cx-num text-[11.5px]" style={{ color: 'var(--cx-mute-1)' }}>{formatBytes(doc.size_bytes)}</span>
+
+                  {/* Added */}
+                  <span className="cx-num text-[11.5px]" style={{ color: 'var(--cx-mute-1)' }}>{timeAgo(doc.created_at)}</span>
+
+                  {/* Status / delete */}
+                  <div className="flex items-center gap-2 justify-between">
+                    {isConfirming ? (
+                      <span className="text-[11px] whitespace-nowrap">
+                        <button onClick={() => handleDelete(doc.id)} className="font-semibold" style={{ color: 'var(--cx-err)' }}>Delete</button>
+                        <span style={{ color: 'var(--cx-line-2)' }}> · </span>
+                        <button onClick={() => setConfirmId(null)} style={{ color: 'var(--cx-mute-2)' }}>Cancel</button>
+                      </span>
+                    ) : isDeleting ? (
+                      <Loader2 size={12} className="animate-spin" style={{ color: 'var(--cx-mute-2)' }} />
+                    ) : (
+                      <>
+                        <span className="inline-flex items-center gap-1.5 text-[11px]" style={{ color: 'var(--cx-mute-1)' }}>
+                          <span className="cx-dot" style={{ background: doc.summary ? 'var(--cx-ok)' : 'var(--cx-mute-2)' }} />
+                          {doc.summary ? 'Analysed' : 'Indexed'}
                         </span>
                         <button
                           onClick={() => setConfirmId(doc.id)}
                           aria-label={`Delete ${doc.name}`}
-                          className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 size-8 rounded flex items-center justify-center transition-all hover:bg-[var(--cx-paper-2)]"
+                          className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 size-6 rounded flex items-center justify-center transition-opacity hover:bg-[var(--cx-paper-2)]"
                           style={{ color: 'var(--cx-mute-2)' }}
                         >
                           <Trash2 size={12} />
                         </button>
-                      </motion.div>
+                      </>
                     )}
-                  </AnimatePresence>
+                  </div>
                 </div>
-              </motion.div>
-            )
-          })}
-        </AnimatePresence>
+              )
+            })}
+          </div>
+        </div>
       </div>
-      </div>
-      </div>
-    </motion.div>
+    </div>
   )
 }

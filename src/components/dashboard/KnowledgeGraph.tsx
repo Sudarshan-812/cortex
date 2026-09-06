@@ -138,40 +138,26 @@ export function KnowledgeGraph({ documents }: { documents: Doc[] }) {
   if (docsWithTopics.length === 0) return null
 
   return (
-    <motion.div
-      id="knowledge-graph"
-      className="cx-panel cx-panel-hover overflow-hidden"
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-    >
+    <div id="knowledge-graph" className="cx-panel overflow-hidden">
       {/* Header */}
       <button
         onClick={() => setExpanded(e => !e)}
-        className="w-full flex items-center justify-between px-6 py-4 border-b transition-colors"
-        style={{ borderColor: 'var(--cx-line)' }}
+        className="w-full flex items-center justify-between px-4 py-3 transition-colors"
         onMouseEnter={e => (e.currentTarget.style.background = 'var(--cx-paper)')}
         onMouseLeave={e => (e.currentTarget.style.background = '')}
       >
-        <div className="flex items-center gap-3">
-          <div className="cx-icon-chip cx-icon-chip-sm">
-            <Network size={15} />
-          </div>
-          <div className="text-left">
-            <p className="cx-rule-label mb-0.5">Knowledge Graph</p>
-            <p className="text-[13.5px] font-semibold" style={{ color: 'var(--cx-ink)' }}>
-              {docsWithTopics.length} doc{docsWithTopics.length !== 1 ? 's' : ''} · topic clusters
-            </p>
-          </div>
+        <div className="flex items-center gap-2.5">
+          <Network size={14} style={{ color: 'var(--cx-mute-2)' }} />
+          <p className="text-[13px] font-semibold" style={{ color: 'var(--cx-ink)' }}>
+            Knowledge graph
+            <span className="font-normal ml-1.5" style={{ color: 'var(--cx-mute-2)' }}>
+              {docsWithTopics.length} doc{docsWithTopics.length !== 1 ? 's' : ''}
+            </span>
+          </p>
         </div>
-        <motion.div
-          animate={{ rotate: expanded ? 180 : 0 }}
-          transition={{ duration: 0.25 }}
-          className="text-[11px] font-mono px-2 py-1 rounded border"
-          style={{ color: 'var(--cx-mute-2)', borderColor: 'var(--cx-line)', background: 'var(--cx-paper-2)' }}
-        >
-          {expanded ? 'Collapse ↑' : 'Expand ↓'}
-        </motion.div>
+        <span className="text-[12px]" style={{ color: 'var(--cx-mute-1)' }}>
+          {expanded ? 'Hide' : 'Show'}
+        </span>
       </button>
 
       <AnimatePresence>
@@ -181,7 +167,8 @@ export function KnowledgeGraph({ documents }: { documents: Doc[] }) {
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-            className="overflow-hidden"
+            className="overflow-hidden border-t"
+            style={{ borderColor: 'var(--cx-line)' }}
           >
             <div ref={containerRef} className="relative px-4 py-4">
               {nodes.length === 0 ? (
@@ -277,6 +264,6 @@ export function KnowledgeGraph({ documents }: { documents: Doc[] }) {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   )
 }

@@ -5,7 +5,6 @@ import Link from "next/link"
 import Image from "next/image"
 import { Search, FileText, MessageSquare, Zap, HardDrive } from "lucide-react"
 
-import { MagneticButton }   from "@/components/MagneticButton"
 import { UploadTriggerButton } from "@/components/dashboard/UploadTriggerButton"
 import { MetricsGrid }      from "@/components/dashboard/MetricsGrid"
 import { UploadZoneNew }    from "@/components/dashboard/UploadZoneNew"
@@ -50,31 +49,31 @@ export default async function Dashboard() {
     }
     return (
       <div className="flex min-h-screen items-center justify-center" style={{ background: "var(--cx-paper)" }}>
-        <div className="w-full max-w-md px-4">
-          <div className="cx-panel p-10">
-            <div className="mb-6">
-              <Image src="/CortexLogo.png" alt="Cortex" width={40} height={40} className="object-contain" />
+        <div className="w-full max-w-sm px-4">
+          <div className="cx-panel p-6">
+            <div className="mb-5">
+              <Image src="/CortexLogo.png" alt="Cortex" width={28} height={28} className="object-contain" />
             </div>
-            <h1 className="cx-display text-2xl font-bold tracking-[-0.01em] mb-1" style={{ color: "var(--cx-ink)" }}>
+            <h1 className="text-[17px] font-semibold tracking-tight mb-1" style={{ color: "var(--cx-ink)" }}>
               Create your workspace
             </h1>
-            <p className="text-sm mb-8" style={{ color: "var(--cx-mute-1)" }}>
+            <p className="text-[13px] mb-5" style={{ color: "var(--cx-mute-1)" }}>
               Give it a name and you&apos;re ready to add documents.
             </p>
-            <form action={initWorkspace} className="space-y-5">
-              <div className="space-y-2">
-                <label htmlFor="workspaceName" className="text-sm font-medium" style={{ color: "var(--cx-ink-2)" }}>
-                  Workspace Name
+            <form action={initWorkspace} className="space-y-3">
+              <div className="space-y-1.5">
+                <label htmlFor="workspaceName" className="text-[12.5px] font-medium" style={{ color: "var(--cx-ink-2)" }}>
+                  Workspace name
                 </label>
                 <input
-                  name="workspaceName" id="workspaceName" placeholder="e.g., Acme Legal Docs" required
-                  className="w-full h-11 rounded-xl border px-4 text-sm outline-none transition-colors"
+                  name="workspaceName" id="workspaceName" placeholder="e.g. Acme Legal Docs" required
+                  className="w-full h-9 rounded-md border px-3 text-[13px] outline-none transition-colors focus:border-[var(--cx-line-2)]"
                   style={{ borderColor: "var(--cx-line)", background: "var(--cx-surface)", color: "var(--cx-ink)" }}
                 />
               </div>
               <button
                 type="submit"
-                className="cx-btn-ink w-full h-11 rounded-xl font-semibold text-[14px]"
+                className="cx-btn-ink w-full h-9 rounded-md font-medium text-[13px]"
               >
                 Create workspace
               </button>
@@ -134,49 +133,30 @@ export default async function Dashboard() {
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-[1240px] mx-auto px-6 md:px-8 pt-10 pb-16">
+      <div className="max-w-[1200px] mx-auto px-6 pt-8 pb-16">
 
-        {/* Editorial header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
-          <div>
-            <div className="flex items-center gap-2.5 mb-5">
-              <span className="cx-dot" style={{ background: "var(--cx-ok)" }} />
-              <span className="cx-rule-label">Workspace</span>
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6 pb-5 border-b" style={{ borderColor: "var(--cx-line)" }}>
+          <div className="min-w-0">
+            <p className="text-[11px] font-medium mb-1" style={{ color: "var(--cx-mute-2)" }}>Workspace</p>
+            <h1 className="text-[20px] font-semibold tracking-tight leading-tight truncate" style={{ color: "var(--cx-ink)" }}>
+              {workspace.name}
+            </h1>
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px]" style={{ color: "var(--cx-mute-1)" }}>
+              <span><span className="cx-num" style={{ color: "var(--cx-ink-2)" }}>{docCount ?? 0}</span> document{(docCount ?? 0) !== 1 ? "s" : ""}</span>
+              <span style={{ color: "var(--cx-line-2)" }}>·</span>
+              <span><span className="cx-num" style={{ color: "var(--cx-ink-2)" }}>{(chunkCount ?? 0).toLocaleString()}</span> passages</span>
+              <span style={{ color: "var(--cx-line-2)" }}>·</span>
+              <span><span className="cx-num" style={{ color: "var(--cx-ink-2)" }}>{sessionCount ?? 0}</span> chat{(sessionCount ?? 0) !== 1 ? "s" : ""}</span>
               {driveConn && (
                 <>
-                  <span className="cx-hdiv w-8 hidden sm:block" />
-                  <Link
-                    href="/dashboard/settings#google-drive"
-                    className="hidden sm:inline-flex items-center gap-1.5 text-[11px] hover:underline"
-                    style={{ color: "var(--cx-mute-1)" }}
-                  >
+                  <span style={{ color: "var(--cx-line-2)" }}>·</span>
+                  <Link href="/dashboard/settings#google-drive" className="inline-flex items-center gap-1 hover:underline">
                     <HardDrive size={11} style={{ color: "var(--cx-accent)" }} />
-                    Google Drive · {driveSyncedAgo ? `synced ${driveSyncedAgo}` : "not synced yet"}
+                    Drive {driveSyncedAgo ? `· ${driveSyncedAgo}` : "· not synced"}
                   </Link>
                 </>
               )}
-            </div>
-            <h1
-              className="cx-display text-[36px] md:text-[44px] font-bold tracking-[-0.03em] leading-[1.02]"
-              style={{ color: "var(--cx-ink)" }}
-            >
-              {workspace.name}
-            </h1>
-            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13.5px]">
-              <span style={{ color: "var(--cx-mute-1)" }}>
-                <span className="cx-num font-semibold" style={{ color: "var(--cx-ink-2)" }}>{docCount ?? 0}</span>
-                {" "}document{(docCount ?? 0) !== 1 ? "s" : ""}
-              </span>
-              <span style={{ color: "var(--cx-line)" }}>·</span>
-              <span style={{ color: "var(--cx-mute-1)" }}>
-                <span className="cx-num font-semibold" style={{ color: "var(--cx-ink-2)" }}>{(chunkCount ?? 0).toLocaleString()}</span>
-                {" "}embeddings
-              </span>
-              <span style={{ color: "var(--cx-line)" }}>·</span>
-              <span style={{ color: "var(--cx-mute-1)" }}>
-                <span className="cx-num font-semibold" style={{ color: "var(--cx-ink-2)" }}>{sessionCount ?? 0}</span>
-                {" "}chat session{(sessionCount ?? 0) !== 1 ? "s" : ""}
-              </span>
             </div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -184,65 +164,45 @@ export default async function Dashboard() {
               <>
                 <UploadTriggerButton
                   label="Upload files"
-                  className="cx-btn-ghost h-9 px-4 rounded-full text-[12.5px] font-medium flex items-center gap-1.5"
+                  className="cx-btn-ghost h-8 px-3 rounded-md text-[12.5px] font-medium flex items-center gap-1.5"
                 />
-                <MagneticButton>
-                  <Link
-                    href="/dashboard/settings#google-drive"
-                    className="cx-btn-ink h-9 px-4 rounded-full text-[12.5px] font-medium flex items-center gap-1.5"
-                  >
-                    <HardDrive size={13} /> Connect Google Drive
-                  </Link>
-                </MagneticButton>
+                <Link
+                  href="/dashboard/settings#google-drive"
+                  className="cx-btn-ink h-8 px-3 rounded-md text-[12.5px] font-medium flex items-center gap-1.5"
+                >
+                  <HardDrive size={13} /> Connect Google Drive
+                </Link>
               </>
             ) : (
               <>
                 <UploadTriggerButton
-                  className="cx-btn-ghost h-9 px-4 rounded-full text-[12.5px] font-medium flex items-center gap-1.5"
+                  className="cx-btn-ghost h-8 px-3 rounded-md text-[12.5px] font-medium flex items-center gap-1.5"
                 />
-                <MagneticButton>
-                  <Link href="/chat" className="cx-btn-ink h-9 px-4 rounded-full text-[12.5px] font-medium flex items-center gap-1.5">
-                    <Search size={13} /> Ask a question
-                  </Link>
-                </MagneticButton>
+                <Link href="/chat" className="cx-btn-ink h-8 px-3 rounded-md text-[12.5px] font-medium flex items-center gap-1.5">
+                  <Search size={13} /> Ask a question
+                </Link>
               </>
             )}
           </div>
         </div>
 
-        {/* ── Onboarding guide - shown only when workspace is empty ── */}
+        {/* Empty-workspace onboarding */}
         {isEmpty && (
-          <div className="cx-panel p-7 mb-6">
-            <p className="cx-rule-label mb-6">Getting started</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="cx-panel p-5 mb-5">
+            <p className="text-[11px] font-medium uppercase tracking-[0.04em] mb-4" style={{ color: "var(--cx-mute-2)" }}>Getting started</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-8 gap-y-4">
               {[
-                {
-                  icon: <FileText size={16} />,
-                  step: "01",
-                  title: "Connect Google Drive",
-                  desc: "Link a Drive folder in Settings, or upload PDF, DOCX or XLSX files directly.",
-                },
-                {
-                  icon: <Zap size={16} />,
-                  step: "02",
-                  title: "Cortex reads your files",
-                  desc: "Every document is parsed, split into passages, and indexed so it can be searched by meaning.",
-                },
-                {
-                  icon: <MessageSquare size={16} />,
-                  step: "03",
-                  title: "Ask anything, get cited answers",
-                  desc: "Ask in plain language. Cortex pulls the relevant passages and links every claim to its source.",
-                },
+                { icon: <FileText size={14} />, step: "1", title: "Connect Google Drive", desc: "Link a Drive folder in Settings, or upload PDF, DOCX or XLSX files directly." },
+                { icon: <Zap size={14} />, step: "2", title: "Cortex reads your files", desc: "Each document is parsed, split into passages, and indexed so it can be searched by meaning." },
+                { icon: <MessageSquare size={14} />, step: "3", title: "Ask, get cited answers", desc: "Ask in plain language. Cortex pulls the relevant passages and links every claim to its source." },
               ].map(({ icon, step, title, desc }) => (
-                <div key={step} className="flex gap-4">
-                  <div className="cx-icon-chip cx-icon-chip-md">
-                    {icon}
-                  </div>
+                <div key={step} className="flex gap-3">
+                  <div className="cx-icon-chip cx-icon-chip-md">{icon}</div>
                   <div>
-                    <span className="cx-num text-[10.5px] block mb-0.5" style={{ color: "var(--cx-mute-2)" }}>{step}</span>
-                    <p className="text-[13.5px] font-semibold mb-1" style={{ color: "var(--cx-ink)" }}>{title}</p>
-                    <p className="text-[12.5px] leading-relaxed" style={{ color: "var(--cx-mute-1)" }}>{desc}</p>
+                    <p className="text-[13px] font-semibold mb-0.5" style={{ color: "var(--cx-ink)" }}>
+                      <span style={{ color: "var(--cx-mute-2)" }}>{step}.</span> {title}
+                    </p>
+                    <p className="text-[12px] leading-relaxed" style={{ color: "var(--cx-mute-1)" }}>{desc}</p>
                   </div>
                 </div>
               ))}
@@ -266,12 +226,12 @@ export default async function Dashboard() {
 
         {/* Upload zone - consistent full width so the layout doesn't reflow
             when the first document finishes analysing. */}
-        <div className="mb-6" id="upload-zone">
+        <div className="mb-5" id="upload-zone">
           <UploadZoneNew workspaceId={workspace.id} />
         </div>
 
         {hasKnowledgeGraph && (
-          <div className="mb-6">
+          <div className="mb-5">
             <KnowledgeGraph documents={documents!} />
           </div>
         )}
@@ -281,20 +241,12 @@ export default async function Dashboard() {
           <DocumentTable documents={documents} storageMB={storageMB} />
         )}
 
-        {/* Footer */}
         <footer
-          className="mt-12 pt-6 border-t flex flex-col sm:flex-row items-center justify-between gap-3"
-          style={{ borderColor: "var(--cx-line)" }}
+          className="mt-10 pt-4 border-t flex items-center gap-2 text-[11px]"
+          style={{ borderColor: "var(--cx-line)", color: "var(--cx-mute-2)" }}
         >
-          <div className="flex items-center gap-2.5">
-            <Image src="/CortexLogo.png" alt="Cortex" width={18} height={18} className="object-contain" />
-            <span className="text-[12px] font-semibold" style={{ color: "var(--cx-ink-2)" }}>Cortex</span>
-            <span className="cx-num text-[10.5px]" style={{ color: "var(--cx-mute-2)" }}>v2.0</span>
-          </div>
-          <div className="flex items-center gap-2 text-[10.5px] font-mono" style={{ color: "var(--cx-mute-2)" }}>
-            <span className="cx-dot" style={{ background: "var(--cx-ok)" }} />
-            <span>All systems operational</span>
-          </div>
+          <span className="cx-dot" style={{ background: "var(--cx-ok)" }} />
+          <span>All systems operational</span>
         </footer>
       </div>
     </div>

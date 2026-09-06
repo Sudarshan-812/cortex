@@ -39,43 +39,32 @@ export default async function ChatIndexPage() {
       style={{ background: 'var(--cx-paper)' }}
     >
       {/* Top bar - shared with ChatWindow */}
-      <ChatTopBar subtitle="Document Chat">
-        <span className="size-1.5 rounded-full" style={{ background: 'var(--cx-ok)' }} />
-        <span className="text-[11.5px] cx-num" style={{ color: 'var(--cx-mute-1)' }}>Gemini Flash</span>
+      <ChatTopBar subtitle="Chat">
+        <span className="text-[11.5px] cx-num" style={{ color: 'var(--cx-mute-2)' }}>Gemini Flash</span>
       </ChatTopBar>
 
       {/* Welcome state */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-16 gap-7 relative">
-        {/* Ambient glow */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 40%, rgba(161,98,7,0.05) 0%, transparent 70%)' }}
-        />
-
-        <div className="relative flex flex-col items-center gap-5 text-center max-w-sm">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-16">
+        <div className="flex flex-col items-center gap-4 text-center max-w-sm">
           <div
-            className="size-16 rounded-[1.25rem] border flex items-center justify-center"
-            style={{
-              background: 'var(--cx-surface)',
-              borderColor: 'var(--cx-line)',
-              boxShadow: '0 8px 28px rgba(161,98,7,0.08), 0 1px 0 rgba(255,255,255,0.9) inset',
-            }}
+            className="size-11 rounded-md border flex items-center justify-center"
+            style={{ background: 'var(--cx-surface)', borderColor: 'var(--cx-line)' }}
           >
-            <Image src="/CortexLogo.png" alt="Cortex" width={28} height={28} className="object-contain" />
+            <Image src="/CortexLogo.png" alt="Cortex" width={22} height={22} className="object-contain" />
           </div>
 
-          <div className="flex flex-col gap-2">
-            <h2 className="cx-display text-[22px] font-bold tracking-[-0.01em]" style={{ color: 'var(--cx-ink)' }}>
+          <div className="flex flex-col gap-1.5">
+            <h2 className="text-[16px] font-semibold tracking-tight" style={{ color: 'var(--cx-ink)' }}>
               Start a conversation
             </h2>
-            <p className="text-[13.5px] leading-relaxed" style={{ color: 'var(--cx-mute-1)' }}>
+            <p className="text-[13px] leading-relaxed" style={{ color: 'var(--cx-mute-1)' }}>
               Connect <strong style={{ color: 'var(--cx-ink)', fontWeight: 600 }}>Google Drive</strong> in Settings or upload a file, then press <strong style={{ color: 'var(--cx-ink)', fontWeight: 600 }}>New Chat</strong>. Ask anything about your documents and Cortex answers with sources.
             </p>
           </div>
 
-          <div className="flex items-center gap-3 text-[11.5px] cx-num pt-1" style={{ color: 'var(--cx-mute-2)' }}>
-            <span>Reads PDFs, Docs, Sheets &amp; more</span>
-          </div>
+          <p className="text-[11.5px]" style={{ color: 'var(--cx-mute-2)' }}>
+            Reads PDFs, Docs, Sheets &amp; more
+          </p>
         </div>
       </div>
     </div>

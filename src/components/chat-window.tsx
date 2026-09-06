@@ -13,7 +13,6 @@ import remarkGfm from 'remark-gfm'
 import { DynamicGreeting } from '@/components/DynamicGreeting'
 import { DocumentReaderPanel } from '@/components/DocumentReaderPanel'
 import { ChatTopBar } from '@/components/ChatTopBar'
-import { MagneticButton } from '@/components/MagneticButton'
 
 /* ── Types ──────────────────────────────────────────────────────── */
 type Source = {
@@ -191,22 +190,12 @@ function SourceCitations({ sources, onViewChunk }: { sources: Source[]; onViewCh
     >
       <button
         onClick={() => setOpen(o => !o)}
-        className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full border text-[12px] font-medium transition-all duration-200"
-        style={{
-          background:   open ? 'var(--cx-accent-wash)' : 'var(--cx-paper-2)',
-          borderColor:  open ? 'var(--cx-accent-line)' : 'var(--cx-line)',
-          color:        open ? 'var(--cx-accent)'      : 'var(--cx-mute-1)',
-        }}
+        className="inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors"
+        style={{ color: open ? 'var(--cx-accent)' : 'var(--cx-mute-1)' }}
       >
         <FileText size={11} />
         {sources.length} source{sources.length !== 1 ? 's' : ''}
-        <motion.span
-          animate={{ rotate: open ? 180 : 0 }}
-          transition={{ duration: 0.25, ease: 'easeInOut' }}
-          className="flex"
-        >
-          <ChevronDown size={11} />
-        </motion.span>
+        <ChevronDown size={11} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
       <AnimatePresence>
@@ -220,29 +209,18 @@ function SourceCitations({ sources, onViewChunk }: { sources: Source[]; onViewCh
           >
             <div className="pt-2.5 space-y-2">
               {sources.map((src, i) => (
-                <motion.div
+                <div
                   key={i}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.07, duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-                  className="flex gap-3 p-3 rounded-xl border cursor-default transition-all duration-200"
+                  className="flex gap-2.5 p-2.5 rounded-md border cursor-default transition-colors"
                   style={{ background: 'var(--cx-surface)', borderColor: 'var(--cx-line)' }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.borderColor = 'var(--cx-accent-line)'
-                    e.currentTarget.style.background  = 'var(--cx-accent-wash)'
-                    e.currentTarget.style.boxShadow   = '0 2px 14px rgba(161,98,7,0.09)'
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.borderColor = 'var(--cx-line)'
-                    e.currentTarget.style.background  = 'var(--cx-surface)'
-                    e.currentTarget.style.boxShadow   = 'none'
-                  }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--cx-paper)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'var(--cx-surface)')}
                 >
                   <div
-                    className="size-8 rounded-lg flex items-center justify-center flex-shrink-0 border"
-                    style={{ background: 'var(--cx-accent-wash)', borderColor: 'var(--cx-accent-line)' }}
+                    className="size-7 rounded-md flex items-center justify-center flex-shrink-0 border"
+                    style={{ background: 'var(--cx-paper-2)', borderColor: 'var(--cx-line)' }}
                   >
-                    <FileText size={13} style={{ color: 'var(--cx-accent)' }} />
+                    <FileText size={12} style={{ color: 'var(--cx-mute-1)' }} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1.5">
@@ -290,7 +268,7 @@ function SourceCitations({ sources, onViewChunk }: { sources: Source[]; onViewCh
                       )}
                     </div>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </motion.div>
@@ -310,15 +288,9 @@ function AnsweredFromBadge({ kind }: { kind: NonNullable<Message['answered_from'
   } as const
   const { label, ok } = map[kind]
   return (
-    <span
-      className="inline-flex items-center gap-1.5 h-6 px-2.5 rounded-full border text-[11px] font-medium"
-      style={{
-        color:       ok ? 'var(--cx-ok)' : 'var(--cx-mute-1)',
-        background:   ok ? 'var(--cx-ok-wash)' : 'var(--cx-paper-2)',
-        borderColor: ok ? 'rgba(60,110,71,0.2)' : 'var(--cx-line)',
-      }}
-    >
-      {ok ? <FileText size={10} /> : <ExternalLink size={10} />}
+    <span className="inline-flex items-center gap-1.5 text-[11px] font-medium"
+      style={{ color: ok ? 'var(--cx-ok)' : 'var(--cx-mute-1)' }}>
+      <span className="cx-dot" style={{ background: ok ? 'var(--cx-ok)' : 'var(--cx-mute-2)' }} />
       {label}
     </span>
   )
@@ -714,14 +686,10 @@ export function ChatWindow({
       <ChatTopBar subtitle={workspaceName}>
         {/* Knowledge base doc count */}
         {docNames.length > 0 && (
-          <div
-            className="hidden sm:flex items-center gap-1.5 h-6 px-2.5 rounded-full border text-[11px]"
-            style={{ borderColor: 'var(--cx-line)', background: 'var(--cx-paper-2)', color: 'var(--cx-mute-1)' }}
-          >
-            <Database size={10} style={{ color: 'var(--cx-mute-2)' }} />
-            <span className="cx-num">{docNames.length}</span>
-            <span>doc{docNames.length !== 1 ? 's' : ''}</span>
-          </div>
+          <span className="hidden sm:inline-flex items-center gap-1 text-[11px]" style={{ color: 'var(--cx-mute-2)' }}>
+            <Database size={10} />
+            <span className="cx-num">{docNames.length}</span> doc{docNames.length !== 1 ? 's' : ''}
+          </span>
         )}
         {messages.length > 0 && (
           <button
@@ -750,10 +718,6 @@ export function ChatWindow({
               transition={{ duration: 0.4 }}
               className="relative flex flex-col items-center justify-center min-h-full px-6 py-20 gap-6"
             >
-              <div
-                className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[480px] h-[480px] pointer-events-none"
-                style={{ background: 'radial-gradient(ellipse, rgba(161,98,7,0.05) 0%, transparent 65%)' }}
-              />
               <input
                 ref={emptyUploadRef}
                 type="file"
@@ -761,48 +725,43 @@ export function ChatWindow({
                 accept=".pdf,.docx,.xlsx"
                 onChange={handleUploadInput}
               />
-              <div className="relative z-10 flex flex-col items-center gap-5 text-center">
+              <div className="relative z-10 flex flex-col items-center gap-4 text-center max-w-sm">
                 <div
-                  className="size-20 rounded-[1.6rem] border flex items-center justify-center"
-                  style={{
-                    background: 'var(--cx-accent-wash)',
-                    borderColor: 'var(--cx-accent-line)',
-                    boxShadow: '0 8px 32px rgba(161,98,7,0.1)',
-                  }}
+                  className="size-11 rounded-md border flex items-center justify-center"
+                  style={{ background: 'var(--cx-paper-2)', borderColor: 'var(--cx-line)' }}
                 >
-                  <UploadCloud size={32} style={{ color: 'var(--cx-accent)' }} />
+                  <UploadCloud size={20} style={{ color: 'var(--cx-mute-1)' }} />
                 </div>
                 <div>
-                  <p className="cx-display text-[19px] font-bold tracking-[-0.01em]" style={{ color: 'var(--cx-ink)' }}>
+                  <p className="text-[16px] font-semibold tracking-tight" style={{ color: 'var(--cx-ink)' }}>
                     Add your first document to start asking
                   </p>
-                  <p className="mt-2 text-[13.5px]" style={{ color: 'var(--cx-mute-1)' }}>
+                  <p className="mt-1.5 text-[13px] leading-relaxed" style={{ color: 'var(--cx-mute-1)' }}>
                     Connect Google Drive in Settings, or upload a file here. Cortex reads it so you can ask questions and get cited answers.
                   </p>
                 </div>
-                <div className="flex flex-wrap items-center justify-center gap-2.5">
+                <div className="flex flex-wrap items-center justify-center gap-2">
                   <a
                     href="/dashboard/settings#google-drive"
-                    className="cx-btn-ink flex items-center gap-2 h-10 px-5 rounded-full text-[13.5px] font-semibold"
+                    className="cx-btn-ink flex items-center gap-2 h-8 px-3.5 rounded-md text-[12.5px] font-medium"
                   >
-                    <HardDrive size={15} /> Connect Google Drive
+                    <HardDrive size={14} /> Connect Google Drive
                   </a>
                   <button
                     onClick={() => emptyUploadRef.current?.click()}
                     disabled={uploading}
-                    className="flex items-center gap-2 h-10 px-5 rounded-full text-[13.5px] font-semibold border transition-colors disabled:opacity-60 hover:bg-[var(--cx-accent-wash)]"
-                    style={{ borderColor: 'var(--cx-line-2)', color: 'var(--cx-ink-2)' }}
+                    className="cx-btn-ghost flex items-center gap-2 h-8 px-3.5 rounded-md text-[12.5px] font-medium disabled:opacity-60"
                   >
                     {uploading
-                      ? <><span className="size-4 border-2 border-current border-t-transparent rounded-full animate-spin" />Uploading…</>
-                      : <><UploadCloud size={15} />Upload a file</>}
+                      ? <><span className="size-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />Uploading…</>
+                      : <><UploadCloud size={14} />Upload a file</>}
                   </button>
                 </div>
                 {uploadNote && (
                   <p className="text-[12px]" style={{ color: 'var(--cx-mute-1)' }}>{uploadNote}</p>
                 )}
-                <p className="text-[11px] font-mono" style={{ color: 'var(--cx-mute-2)' }}>
-                  PDF · DOCX · XLSX · up to 50 MB
+                <p className="text-[11px]" style={{ color: 'var(--cx-mute-2)' }}>
+                  PDF, DOCX, XLSX · up to 50 MB
                 </p>
               </div>
             </motion.div>
@@ -817,23 +776,14 @@ export function ChatWindow({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.4 }}
-              className="relative flex flex-col items-center justify-center min-h-full px-6 py-20 gap-10"
+              className="relative flex flex-col items-center justify-center min-h-full px-6 py-20 gap-8"
             >
-              <div
-                className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] h-[520px] pointer-events-none"
-                style={{ background: 'radial-gradient(ellipse, rgba(161,98,7,0.07) 0%, transparent 65%)' }}
-              />
-
-              <div className="relative z-10 flex flex-col items-center gap-5">
+              <div className="relative z-10 flex flex-col items-center gap-4">
                 <div
-                  className="size-[68px] rounded-[1.35rem] border flex items-center justify-center"
-                  style={{
-                    background: 'var(--cx-surface)',
-                    borderColor: 'var(--cx-line)',
-                    boxShadow: '0 8px 32px rgba(161,98,7,0.12), 0 1px 0 rgba(255,255,255,0.85) inset',
-                  }}
+                  className="size-11 rounded-md border flex items-center justify-center"
+                  style={{ background: 'var(--cx-surface)', borderColor: 'var(--cx-line)' }}
                 >
-                  <Image src="/CortexLogo.png" alt="Cortex" width={36} height={36} className="object-contain" />
+                  <Image src="/CortexLogo.png" alt="Cortex" width={22} height={22} className="object-contain" />
                 </div>
 
                 <motion.div
@@ -873,18 +823,17 @@ export function ChatWindow({
                   return (
                     <motion.div
                       key={key}
-                      initial={{ opacity: 0, y: 12, scale: 0.98 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
                       className="flex flex-col items-end gap-1"
                     >
                       <div
-                        className="max-w-[78%] rounded-2xl rounded-tr-md px-5 py-3.5 text-[14.5px] leading-[1.75] whitespace-pre-wrap"
+                        className="max-w-[80%] rounded-lg px-4 py-2.5 text-[14px] leading-[1.65] whitespace-pre-wrap"
                         style={{
-                          background: 'var(--cx-surface)',
+                          background: 'var(--cx-paper-2)',
                           color: 'var(--cx-ink)',
                           border: '1px solid var(--cx-line)',
-                          boxShadow: '0 1px 0 rgba(255,255,255,0.9) inset, 0 4px 16px rgba(10,10,10,0.05)',
                         }}
                       >
                         {msg.content}
@@ -949,14 +898,10 @@ export function ChatWindow({
                             {activeTools.filter(t => t.status === 'done').map(t => (
                               <div
                                 key={t.name}
-                                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11.5px] font-medium"
-                                style={{
-                                  color: 'var(--cx-ok)',
-                                  background: 'var(--cx-ok-wash)',
-                                  borderColor: 'rgba(60,110,71,0.2)',
-                                }}
+                                className="inline-flex items-center gap-1.5 text-[11.5px]"
+                                style={{ color: 'var(--cx-mute-1)' }}
                               >
-                                <CheckCircle2 size={10} strokeWidth={2.5} />
+                                <CheckCircle2 size={11} style={{ color: 'var(--cx-ok)' }} />
                                 {t.name === 'search_documents'
                                   ? `${t.count ?? 0} sources found`
                                   : t.name === 'relevance_check'
@@ -1057,24 +1002,12 @@ export function ChatWindow({
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: i * 0.08, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                     onClick={() => handleSubmit(q)}
-                    className="group text-left flex items-center gap-3 px-4 py-2.5 rounded-xl border text-[13px] font-medium transition-all duration-200"
-                    style={{
-                      borderColor: 'var(--cx-line)',
-                      background: 'var(--cx-paper-2)',
-                      color: 'var(--cx-ink-2)',
-                    }}
-                    onMouseEnter={e => {
-                      e.currentTarget.style.borderColor = 'var(--cx-accent-line)'
-                      e.currentTarget.style.background  = 'var(--cx-accent-wash)'
-                      e.currentTarget.style.color       = 'var(--cx-accent)'
-                    }}
-                    onMouseLeave={e => {
-                      e.currentTarget.style.borderColor = 'var(--cx-line)'
-                      e.currentTarget.style.background  = 'var(--cx-paper-2)'
-                      e.currentTarget.style.color       = 'var(--cx-ink-2)'
-                    }}
+                    className="group text-left flex items-center gap-2.5 px-3 py-2 rounded-md border text-[13px] transition-colors"
+                    style={{ borderColor: 'var(--cx-line)', background: 'var(--cx-surface)', color: 'var(--cx-ink-2)' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--cx-paper-2)')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'var(--cx-surface)')}
                   >
-                    <Sparkles size={11} className="flex-shrink-0 opacity-60 group-hover:opacity-100 transition-opacity" />
+                    <Sparkles size={11} className="flex-shrink-0" style={{ color: 'var(--cx-mute-2)' }} />
                     <span className="flex-1">{q}</span>
                     <ArrowUp size={11} className="flex-shrink-0 opacity-0 group-hover:opacity-60 transition-opacity -rotate-45" />
                   </motion.button>
@@ -1106,13 +1039,11 @@ export function ChatWindow({
         >
           <div className="max-w-[720px] mx-auto">
             <div
-              className="rounded-2xl overflow-hidden transition-all duration-200"
+              className="rounded-lg overflow-hidden transition-all duration-150"
               style={{
-                background:  focused ? 'var(--cx-surface)' : 'var(--cx-paper-2)',
-                border:      `1.5px solid ${focused ? 'var(--cx-accent-line)' : 'var(--cx-line)'}`,
-                boxShadow:   focused
-                  ? '0 0 0 3px var(--cx-accent-wash), 0 4px 20px rgba(161,98,7,0.10)'
-                  : '0 2px 8px rgba(10,10,10,0.04)',
+                background:  'var(--cx-surface)',
+                border:      `1px solid ${focused ? 'var(--cx-line-2)' : 'var(--cx-line)'}`,
+                boxShadow:   focused ? '0 0 0 3px var(--cx-accent-wash)' : 'none',
               }}
             >
               <label htmlFor="cx-composer" className="sr-only">Ask a question about your documents</label>
@@ -1165,24 +1096,20 @@ export function ChatWindow({
                       <Square size={13} strokeWidth={2.5} fill="currentColor" />
                     </button>
                   ) : (
-                    <MagneticButton>
-                      <motion.button
-                        whileTap={{ scale: 0.94 }}
-                        onClick={() => handleSubmit()}
-                        disabled={!input.trim()}
-                        aria-label="Send message"
-                        className="size-9 rounded-full flex items-center justify-center transition-all duration-200"
-                        style={{
-                          background: input.trim() ? 'var(--cx-ink)' : 'var(--cx-paper-2)',
-                          color:      input.trim() ? '#f9f8f5'       : 'var(--cx-mute-1)',
-                          border:     input.trim() ? 'none'          : '1px solid var(--cx-line)',
-                          cursor:     input.trim() ? 'pointer'       : 'not-allowed',
-                          boxShadow:  input.trim() ? '0 4px 14px rgba(10,10,10,0.28)' : 'none',
-                        }}
-                      >
-                        <ArrowUp size={15} strokeWidth={2.25} />
-                      </motion.button>
-                    </MagneticButton>
+                    <button
+                      onClick={() => handleSubmit()}
+                      disabled={!input.trim()}
+                      aria-label="Send message"
+                      className="size-8 rounded-md flex items-center justify-center transition-colors"
+                      style={{
+                        background: input.trim() ? 'var(--cx-ink)' : 'var(--cx-paper-2)',
+                        color:      input.trim() ? '#fafafa'       : 'var(--cx-mute-2)',
+                        border:     input.trim() ? '1px solid var(--cx-ink)' : '1px solid var(--cx-line)',
+                        cursor:     input.trim() ? 'pointer'       : 'not-allowed',
+                      }}
+                    >
+                      <ArrowUp size={15} strokeWidth={2.25} />
+                    </button>
                   )}
                 </div>
               </div>

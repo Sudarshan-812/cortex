@@ -266,92 +266,71 @@
 }
 .lp-spotlight:hover::before { opacity: 1; }
 
+/* ── Clean functional dashboard: flat surfaces, hairline borders, no shadows,
+   system font. Warm-paper + gold palette retained; gold is reserved for real
+   accents (primary button, active nav, links, key figures). ─────────────── */
+:root { --cx-radius: 8px; }
+
 .cx-num {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-feature-settings: "tnum", "zero";
-  letter-spacing: -0.02em;
-}
-.cx-serif {
-  font-family: var(--font-instrument-serif, Georgia, serif);
   letter-spacing: -0.01em;
 }
-.cx-display {
-  font-family: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
-  font-optical-sizing: auto;
-  letter-spacing: -0.02em;
-}
+.cx-serif { font-style: italic; }
+.cx-display { letter-spacing: -0.02em; }
 .cx-rule-label {
-  font-family: var(--font-geist-mono), ui-monospace, monospace;
-  letter-spacing: .22em;
-  text-transform: uppercase;
-  font-size: 10.5px;
-  color: var(--cx-mute-1);
+  font-size: 11px;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--cx-mute-2);
 }
-.cx-panel {
+
+/* Flat card. No shadow, no lift. */
+.cx-panel,
+.cx-panel-flat {
   background: var(--cx-surface);
   border: 1px solid var(--cx-line);
-  border-radius: 14px;
-  box-shadow:
-    0 1px 0 rgba(255,255,255,0.7) inset,
-    0 1px 2px rgba(10,10,10,0.03),
-    0 10px 26px -14px rgba(10,10,10,0.09),
-    0 28px 56px -28px rgba(10,10,10,0.1);
-  transition: box-shadow 0.25s ease, transform 0.25s ease;
+  border-radius: var(--cx-radius);
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
-.cx-panel-hover:hover {
-  transform: translateY(-3px);
-  box-shadow:
-    0 1px 0 rgba(255,255,255,0.7) inset,
-    0 2px 4px rgba(10,10,10,0.04),
-    0 18px 34px -14px rgba(10,10,10,0.14),
-    0 36px 64px -24px rgba(10,10,10,0.14);
-}
+.cx-panel-hover:hover { border-color: var(--cx-line-2); }
+
+/* Small neutral icon holder (gold only when a component opts in). */
 .cx-icon-chip {
-  border-radius: 12px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  border: 1px solid var(--cx-accent-line);
-  background: var(--cx-accent-wash);
-  color: var(--cx-accent);
-}
-.cx-icon-chip-sm  { width: 32px; height: 32px; }
-.cx-icon-chip-md  { width: 36px; height: 36px; }
-.cx-icon-chip-lg  { width: 40px; height: 40px; }
-.cx-icon-chip-xl  { width: 56px; height: 56px; border-radius: 16px; }
-.cx-panel-flat {
-  background: var(--cx-surface);
   border: 1px solid var(--cx-line);
-  border-radius: 14px;
+  background: var(--cx-paper-2);
+  color: var(--cx-mute-1);
 }
+.cx-icon-chip-sm  { width: 26px; height: 26px; }
+.cx-icon-chip-md  { width: 30px; height: 30px; }
+.cx-icon-chip-lg  { width: 34px; height: 34px; }
+.cx-icon-chip-xl  { width: 44px; height: 44px; }
+
+/* Buttons: flat, 1px, no shadow, no transform. */
 .cx-btn-ink {
   background: var(--cx-ink);
-  color: #f9f8f5;
+  color: #fafafa;
   border: 1px solid var(--cx-ink);
-  box-shadow: 0 1px 0 rgba(255,255,255,0.08) inset, 0 6px 18px -8px rgba(10,10,10,0.35);
-  transition: transform .18s cubic-bezier(.2,.7,.2,1), box-shadow .18s cubic-bezier(.2,.7,.2,1), background .2s ease;
+  transition: background 0.15s ease;
 }
-.cx-btn-ink:hover {
-  background: #000;
-  transform: translateY(-0.5px);
-  box-shadow: 0 1px 0 rgba(255,255,255,0.08) inset, 0 10px 22px -10px rgba(10,10,10,0.45);
-}
+.cx-btn-ink:hover { background: #000; }
 .cx-btn-ghost {
-  background: rgba(255,255,255,0.6);
-  border: 1px solid var(--cx-line);
-  transition: background .2s ease, border-color .2s ease, transform .18s cubic-bezier(.2,.7,.2,1);
-}
-.cx-btn-ghost:hover {
   background: var(--cx-surface);
-  border-color: var(--cx-line-2);
-  transform: translateY(-0.5px);
+  border: 1px solid var(--cx-line);
+  color: var(--cx-ink-2);
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
-.cx-hdiv {
-  background: linear-gradient(to right, transparent, var(--cx-line), transparent);
-  height: 1px;
-}
+.cx-btn-ghost:hover { background: var(--cx-paper-2); border-color: var(--cx-line-2); }
+
+.cx-hdiv { background: var(--cx-line); height: 1px; }
+
+/* Inline citation chip. */
 .cx-cite {
   display: inline-flex;
   align-items: center;
@@ -368,10 +347,10 @@
   font-size: 10px;
   vertical-align: 1px;
   margin: 0 1px;
-  transition: background .18s ease, transform .18s ease;
+  transition: background 0.15s ease;
   cursor: pointer;
 }
-.cx-cite:hover { background: var(--cx-accent-wash); border-color: var(--cx-accent); transform: translateY(-0.5px); }
+.cx-cite:hover { background: var(--cx-accent); color: #fff; border-color: var(--cx-accent); }
 .cx-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; }
 
 @keyframes cx-spin { to { transform: rotate(360deg); } }
@@ -404,19 +383,17 @@
   to   { opacity: 1; filter: blur(0px); }
 }
 
-/* Prompt card hover (CSS-driven so 3D transform stays on motion layer) */
+/* Suggested-prompt chip */
 .cx-prompt-card {
   background: var(--cx-surface);
   border-color: var(--cx-line);
   color: var(--cx-ink-2);
-  transition: background 0.18s ease, border-color 0.18s ease,
-              color 0.18s ease, box-shadow 0.18s ease;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 .cx-prompt-card:hover {
-  background: var(--cx-accent-wash);
-  border-color: var(--cx-accent-line);
+  background: var(--cx-paper-2);
+  border-color: var(--cx-line-2);
   color: var(--cx-ink);
-  box-shadow: 0 4px 20px rgba(161,98,7,0.09);
 }
 
 /* ── Accessibility foundation ──────────────────────────────────── */

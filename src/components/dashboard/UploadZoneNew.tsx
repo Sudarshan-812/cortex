@@ -175,31 +175,18 @@ export function UploadZoneNew({ workspaceId }: { workspaceId: string }) {
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="cx-panel cx-panel-hover overflow-hidden flex flex-col h-full"
-    >
-      <div className="flex items-center gap-3 px-5 pt-5 pb-3">
-        <div className="cx-icon-chip cx-icon-chip-sm">
-          <UploadCloud size={15} />
-        </div>
-        <div>
-          <p className="cx-rule-label mb-1">Upload</p>
-          <h3 className="text-[14.5px] font-semibold tracking-tight" style={{ color: 'var(--cx-ink)' }}>
-            Add files directly
-          </h3>
-        </div>
+    <div className="cx-panel overflow-hidden flex flex-col h-full">
+      <div className="px-4 pt-3.5 pb-2.5">
+        <h3 className="text-[13px] font-semibold" style={{ color: 'var(--cx-ink)' }}>Upload files</h3>
       </div>
 
-      <div className="px-5 pb-4">
+      <div className="px-4 pb-3.5">
         <div
           onDragOver={e => { e.preventDefault(); setDrag(true) }}
           onDragLeave={() => setDrag(false)}
           onDrop={e => { e.preventDefault(); setDrag(false); handleFiles(e.dataTransfer.files) }}
           onClick={() => fileRef.current?.click()}
-          className="relative rounded-xl border border-dashed transition-all duration-200 flex flex-col items-center justify-center text-center px-6 py-7 cursor-pointer"
+          className="relative rounded-md border border-dashed transition-colors flex flex-col items-center justify-center text-center px-6 py-6 cursor-pointer"
           style={{
             borderColor: drag ? 'var(--cx-accent)' : 'var(--cx-line-2)',
             background:   drag ? 'var(--cx-accent-wash)' : 'var(--cx-paper)',
@@ -214,12 +201,12 @@ export function UploadZoneNew({ workspaceId }: { workspaceId: string }) {
             onChange={e => handleFiles(e.target.files)}
             accept=".pdf,.docx,.xlsx"
           />
-          <UploadCloud size={20} className="mb-2" style={{ color: 'var(--cx-mute-1)' }} />
+          <UploadCloud size={18} className="mb-1.5" style={{ color: 'var(--cx-mute-2)' }} />
           <p className="text-[12.5px] font-medium mb-0.5" style={{ color: 'var(--cx-ink)' }}>
             Drop a file or click to browse
           </p>
-          <p className="text-[10.5px] font-mono" style={{ color: 'var(--cx-mute-2)' }}>
-            PDF · DOCX · XLSX · up to 50 MB
+          <p className="text-[11px]" style={{ color: 'var(--cx-mute-2)' }}>
+            PDF, DOCX, XLSX · up to 50 MB
           </p>
         </div>
       </div>
@@ -230,12 +217,12 @@ export function UploadZoneNew({ workspaceId }: { workspaceId: string }) {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className="border-t px-5 py-4 space-y-3 overflow-hidden"
+            transition={{ duration: 0.25 }}
+            className="border-t px-4 py-3 space-y-2.5 overflow-hidden"
             style={{ borderColor: 'var(--cx-line)' }}
           >
-            <div className="flex items-center justify-between mb-1">
-              <p className="cx-rule-label">Queue</p>
+            <div className="flex items-center justify-between">
+              <p className="text-[11px] font-medium" style={{ color: 'var(--cx-mute-2)' }}>Queue</p>
               <span className="cx-num text-[10.5px]" style={{ color: 'var(--cx-mute-2)' }}>
                 {queue.filter(f => f.stage !== 'embedded' && !f.error).length} active
                 {' · '}
@@ -248,6 +235,6 @@ export function UploadZoneNew({ workspaceId }: { workspaceId: string }) {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   )
 }

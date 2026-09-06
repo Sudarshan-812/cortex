@@ -1,7 +1,6 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { motion } from 'framer-motion'
 import {
   AlertCircle, Check, CheckCircle2, ChevronRight, FolderClosed, HardDrive,
   Link2, Loader2, RefreshCw, Unlink,
@@ -157,20 +156,14 @@ export function GoogleDriveCard({
   const lastSync = timeAgo(status?.last_synced_at)
 
   return (
-    <motion.div
-      id="google-drive"
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.1, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      className="cx-panel p-5 mb-4 max-w-2xl scroll-mt-24"
-    >
-      <div className="flex items-center gap-3 mb-1">
-        <HardDrive size={18} style={{ color: 'var(--cx-accent)' }} />
-        <h3 className="text-[15px] font-semibold" style={{ color: 'var(--cx-ink)' }}>
+    <div id="google-drive" className="cx-panel p-4 mb-5 max-w-2xl scroll-mt-24">
+      <div className="flex items-center gap-2 mb-1">
+        <HardDrive size={15} style={{ color: 'var(--cx-accent)' }} />
+        <h3 className="text-[13px] font-semibold" style={{ color: 'var(--cx-ink)' }}>
           Google Drive
         </h3>
       </div>
-      <p className="text-[13px] mb-4" style={{ color: 'var(--cx-ink)', opacity: 0.65 }}>
+      <p className="text-[12.5px] mb-3.5" style={{ color: 'var(--cx-mute-1)' }}>
         Give Cortex read-only access to one Drive folder. Every PDF, DOCX and XLSX
         inside it becomes searchable in chat. Edited files are picked up on the next sync.
       </p>
@@ -353,6 +346,6 @@ export function GoogleDriveCard({
           <AlertCircle size={13} /> {error}
         </div>
       )}
-    </motion.div>
+    </div>
   )
 }
