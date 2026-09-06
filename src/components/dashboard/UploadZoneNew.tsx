@@ -186,9 +186,9 @@ export function UploadZoneNew({ workspaceId }: { workspaceId: string }) {
           <UploadCloud size={15} />
         </div>
         <div>
-          <p className="cx-rule-label mb-1">Ingest</p>
+          <p className="cx-rule-label mb-1">Upload</p>
           <h3 className="text-[14.5px] font-semibold tracking-tight" style={{ color: 'var(--cx-ink)' }}>
-            Add to knowledge base
+            Add files directly
           </h3>
         </div>
       </div>

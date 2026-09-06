@@ -167,7 +167,7 @@ export default async function Dashboard() {
                 />
                 <MagneticButton>
                   <Link href="/chat" className="cx-btn-ink h-9 px-4 rounded-full text-[12.5px] font-medium flex items-center gap-1.5">
-                    <Search size={13} /> Query knowledge base
+                    <Search size={13} /> Ask a question
                   </Link>
                 </MagneticButton>
               </>
@@ -178,26 +178,26 @@ export default async function Dashboard() {
         {/* ── Onboarding guide - shown only when workspace is empty ── */}
         {isEmpty && (
           <div className="cx-panel p-7 mb-6">
-            <p className="cx-rule-label mb-6">How Cortex works</p>
+            <p className="cx-rule-label mb-6">Getting started</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               {[
                 {
                   icon: <FileText size={16} />,
                   step: "01",
-                  title: "Upload your documents",
-                  desc: "Add PDF, Word (DOCX) or Excel (XLSX) files, up to 50 MB each.",
+                  title: "Connect Google Drive",
+                  desc: "Link a Drive folder in Settings, or upload PDF, DOCX or XLSX files directly.",
                 },
                 {
                   icon: <Zap size={16} />,
                   step: "02",
-                  title: "Cortex processes them",
-                  desc: "Your documents are split into semantic chunks, embedded with Gemini, and indexed for hybrid search.",
+                  title: "Cortex reads your files",
+                  desc: "Every document is parsed, split into passages, and indexed so it can be searched by meaning.",
                 },
                 {
                   icon: <MessageSquare size={16} />,
                   step: "03",
-                  title: "Ask questions, get cited answers",
-                  desc: "Query in plain English. Cortex retrieves the most relevant sections and cites every source.",
+                  title: "Ask anything, get cited answers",
+                  desc: "Ask in plain language. Cortex pulls the relevant passages and links every claim to its source.",
                 },
               ].map(({ icon, step, title, desc }) => (
                 <div key={step} className="flex gap-4">

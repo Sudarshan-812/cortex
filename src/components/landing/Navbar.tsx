@@ -195,7 +195,7 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
                   Log in
                 </Link>
                 <Link href="/login" className="h-8 px-4 inline-flex items-center justify-center rounded-full text-[13px] font-semibold lp-btn-primary">
-                  Get started
+                  Connect Drive
                 </Link>
               </>
             )}
@@ -257,7 +257,7 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
                   </Link>
                   <Link href="/login" onClick={() => setMobileOpen(false)}
                     className="py-2.5 text-center rounded-xl text-[14px] font-semibold lp-btn-primary">
-                    Get Started
+                    Connect Google Drive
                   </Link>
                 </div>
               )}

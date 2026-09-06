@@ -8,26 +8,26 @@ const sections: { icon: LucideIcon; title: string; description: string; items: s
   {
     icon: Zap,
     title: "Quick Start",
-    description: "Get up and running in under 5 minutes. Create a workspace, upload a document, and ask your first question.",
-    items: ["Create an account", "Upload your first PDF", "Ask a question", "View source citations"],
+    description: "Get your first answer in minutes. Create an account, connect a Google Drive folder, and ask a question.",
+    items: ["Create an account", "Connect Google Drive", "Ask a question", "Open the cited source"],
   },
   {
     icon: Database,
-    title: "RAG Pipeline",
-    description: "Understand how Cortex processes and indexes your documents using 768-dim Matryoshka embeddings.",
-    items: ["Document chunking strategy", "Embedding model details", "pgvector storage", "Index management"],
+    title: "How indexing works",
+    description: "What happens to a file after you connect it: parsing, splitting into passages, and building the search index.",
+    items: ["Supported file types", "How files are split", "Keeping Drive in sync", "Removing a document"],
   },
   {
     icon: FileSearch,
-    title: "Hybrid Search",
-    description: "Learn how Cortex combines vector cosine similarity with BM25 keyword search for best-in-class retrieval.",
-    items: ["Vector search explained", "BM25 keyword fusion", "Reciprocal Rank Fusion (RRF)", "Search tuning"],
+    title: "How search works",
+    description: "How Cortex finds the right passage - matching on meaning and on exact wording at the same time.",
+    items: ["Meaning vs. keyword match", "Merging the two", "Why results are ordered this way", "Tuning retrieval"],
   },
   {
     icon: BrainCircuit,
-    title: "AI Re-ranking",
-    description: "Gemini evaluates the top retrieved chunks and re-orders them by semantic relevance before generation.",
-    items: ["Re-ranking architecture", "Relevance scoring", "Agentic reasoning", "Source citation logic"],
+    title: "How answers are written",
+    description: "The relevance check, the grounding check, and how every claim gets a citation to the source file and page.",
+    items: ["Re-ranking passages", "The grounding check", "When Cortex says “not found”", "How citations are built"],
   },
 ];
 
@@ -81,7 +81,7 @@ export default function DocsContent() {
             Documentation
           </h1>
           <p className="text-[16px] leading-relaxed max-w-2xl" style={{ color: 'var(--cx-mute-1)' }}>
-            Everything you need to use Cortex - from uploading your first document to understanding the RAG pipeline under the hood.
+            Everything you need to use Cortex - from connecting Google Drive to understanding how every answer is retrieved and cited.
           </p>
         </motion.div>
 
@@ -145,7 +145,7 @@ export default function DocsContent() {
             Ready to get started?
           </h2>
           <p className="text-[14px] mb-7" style={{ color: 'rgba(246,245,242,0.55)' }}>
-            Create your free workspace and upload your first document in minutes.
+            Connect Google Drive and get your first cited answer in minutes.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <motion.div whileTap={{ scale: 0.97 }} whileHover={{ scale: 1.02 }}>
@@ -154,7 +154,7 @@ export default function DocsContent() {
                 className="inline-flex px-6 py-2.5 rounded-full text-[13.5px] font-semibold transition-colors"
                 style={{ background: '#f6f5f2', color: 'var(--cx-ink)' }}
               >
-                Create Free Account
+                Connect Google Drive
               </Link>
             </motion.div>
             <motion.div whileTap={{ scale: 0.97 }} whileHover={{ scale: 1.02 }}>

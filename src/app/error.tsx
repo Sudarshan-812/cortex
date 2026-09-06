@@ -29,7 +29,7 @@ export default function Error({
           Something went wrong
         </h1>
         <p className="text-[13.5px] leading-relaxed mb-8" style={{ color: 'var(--cx-mute-1)' }}>
-          An unexpected error occurred. You can try again or return to the dashboard.
+          An unexpected error occurred. Try again, or head back to the home page.
         </p>
         <div className="flex items-center justify-center gap-3">
           <button

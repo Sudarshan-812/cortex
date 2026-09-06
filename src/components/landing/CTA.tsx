@@ -29,11 +29,11 @@ export function CTA({ isLoggedIn = false }: CTAProps) {
           <h2
             className="lp-display text-4xl md:text-[3.2rem] font-medium tracking-tight leading-[1.08] max-w-lg"
             style={{ color: 'var(--lp-ink)' }}>
-            Your knowledge base is <span className="lp-gradient-text">one upload away.</span>
+            Your Drive already has the answers. <span className="lp-gradient-text">Start asking.</span>
           </h2>
 
           <p className="text-[15px] max-w-sm leading-relaxed" style={{ color: 'var(--lp-mute-1)' }}>
-            Drop in your PDFs and start asking questions in seconds. No setup, no config - just answers.
+            Connect Google Drive and ask your first question in under a minute. Cortex handles the rest.
           </p>
 
           <div className="mt-2">
@@ -42,7 +42,7 @@ export function CTA({ isLoggedIn = false }: CTAProps) {
                 href={isLoggedIn ? "/dashboard" : "/login"}
                 className="lp-btn-accent group inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full font-semibold text-[15px]"
               >
-                {isLoggedIn ? "Open dashboard" : "Get started"}
+                {isLoggedIn ? "Open dashboard" : "Connect Google Drive"}
                 <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform duration-200" />
               </Link>
             </MagneticButton>

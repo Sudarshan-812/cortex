@@ -756,10 +756,10 @@ export function ChatWindow({
                 </div>
                 <div>
                   <p className="cx-display text-[19px] font-bold tracking-[-0.01em]" style={{ color: 'var(--cx-ink)' }}>
-                    Upload your first document to get started
+                    Add your first document to start asking
                   </p>
                   <p className="mt-2 text-[13.5px]" style={{ color: 'var(--cx-mute-1)' }}>
-                    Cortex will read and understand your documents so you can ask questions about them.
+                    Connect Google Drive in Settings, or upload a file here. Cortex reads it so you can ask questions and get cited answers.
                   </p>
                 </div>
                 <motion.button
@@ -778,7 +778,7 @@ export function ChatWindow({
                 >
                   {uploading
                     ? <><span className="size-4 border-2 border-current border-t-transparent rounded-full animate-spin" />Uploading…</>
-                    : <><UploadCloud size={15} />Upload Document</>}
+                    : <><UploadCloud size={15} />Upload a file</>}
                 </motion.button>
                 {uploadNote && (
                   <p className="text-[12px]" style={{ color: 'var(--cx-mute-1)' }}>{uploadNote}</p>

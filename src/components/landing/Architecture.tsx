@@ -10,8 +10,8 @@ const nodes = [
   {
     icon: Upload,
     step: "STEP 01",
-    title: "Ingest & Chunk",
-    desc: "Uploaded PDFs and documents are parsed and split into overlapping chunks, ready for embedding.",
+    title: "Sync & Chunk",
+    desc: "Files from your connected Google Drive folder (and any direct uploads) are parsed and split into overlapping chunks.",
     tag: "document_chunks",
   },
   {
@@ -76,10 +76,10 @@ export function Architecture() {
             className="lp-display text-4xl md:text-5xl font-medium tracking-tight mb-3"
             style={{ color: "var(--lp-ink)" }}
           >
-            From question to <span className="lp-gradient-text">cited answer</span> - six real steps.
+            From your question to a <span className="lp-gradient-text">cited answer</span>
           </h2>
           <p className="text-[15px] max-w-xl mx-auto leading-relaxed" style={{ color: "var(--lp-mute-1)" }}>
-            This is the exact retrieval pipeline running behind every chat message - not a diagram made for marketing.
+            The actual pipeline behind every answer: retrieval, re-ranking, a grounding check, then a response cited to the source.
           </p>
         </div>
 

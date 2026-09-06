@@ -22,14 +22,14 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
       >
         <span className="inline-flex rounded-full h-1.5 w-1.5" style={{ background: 'var(--lp-primary-2)' }} />
         <span className="text-[11.5px] font-medium tracking-wide" style={{ color: 'var(--lp-primary-2)' }}>
-          Now with Corrective RAG &amp; Google Drive sync
+          Now connects to Google Drive
         </span>
       </div>
 
       {/* Headline - rendered on first paint (LCP), no entrance animation */}
       <h1 className="lp-display text-5xl md:text-7xl lg:text-[5.5rem] font-extrabold tracking-[-0.035em] leading-[1.0] mb-6">
-        <span className="block" style={{ color: 'var(--lp-ink)' }}>Your documents.</span>
-        <span className="lp-gradient-text block">Finally intelligent.</span>
+        <span className="block" style={{ color: 'var(--lp-ink)' }}>Ask your Drive.</span>
+        <span className="lp-gradient-text block">Get the answer.</span>
       </h1>
 
       {/* Subtitle */}
@@ -40,7 +40,7 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
         className="text-[17px] md:text-[19px] leading-relaxed max-w-2xl mx-auto mb-9"
         style={{ color: 'var(--lp-mute-1)' }}
       >
-        Cortex turns your PDFs, documents, and notes into a smart, conversational knowledge base - hybrid search, AI re-ranking, and source citations on every answer.
+        Connect Google Drive once. Cortex reads every document and answers your questions in plain language - with a link to the exact file and page each answer came from.
       </motion.p>
 
       {/* CTA buttons */}
@@ -75,7 +75,7 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
               <Link href="/login"
                 className="lp-btn-accent group inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-full font-semibold text-[15px]"
               >
-                Get started
+                Connect Google Drive
                 <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform duration-200" />
               </Link>
             </MagneticButton>
@@ -121,7 +121,7 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
             <div className="w-[170px] sm:w-[210px] flex-shrink-0 border-r p-3 flex flex-col gap-1"
               style={{ background: 'rgba(28,25,23,0.012)', borderColor: 'var(--lp-border)' }}>
               <p className="text-[10.5px] font-semibold uppercase tracking-widest px-2 mb-1 cx-num"
-                style={{ color: 'var(--lp-mute-2)' }}>Workspace</p>
+                style={{ color: 'var(--lp-mute-2)' }}>Google Drive</p>
 
               {[
                 { name: "Annual_Report_2024.pdf", active: true },
@@ -148,9 +148,9 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
 
               <div className="mt-auto pt-2 border-t" style={{ borderColor: 'var(--lp-border)' }}>
                 <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg cursor-default"
-                  style={{ color: 'var(--lp-mute-2)' }}>
-                  <Plus size={12} />
-                  <span className="text-[11px] font-medium">Upload document</span>
+                  style={{ color: 'var(--lp-ok)' }}>
+                  <span className="size-1.5 rounded-full" style={{ background: 'var(--lp-ok)' }} />
+                  <span className="text-[11px] font-medium">Synced 4 min ago</span>
                 </div>
               </div>
             </div>

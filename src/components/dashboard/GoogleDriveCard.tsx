@@ -102,8 +102,8 @@ export function GoogleDriveCard({ workspaceId }: { workspaceId?: string }) {
         </h3>
       </div>
       <p className="text-[13px] mb-4" style={{ color: 'var(--cx-ink)', opacity: 0.65 }}>
-        Sync a Drive folder into this workspace. PDF, DOCX and XLSX files are parsed,
-        chunked and embedded; edited files re-sync on the next run.
+        Give Cortex read-only access to one Drive folder. Every PDF, DOCX and XLSX
+        inside it becomes searchable in chat. Edited files are picked up on the next sync.
       </p>
 
       {status == null ? (

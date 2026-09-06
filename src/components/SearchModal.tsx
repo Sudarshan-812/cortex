@@ -119,7 +119,7 @@ export function SearchModal({
             ref={panelRef}
             role="dialog"
             aria-modal="true"
-            aria-label="Search your knowledge base"
+            aria-label="Search your documents"
             onMouseMove={() => kbNav && setKbNav(false)}
             initial={{ opacity: 0, y: -24, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -142,8 +142,8 @@ export function SearchModal({
                   ref={inputRef}
                   value={query}
                   onChange={e => { setQuery(e.target.value); setSelected(0) }}
-                  placeholder="Search your knowledge base…"
-                  aria-label="Search your knowledge base"
+                  placeholder="Search your documents…"
+                  aria-label="Search your documents"
                   className="flex-1 bg-transparent text-[15px] outline-none"
                   style={{ color: 'var(--cx-ink)' }}
                 />

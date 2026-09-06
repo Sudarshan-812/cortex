@@ -69,20 +69,12 @@ export default async function ChatIndexPage() {
               Start a conversation
             </h2>
             <p className="text-[13.5px] leading-relaxed" style={{ color: 'var(--cx-mute-1)' }}>
-              Click <strong style={{ color: 'var(--cx-ink)', fontWeight: 600 }}>Upload Document</strong> in the sidebar to add files, then press <strong style={{ color: 'var(--cx-ink)', fontWeight: 600 }}>New Chat</strong> to begin asking questions.
+              Connect <strong style={{ color: 'var(--cx-ink)', fontWeight: 600 }}>Google Drive</strong> in Settings or upload a file, then press <strong style={{ color: 'var(--cx-ink)', fontWeight: 600 }}>New Chat</strong>. Ask anything about your documents and Cortex answers with sources.
             </p>
           </div>
 
           <div className="flex items-center gap-3 text-[11.5px] cx-num pt-1" style={{ color: 'var(--cx-mute-2)' }}>
-            <span>PDF</span>
-            <span style={{ color: 'var(--cx-line-2)' }}>·</span>
-            <span>DOCX</span>
-            <span style={{ color: 'var(--cx-line-2)' }}>·</span>
-            <span>TXT</span>
-            <span style={{ color: 'var(--cx-line-2)' }}>·</span>
-            <span>MD</span>
-            <span style={{ color: 'var(--cx-line-2)' }}>·</span>
-            <span>CSV</span>
+            <span>Reads PDFs, Docs, Sheets &amp; more</span>
           </div>
         </div>
       </div>

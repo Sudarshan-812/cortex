@@ -39,7 +39,7 @@ export default async function SettingsPage() {
     {
       iconName: "Building2",
       title: "Workspace",
-      description: "Details about your knowledge base workspace.",
+      description: "Details about your workspace.",
       items: [
         { label: "Workspace ID",   value: workspace?.id ? workspace.id.slice(0, 8) + "…" : "—" },
         { label: "Created",        value: workspace?.created_at ? new Date(workspace.created_at).toLocaleDateString() : "—" },

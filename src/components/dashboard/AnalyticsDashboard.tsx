@@ -112,8 +112,8 @@ export function AnalyticsDashboard({
       {/* Charts row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
-        {/* Document uploads over time */}
-        <ChartPanel title="Document uploads over time" label="Upload history" delay={0.2}>
+        {/* Documents added over time */}
+        <ChartPanel title="Documents added over time" label="Document history" delay={0.2}>
           {docTimeline.length > 0 ? (
             <ResponsiveContainer width="100%" height={200}>
               <AreaChart data={docTimeline.map(d => ({ ...d, date: fmtDate(d.date) }))}>
@@ -132,7 +132,7 @@ export function AnalyticsDashboard({
             </ResponsiveContainer>
           ) : (
             <div className="h-[200px] flex items-center justify-center">
-              <p className="text-[12.5px]" style={{ color: 'var(--cx-mute-2)' }}>No upload data yet</p>
+              <p className="text-[12.5px]" style={{ color: 'var(--cx-mute-2)' }}>No documents yet</p>
             </div>
           )}
         </ChartPanel>
@@ -167,7 +167,7 @@ export function AnalyticsDashboard({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
 
         {/* Top topics */}
-        <ChartPanel title="Top topics across knowledge base" label="Topic frequency" delay={0.3}>
+        <ChartPanel title="Top topics across your documents" label="Topic frequency" delay={0.3}>
           {topTopics.length > 0 ? (
             <ResponsiveContainer width="100%" height={240}>
               <BarChart

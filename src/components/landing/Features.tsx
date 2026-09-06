@@ -62,12 +62,12 @@ export function Features() {
         transition={{ duration: 0.35, ease }}
         className="text-center mb-12"
       >
-        <p className="lp-rule-label mb-3">Under the hood</p>
+        <p className="lp-rule-label mb-3">Why it&apos;s different</p>
         <h2 className="lp-display text-4xl md:text-5xl font-medium tracking-tight mb-3" style={{ color: "var(--lp-ink)" }}>
-          Built for <span className="lp-gradient-text">correctness</span>, not vibes
+          Answers you can actually <span className="lp-gradient-text">trust</span>
         </h2>
         <p className="text-[15px] max-w-xl mx-auto" style={{ color: "var(--lp-mute-1)" }}>
-          Every answer is retrieved, re-ranked, and streamed by real infrastructure - here&apos;s what&apos;s actually running.
+          Every answer is grounded in your own files, checked for relevance before it&apos;s written, and cited so you can verify it in one click.
         </p>
       </motion.div>
 
@@ -79,7 +79,7 @@ export function Features() {
             Finds what you mean, not just what you type
           </h3>
           <p className="text-[14.5px] leading-relaxed max-w-md mb-6" style={{ color: "var(--lp-mute-1)" }}>
-            Every query runs two searches in parallel - dense vector similarity and Postgres full-text search - then fuses the results with Reciprocal Rank Fusion.
+            Cortex matches on meaning and on exact wording at the same time, then merges both - so it surfaces the right passage whether or not you used the words in the document.
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <span className="lp-mono text-[11px] px-2.5 py-1.5 rounded-lg border" style={{ background: "var(--lp-surface-2)", borderColor: "var(--lp-border)", color: "var(--lp-ink-2)" }}>
@@ -94,14 +94,14 @@ export function Features() {
           </div>
         </Tile>
 
-        {/* pgvector */}
+        {/* Isolation */}
         <Tile delay={0.07}>
-          <TileHeader icon={Database} label="Storage" />
+          <TileHeader icon={Database} label="Privacy" />
           <h3 className="text-xl font-bold tracking-tight mb-2" style={{ color: "var(--lp-ink)" }}>
-            768-dim, workspace-isolated
+            Your files stay yours
           </h3>
           <p className="text-[13.5px] leading-relaxed" style={{ color: "var(--lp-mute-1)" }}>
-            Matryoshka-truncated embeddings stored in Supabase pgvector, scoped per workspace so documents never cross tenants.
+            Read-only access to the folder you choose. Everything is scoped to your workspace with row-level isolation, so documents never cross between accounts.
           </p>
         </Tile>
 
@@ -109,10 +109,10 @@ export function Features() {
         <Tile delay={0.14}>
           <TileHeader icon={ArrowUpDown} label="Re-ranking" />
           <h3 className="text-xl font-bold tracking-tight mb-2" style={{ color: "var(--lp-ink)" }}>
-            <span className="lp-mono">10 → 3</span> candidates
+            Reads the whole doc, quotes the part that matters
           </h3>
           <p className="text-[13.5px] leading-relaxed" style={{ color: "var(--lp-mute-1)" }}>
-            The top 10 retrieved chunks are scored for relevance and cut down to the 3 that actually answer the question.
+            Candidate passages are scored for relevance and narrowed to the few that actually answer your question before anything is written.
           </p>
         </Tile>
 
@@ -120,7 +120,7 @@ export function Features() {
         <Tile className="md:col-span-2" delay={0.21}>
           <TileHeader icon={Radio} label="Streaming" />
           <h3 className="text-xl font-bold tracking-tight mb-3" style={{ color: "var(--lp-ink)" }}>
-            Answers arrive as they&apos;re generated
+            Answers stream as they&apos;re written
           </h3>
           <div
             className="text-[13.5px] leading-relaxed p-3 rounded-xl border"
@@ -130,14 +130,14 @@ export function Features() {
           </div>
         </Tile>
 
-        {/* Agentic tool use */}
+        {/* Grounding honesty */}
         <Tile delay={0.28}>
-          <TileHeader icon={Bot} label="Agent" />
+          <TileHeader icon={Bot} label="Grounding" />
           <h3 className="text-xl font-bold tracking-tight mb-2" style={{ color: "var(--lp-ink)" }}>
-            Knows when to look further
+            Tells you when your files don&apos;t have the answer
           </h3>
           <p className="text-[13.5px] leading-relaxed" style={{ color: "var(--lp-mute-1)" }}>
-            When your documents don&apos;t have the answer, the agent calls out to live web search instead of guessing.
+            If the documents don&apos;t cover your question, Cortex says so instead of guessing - and can reach out to live web search when you want it to.
           </p>
         </Tile>
 
@@ -153,7 +153,7 @@ export function Features() {
               </h3>
             </div>
             <p className="text-[13.5px] leading-relaxed flex-1" style={{ color: "var(--lp-mute-1)" }}>
-              Every claim traces back to the exact document and chunk it came from - click a citation to see the source.
+              Every claim traces back to the exact file and page it came from - click a citation to open the source.
             </p>
             <div className="flex gap-1.5 flex-shrink-0">
               {["Q3_Results.pdf · p.12", "Annual_Report_2024.pdf · p.4"].map((cite) => (

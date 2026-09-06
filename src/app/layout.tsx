@@ -46,14 +46,14 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://cortex.sudarshank.c
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Cortex - AI Document Intelligence",
+    default: "Cortex — Ask your Google Drive anything",
     template: "%s | Cortex",
   },
   description:
-    "Cortex turns your PDFs, documents, and notes into a smart conversational knowledge base using hybrid search, AI re-ranking, and source citations.",
+    "Connect Google Drive and ask questions across every document in plain language. Cortex answers with a direct link to the exact file and page — so you can trust it.",
   keywords: [
-    "RAG", "document AI", "vector search", "AI knowledge base",
-    "PDF chat", "enterprise AI", "Supabase", "pgvector",
+    "Google Drive AI", "chat with Google Drive", "ask your documents",
+    "document search", "AI knowledge base", "cited answers", "PDF chat",
   ],
   authors: [{ name: "Cortex" }],
   creator: "Cortex",
@@ -62,23 +62,23 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: siteUrl,
     siteName: "Cortex",
-    title: "Cortex - AI Document Intelligence",
+    title: "Cortex — Ask your Google Drive anything",
     description:
-      "Chat with your documents using hybrid search, Gemini AI re-ranking, and real-time SSE streaming.",
+      "Connect Google Drive once. Cortex reads every document and answers your questions in plain language, with a cited link to the exact file and page.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Cortex - AI Document Intelligence",
+        alt: "Cortex — Ask your Google Drive anything",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Cortex - AI Document Intelligence",
+    title: "Cortex — Ask your Google Drive anything",
     description:
-      "Chat with your documents using hybrid search, Gemini AI re-ranking, and real-time SSE streaming.",
+      "Connect Google Drive once. Cortex reads every document and answers in plain language, with a cited link to the exact file and page.",
     images: ["/og-image.png"],
   },
   robots: {
@@ -94,7 +94,7 @@ const jsonLd = {
   name: "Cortex",
   applicationCategory: "BusinessApplication",
   description:
-    "Enterprise RAG pipeline that turns PDFs and documents into a conversational AI knowledge base with hybrid search, AI re-ranking, and source citations.",
+    "Connect Google Drive and ask questions across every document in plain language. Cortex answers with a cited link to the exact file and page.",
   url: siteUrl,
   offers: {
     "@type": "Offer",
@@ -102,11 +102,11 @@ const jsonLd = {
     priceCurrency: "USD",
   },
   featureList: [
-    "Hybrid vector + BM25 search",
-    "Gemini AI re-ranking",
-    "Real-time Server-Sent Events streaming",
-    "Source citations on every answer",
-    "Workspace isolation",
+    "Connects to Google Drive",
+    "Ask questions in plain language",
+    "A cited source on every grounded answer",
+    "Answers stream as they're written",
+    "Row-level isolation per workspace",
   ],
 };
 

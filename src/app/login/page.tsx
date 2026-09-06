@@ -104,11 +104,11 @@ export default function LoginPage() {
             className="flex-1 flex flex-col justify-center max-w-[480px]"
           >
             <h1 className="text-5xl font-semibold tracking-[-0.025em] leading-[1.05] mb-5" style={{ color: 'var(--cx-ink)' }}>
-              Your documents.<br />
-              <span style={{ color: 'var(--cx-accent)' }}>Finally intelligent.</span>
+              Ask your Drive.<br />
+              <span style={{ color: 'var(--cx-accent)' }}>Get the answer.</span>
             </h1>
             <p className="text-[16px] leading-relaxed" style={{ color: 'var(--cx-ink-2)' }}>
-              Hybrid search, AI re-ranking, and source citations on every answer.
+              Sign in to ask questions across your connected Google Drive - with a cited source on every answer.
             </p>
           </motion.div>
 
@@ -141,12 +141,12 @@ export default function LoginPage() {
               <Image src="/CortexLogo.png" alt="Cortex Logo" width={48} height={48} className="object-contain mx-auto mb-6" />
             </motion.div>
             <h2 className="text-3xl font-semibold tracking-tight mb-2" style={{ color: 'var(--cx-ink)' }}>
-              {isSignUp ? "Create your workspace" : "Welcome back"}
+              {isSignUp ? "Create your account" : "Welcome back"}
             </h2>
             <p className="text-[14px]" style={{ color: 'var(--cx-mute-1)' }}>
               {isSignUp
-                ? "Enter your details to initialize your knowledge base."
-                : "Sign in to access your documents and chats."}
+                ? "Sign up, then connect Google Drive to start asking."
+                : "Sign in to pick up where you left off."}
             </p>
           </div>
 
@@ -309,7 +309,7 @@ export default function LoginPage() {
                 </>
               ) : (
                 <>
-                  <span>{isSignUp ? "Create Workspace" : "Sign in to Cortex"}</span>
+                  <span>{isSignUp ? "Create account" : "Sign in"}</span>
                   <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform" />
                 </>
               )}

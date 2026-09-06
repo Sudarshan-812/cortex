@@ -92,9 +92,9 @@ export function MetricsGrid({
         trend={docsTrend}
       />
       <MetricTile
-        label="Vector chunks, 768-dim"
+        label="Searchable passages"
         value={embeddings}
-        sub="Embeddings"
+        sub="Indexed"
         sparkColor="var(--cx-accent)"
       />
       <MetricTile
