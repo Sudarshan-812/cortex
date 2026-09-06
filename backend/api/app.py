@@ -6,6 +6,7 @@ import json
 from fastapi import Depends, FastAPI
 from fastapi.responses import StreamingResponse
 
+from api.connectors import router as connectors_router
 from api.deps import require_user
 from api.ingest import router as ingest_router
 from core.config import get_settings
@@ -15,6 +16,7 @@ from services.retrieval import RAGOrchestrator
 
 app = FastAPI(title="Cortex Retrieval API")
 app.include_router(ingest_router)
+app.include_router(connectors_router)
 
 
 @app.get("/health")

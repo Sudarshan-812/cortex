@@ -32,6 +32,7 @@ class FakeDB:
         self.chunks: list[dict] = []                   # id, document_id, external_id, content, metadata, acl, relevance
         self.sync_state: dict[tuple[str, str], dict] = {}
         self.connectors: dict[tuple[str, str], dict] = {}
+        self.vault: dict[str, str] = {}  # secret_id -> plaintext
         self.saved_tokens: list = []
         self.doc_updates: list = []  # (doc_id, *rest) from UPDATE documents
         self.raise_on_executemany = False
@@ -169,13 +170,56 @@ class FakeConn:
         if s.startswith("SELECT last_synced_at FROM drive_sync_state"):
             st = self.db.sync_state.get((args[0], args[1]))
             return st["last_synced_at"] if st else None
+        if s.startswith("SELECT 1 FROM workspaces WHERE id = $1 AND owner_id = $2"):
+            return 1 if self.db.workspaces.get(args[0]) == args[1] else None
+        if s.startswith("SELECT 1 FROM documents d JOIN workspaces w"):
+            doc = self.db.documents.get(args[0])
+            ok = doc and doc["workspace_id"] == args[1] and self.db.workspaces.get(args[1]) == args[2]
+            return 1 if ok else None
+        if "vault.create_secret" in s:
+            sid = _uid()
+            self.db.vault[sid] = args[0]
+            return sid
+        if s.startswith("SELECT refresh_token_secret_id FROM connector_accounts"):
+            c = self.db.connectors.get((args[0], args[1]))
+            return c.get("refresh_token_secret_id") if c else None
+        if s.startswith("INSERT INTO connector_accounts"):
+            uid, ws, provider, email, secret_id = args
+            key = (uid, provider)
+            acc_id = self.db.connectors[key]["id"] if key in self.db.connectors else _uid()
+            self.db.connectors[key] = {
+                "id": acc_id, "user_id": uid, "workspace_id": ws, "provider": provider,
+                "external_account_email": email, "refresh_token_secret_id": secret_id,
+                "access_token": None, "access_token_expires_at": None, "scopes": [],
+                "refresh_token": self.db.vault.get(str(secret_id)),
+            }
+            return acc_id
         raise AssertionError(f"unhandled fetchval: {s[:90]}")
 
     async def fetchrow(self, sql, *args):
         s = " ".join(sql.split())
-        if "FROM connector_accounts" in s:
-            row = self.db.connectors.get((args[0], args[1]))
-            return dict(row) if row else None
+        if "vs.decrypted_secret AS refresh_token" in s:  # SupabaseTokenStore.load
+            c = self.db.connectors.get((args[0], args[1]))
+            return dict(c) if c else None
+        if "JOIN workspaces w ON w.id = ca.workspace_id" in s:  # /sync ownership
+            c = self.db.connectors.get((args[0], "gdrive"))
+            if c and self.db.workspaces.get(c["workspace_id"]) == args[0]:
+                return {"id": c["id"]}
+            return None
+        if "external_account_email AS email" in s:  # /status
+            c = self.db.connectors.get((args[0], "gdrive"))
+            if not c:
+                return None
+            latest = None
+            for (acc_id, folder), st in self.db.sync_state.items():
+                if acc_id == c["id"]:
+                    latest = (folder, st)
+            return {
+                "email": c["external_account_email"],
+                "folder_id": latest[0] if latest else None,
+                "last_synced_at": latest[1]["last_synced_at"] if latest else None,
+                "last_status": latest[1].get("last_status") if latest else None,
+            }
         raise AssertionError(f"unhandled fetchrow: {s[:90]}")
 
     async def execute(self, sql, *args):
@@ -192,6 +236,8 @@ class FakeConn:
             self.db.chunks = [c for c in self.db.chunks if keep(c)]
         elif s.startswith("UPDATE documents"):
             self.db.doc_updates.append(args)
+        elif "vault.update_secret" in s:
+            self.db.vault[str(args[0])] = args[1]
         elif s.startswith("INSERT INTO drive_sync_state"):
             self.db.sync_state[(args[0], args[1])] = {
                 "last_synced_at": args[2],

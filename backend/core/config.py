@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     # Google OAuth (Drive connector)
     google_oauth_client_id: str = ""
     google_oauth_client_secret: str = ""
+    google_oauth_redirect_uri: str = ""  # must match a redirect URI on the OAuth client
+    frontend_url: str = "http://localhost:3000"
+    connector_state_secret: str = ""  # HMAC key for the OAuth `state` param
 
     # Gemini embeddings — must match the Next.js ingest path exactly.
     gemini_api_key: str = ""

@@ -357,6 +357,7 @@ class RAGOrchestrator:
                 chunk_id=c.id,
                 source_name=c.source_name,
                 page_number=c.metadata.page_number,
+                score=round(c.rerank_score, 3),
             ).model_dump()
             for c in ranked
         ]
