@@ -1,4 +1,4 @@
-"""IngestService — signed-URL download -> docling parse -> embed -> atomic chunk write."""
+"""IngestService - signed-URL download -> docling parse -> embed -> atomic chunk write."""
 from __future__ import annotations
 
 import asyncio
@@ -118,7 +118,7 @@ class IngestService:
         ]
         async with self._pool.acquire() as conn:
             async with conn.transaction():
-                # atomic replace — re-ingest of the same document leaves no orphans
+                # atomic replace - re-ingest of the same document leaves no orphans
                 await conn.execute(
                     "DELETE FROM document_chunks "
                     "WHERE document_id = $1 AND external_id IS NULL",
@@ -154,5 +154,5 @@ class IngestService:
                     str(out.get("summary", ""))[:2000],
                     json.dumps(list(out.get("topics", []))[:8]),
                 )
-        except Exception as exc:  # noqa: BLE001 — summary is best-effort
+        except Exception as exc:  # noqa: BLE001 - summary is best-effort
             logger.warning("summary failed for %s: %s", document_id, exc)

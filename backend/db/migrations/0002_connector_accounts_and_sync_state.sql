@@ -1,5 +1,5 @@
 -- ============================================================
--- 0002 — OAuth connector accounts + per-folder Drive sync cursor
+-- 0002 - OAuth connector accounts + per-folder Drive sync cursor
 -- Idempotent. Vault stores refresh tokens; we keep only the secret id.
 -- ============================================================
 

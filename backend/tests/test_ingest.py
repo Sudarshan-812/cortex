@@ -1,4 +1,4 @@
-"""W1 — /v1/ingest service + require_user dependency (mocked Storage + FakeDB)."""
+"""W1 - /v1/ingest service + require_user dependency (mocked Storage + FakeDB)."""
 from __future__ import annotations
 
 import httpx

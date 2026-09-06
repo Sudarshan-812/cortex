@@ -22,7 +22,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const activeId = cookieStore.get("cortex_active_workspace")?.value
   const workspace = workspaces?.find(w => w.id === activeId) ?? workspaces?.[0] ?? null
 
-  // No workspace yet — the dashboard page renders its own centered onboarding
+  // No workspace yet - the dashboard page renders its own centered onboarding
   // card, so skip the app shell entirely rather than showing an empty sidebar.
   if (!workspace || !workspaces || workspaces.length === 0) {
     return <>{children}</>

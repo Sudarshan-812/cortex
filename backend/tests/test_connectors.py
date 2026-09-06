@@ -1,4 +1,4 @@
-"""W2 — Google Drive connector: signed state, code exchange, Vault store, routes."""
+"""W2 - Google Drive connector: signed state, code exchange, Vault store, routes."""
 from __future__ import annotations
 
 import time

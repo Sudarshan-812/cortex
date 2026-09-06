@@ -24,7 +24,7 @@ export default async function LandingPage({
     const { data } = await supabase.auth.getUser()
     user = data.user
   } catch {
-    // stale refresh token — treat as logged out
+    // stale refresh token - treat as logged out
   }
 
   const isLoggedIn = !!user;

@@ -234,7 +234,7 @@ export default function LoginPage() {
                       });
                       setIsLoading(false);
                       if (error) setError(error.message);
-                      else setSuccessMsg("Password reset email sent — check your inbox.");
+                      else setSuccessMsg("Password reset email sent - check your inbox.");
                     }}
                     className="text-[12px] font-semibold transition-colors"
                     style={{ color: 'var(--cx-mute-1)' }}

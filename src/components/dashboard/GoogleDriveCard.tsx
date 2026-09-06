@@ -113,7 +113,7 @@ export function GoogleDriveCard({ workspaceId }: { workspaceId?: string }) {
           {status.last_synced_at && (
             <p className="text-[12px]" style={{ color: 'var(--cx-ink)', opacity: 0.6 }}>
               Last sync {new Date(status.last_synced_at).toLocaleString()} ·{' '}
-              {status.last_status ?? '—'}
+              {status.last_status ?? '-'}
               {status.folder_id ? ` · folder ${status.folder_id}` : ''}
             </p>
           )}

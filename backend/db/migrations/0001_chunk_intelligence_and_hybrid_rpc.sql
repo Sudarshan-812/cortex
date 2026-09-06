@@ -1,5 +1,5 @@
 -- ============================================================
--- 0001 — Chunk intelligence columns + ACL-aware hybrid RPC
+-- 0001 - Chunk intelligence columns + ACL-aware hybrid RPC
 -- Baseline = repo-root schema.sql (pre-backend). Forward-only.
 -- Idempotent: safe to re-run.
 -- ============================================================
@@ -19,7 +19,7 @@ ALTER TABLE document_chunks
 COMMENT ON COLUMN document_chunks.external_id IS
   'Source-system id (e.g. Google Drive fileId). NULL for direct uploads.';
 COMMENT ON COLUMN document_chunks.source_type IS
-  'upload | gdrive | ... — provenance of the chunk.';
+  'upload | gdrive | ... - provenance of the chunk.';
 COMMENT ON COLUMN document_chunks.acl_permissions IS
   'Additive access grants: {"public": bool, "users": ["<uuid>", ...]}. '
   '{} = fall back to workspace ownership/membership only.';
@@ -43,7 +43,7 @@ CREATE INDEX IF NOT EXISTS document_chunks_metadata_gin_idx
 
 -- ------------------------------------------------------------
 -- 2. documents: companion connector columns (needed by Part 3
---    delta syncer — "does this file already exist in documents").
+--    delta syncer - "does this file already exist in documents").
 --    Beyond the brief's literal Part-1 bullet; included so the
 --    schema is coherent in one migration.
 -- ------------------------------------------------------------
@@ -58,7 +58,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS documents_workspace_external_id_key
   ON documents (workspace_id, external_id) WHERE external_id IS NOT NULL;
 
 -- ------------------------------------------------------------
--- 3. match_hybrid_documents — ACL pre-filter -> dense + BM25 -> RRF
+-- 3. match_hybrid_documents - ACL pre-filter -> dense + BM25 -> RRF
 --    Pre-filters to chunks visible to :auth_uid BEFORE scoring,
 --    so no non-permitted row ever enters ranking.
 --    match_documents() is left intact (current app depends on it).

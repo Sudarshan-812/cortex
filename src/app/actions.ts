@@ -214,7 +214,7 @@ export async function uploadDocument(formData: FormData) {
         }
       }
     } catch (err) {
-      // Non-fatal — summary is enhancement only
+      // Non-fatal - summary is enhancement only
       Sentry.captureException(err, { tags: { stage: "auto_summary" }, extra: { docId: docData.id } })
     }
   } catch (err: any) {

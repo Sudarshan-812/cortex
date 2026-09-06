@@ -13,7 +13,7 @@ async def _init_conn(conn: asyncpg.Connection) -> None:
         from pgvector.asyncpg import register_vector
 
         await register_vector(conn)
-    except Exception:  # noqa: BLE001 — vector codec optional for non-embedding paths
+    except Exception:  # noqa: BLE001 - vector codec optional for non-embedding paths
         pass
 
 

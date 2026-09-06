@@ -101,7 +101,7 @@ class GoogleOAuthClient:
         tok = resp.json()
         if "refresh_token" not in tok:
             raise OAuthError(
-                "no refresh_token returned — revoke the app at "
+                "no refresh_token returned - revoke the app at "
                 "myaccount.google.com/permissions and retry"
             )
         return tok

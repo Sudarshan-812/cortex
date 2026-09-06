@@ -46,7 +46,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://cortex.ai";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Cortex — AI Document Intelligence",
+    default: "Cortex - AI Document Intelligence",
     template: "%s | Cortex",
   },
   description:
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: siteUrl,
     siteName: "Cortex",
-    title: "Cortex — AI Document Intelligence",
+    title: "Cortex - AI Document Intelligence",
     description:
       "Chat with your documents using hybrid search, Gemini AI re-ranking, and real-time SSE streaming.",
     images: [
@@ -70,13 +70,13 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Cortex — AI Document Intelligence",
+        alt: "Cortex - AI Document Intelligence",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Cortex — AI Document Intelligence",
+    title: "Cortex - AI Document Intelligence",
     description:
       "Chat with your documents using hybrid search, Gemini AI re-ranking, and real-time SSE streaming.",
     images: ["/og-image.png"],
@@ -125,7 +125,7 @@ export default function RootLayout({
           </SmoothScrollProvider>
           <Analytics />
         </PostHogProvider>
-        {/* JSON-LD structured data — placed in body, valid per spec and Next.js recommendation */}
+        {/* JSON-LD structured data - placed in body, valid per spec and Next.js recommendation */}
         <Script
           id="json-ld"
           type="application/ld+json"

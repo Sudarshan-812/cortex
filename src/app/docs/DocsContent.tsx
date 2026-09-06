@@ -85,7 +85,7 @@ export default function DocsContent() {
             Documentation
           </h1>
           <p className="text-[16px] leading-relaxed max-w-2xl" style={{ color: 'var(--cx-mute-1)' }}>
-            Everything you need to use Cortex — from uploading your first document to understanding the RAG pipeline under the hood.
+            Everything you need to use Cortex - from uploading your first document to understanding the RAG pipeline under the hood.
           </p>
         </motion.div>
 

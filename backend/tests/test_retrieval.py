@@ -1,4 +1,4 @@
-"""Part-4 unit tests — RRF math, rerank + CRAG fallbacks, orchestrator event
+"""Part-4 unit tests - RRF math, rerank + CRAG fallbacks, orchestrator event
 flow, citation parsing, Gemini SSE synthesis. Live DB / model calls are Part 5."""
 from __future__ import annotations
 

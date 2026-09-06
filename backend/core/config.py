@@ -12,7 +12,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore", case_sensitive=False)
 
-    # Postgres — service-role connection (session-mode pooler :5432 or direct).
+    # Postgres - service-role connection (session-mode pooler :5432 or direct).
     # Left lenient so import/parse paths don't require it; connect fails loudly if unset.
     supabase_db_url: str = ""
 
@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     frontend_url: str = "http://localhost:3000"
     connector_state_secret: str = ""  # HMAC key for the OAuth `state` param
 
-    # Gemini embeddings — must match the Next.js ingest path exactly.
+    # Gemini embeddings - must match the Next.js ingest path exactly.
     gemini_api_key: str = ""
     embedding_model: str = "gemini-embedding-001"
     embedding_dim: int = 768

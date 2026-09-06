@@ -1,5 +1,5 @@
 -- ============================================================
--- Cortex — Supabase Schema
+-- Cortex - Supabase Schema
 -- Run this in: Supabase Dashboard → SQL Editor → New Query
 -- ============================================================
 
@@ -178,7 +178,7 @@ DROP POLICY IF EXISTS "workspaces_select" ON workspaces;
 CREATE POLICY "workspaces_select" ON workspaces FOR SELECT USING (owner_id = auth.uid());
 DROP POLICY IF EXISTS "workspaces_insert" ON workspaces;
 CREATE POLICY "workspaces_insert" ON workspaces FOR INSERT WITH CHECK (owner_id = auth.uid());
--- UPDATE was missing — a workspace could never be renamed under RLS.
+-- UPDATE was missing - a workspace could never be renamed under RLS.
 DROP POLICY IF EXISTS "workspaces_update" ON workspaces;
 CREATE POLICY "workspaces_update" ON workspaces FOR UPDATE
   USING (owner_id = auth.uid())
@@ -194,7 +194,7 @@ CREATE POLICY "members_select" ON workspace_members FOR SELECT
 DROP POLICY IF EXISTS "members_insert" ON workspace_members;
 CREATE POLICY "members_insert" ON workspace_members FOR INSERT
   WITH CHECK (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
--- UPDATE / DELETE were missing — deleteWorkspace() (src/app/actions.ts) removes
+-- UPDATE / DELETE were missing - deleteWorkspace() (src/app/actions.ts) removes
 -- member rows by workspace_id, which silently no-ops without a DELETE policy.
 DROP POLICY IF EXISTS "members_update" ON workspace_members;
 CREATE POLICY "members_update" ON workspace_members FOR UPDATE
@@ -211,7 +211,7 @@ CREATE POLICY "documents_select" ON documents FOR SELECT
 DROP POLICY IF EXISTS "documents_insert" ON documents;
 CREATE POLICY "documents_insert" ON documents FOR INSERT
   WITH CHECK (workspace_id IN (SELECT id FROM workspaces WHERE owner_id = auth.uid()));
--- UPDATE was missing — the auto-summary / topics writer (src/app/actions.ts and
+-- UPDATE was missing - the auto-summary / topics writer (src/app/actions.ts and
 -- src/app/api/upload/route.ts) runs under the caller's RLS context, so without
 -- this policy every documents.update({summary, topics}) silently touched 0 rows
 -- and Document Intelligence never persisted.
@@ -238,7 +238,7 @@ CREATE POLICY "chunks_insert" ON document_chunks FOR INSERT
     JOIN workspaces w ON d.workspace_id = w.id
     WHERE w.owner_id = auth.uid()
   ));
--- UPDATE / DELETE were missing — without them a chunk row could never be
+-- UPDATE / DELETE were missing - without them a chunk row could never be
 -- edited or removed under RLS, and re-embed / cleanup paths would silently fail.
 DROP POLICY IF EXISTS "chunks_update" ON document_chunks;
 CREATE POLICY "chunks_update" ON document_chunks FOR UPDATE
@@ -316,7 +316,7 @@ ON CONFLICT (id) DO NOTHING;
 ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
 
 -- Drop EVERY pre-existing policy that references this bucket.
--- Older builds shipped "authenticated"-only policies — any logged-in user
+-- Older builds shipped "authenticated"-only policies - any logged-in user
 -- could read or delete any other tenant's files (§3.1, CRITICAL).
 DO $$
 DECLARE pol record;

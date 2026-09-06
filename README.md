@@ -44,17 +44,17 @@ Chat, upload, and Google Drive sync are served by a FastAPI service the Next.js
 routes proxy to. See `backend/README.md`. Run both:
 
 ```bash
-# terminal 1 — Python backend
+# terminal 1 - Python backend
 cd backend && uvicorn api.app:app --port 8000
 
-# terminal 2 — Next.js app
+# terminal 2 - Next.js app
 npm run dev
 ```
 
 `.env.local` needs `BACKEND_URL=http://localhost:8000`; `backend/.env` needs
 `SUPABASE_DB_URL`, `GEMINI_API_KEY`, `SUPABASE_URL`, and (for Drive) the
 `GOOGLE_OAUTH_*` + `CONNECTOR_STATE_SECRET` vars. Every model call is Gemini
-(free tier) — no paid API.
+(free tier) - no paid API.
 
 - `POST /api/chat` → backend `/v1/query`: hybrid retrieve (`match_hybrid_documents`,
   ACL-filtered) → Gemini rerank → Corrective-RAG (rewrite + re-retrieve if weak) →

@@ -105,7 +105,7 @@ export default async function Dashboard() {
   const storageMB  = Math.round(totalBytes / (1024 * 1024))
   const isEmpty    = (docCount ?? 0) === 0
 
-  // Real timelines from actual created_at timestamps — no fake/hardcoded data.
+  // Real timelines from actual created_at timestamps - no fake/hardcoded data.
   const docsTimeline     = buildDailyTimeline((documents ?? []).map(d => d.created_at).reverse())
   const sessionsTimeline = buildDailyTimeline((sessions ?? []).map(s => s.created_at))
 
@@ -170,7 +170,7 @@ export default async function Dashboard() {
           </div>
         </div>
 
-        {/* ── Onboarding guide — shown only when workspace is empty ── */}
+        {/* ── Onboarding guide - shown only when workspace is empty ── */}
         {isEmpty && (
           <div className="cx-panel p-7 mb-6">
             <p className="cx-rule-label mb-6">How Cortex works</p>
@@ -210,7 +210,7 @@ export default async function Dashboard() {
           </div>
         )}
 
-        {/* Real metrics — computed from actual workspace data */}
+        {/* Real metrics - computed from actual workspace data */}
         {!isEmpty && (
           <MetricsGrid
             docs={docCount ?? 0}
@@ -224,7 +224,7 @@ export default async function Dashboard() {
           />
         )}
 
-        {/* Upload zone + knowledge graph — paired side by side on desktop */}
+        {/* Upload zone + knowledge graph - paired side by side on desktop */}
         {hasKnowledgeGraph ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-6 items-stretch">
             <div className="lg:col-span-5" id="upload-zone">

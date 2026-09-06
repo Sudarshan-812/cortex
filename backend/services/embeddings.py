@@ -1,4 +1,4 @@
-"""GeminiEmbedder — gemini-embedding-001 truncated to `dim`.
+"""GeminiEmbedder - gemini-embedding-001 truncated to `dim`.
 Byte-compatible with the Next.js ingest path (same model, same 768-slice)."""
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""GeminiStructured — :generateContent with a JSON responseSchema.
+"""GeminiStructured - :generateContent with a JSON responseSchema.
 
 Powers the reranker and the CRAG grader. Cohere Rerank has no free production
 tier (trial keys are rate-limited / non-production), so the free-tier path is a

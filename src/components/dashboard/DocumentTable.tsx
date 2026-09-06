@@ -183,7 +183,7 @@ export function DocumentTable({
                       )}
                     </>
                   ) : (
-                    <span className="text-[11px]" style={{ color: 'var(--cx-mute-2)' }}>—</span>
+                    <span className="text-[11px]" style={{ color: 'var(--cx-mute-2)' }}>-</span>
                   )}
                 </div>
 

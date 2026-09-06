@@ -85,7 +85,7 @@ function formatTime(iso?: string): string {
   return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
 }
 
-/* ── Streaming text — per-chunk blur reveal ─────────────────────── */
+/* ── Streaming text - per-chunk blur reveal ─────────────────────── */
 function StreamingContent({ content }: { content: string }) {
   const chunksRef = useRef<string[]>([])
   const lenRef    = useRef(0)
@@ -371,7 +371,7 @@ function CodeBlock({ lang, code }: { lang: string; code: string }) {
   )
 }
 
-/* ── Prompt card — 3D magnetic tilt ────────────────────────────── */
+/* ── Prompt card - 3D magnetic tilt ────────────────────────────── */
 function PromptCard({
   label, index, onClick,
 }: { label: string; index: number; onClick: () => void }) {
@@ -707,7 +707,7 @@ export function ChatWindow({
       {/* ── Message area ──────────────────────────────────────────── */}
       <div className="flex-1 overflow-y-auto cx-scroll-thin scroll-smooth">
 
-        {/* Empty state — no documents */}
+        {/* Empty state - no documents */}
         <AnimatePresence>
           {isEmpty && !hasDocuments && (
             <motion.div
@@ -775,7 +775,7 @@ export function ChatWindow({
           )}
         </AnimatePresence>
 
-        {/* Empty state — has documents, no messages yet */}
+        {/* Empty state - has documents, no messages yet */}
         <AnimatePresence>
           {isEmpty && hasDocuments && (
             <motion.div

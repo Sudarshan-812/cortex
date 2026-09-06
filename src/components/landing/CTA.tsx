@@ -51,7 +51,7 @@ export function CTA({ isLoggedIn = false }: CTAProps) {
           <motion.p variants={item}
             className="text-[15px] max-w-sm leading-relaxed"
             style={{ color: 'var(--lp-mute-1)' }}>
-            Drop in your PDFs and start asking questions in seconds. No setup, no config — just answers.
+            Drop in your PDFs and start asking questions in seconds. No setup, no config - just answers.
           </motion.p>
 
           <motion.div variants={item} className="mt-2 flex flex-col sm:flex-row items-center gap-3">
@@ -60,7 +60,7 @@ export function CTA({ isLoggedIn = false }: CTAProps) {
                 href={isLoggedIn ? "/dashboard" : "/login"}
                 className="lp-btn-accent group inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full font-semibold text-[15px]"
               >
-                {isLoggedIn ? "Open Dashboard" : "Get Started — It's Free"}
+                {isLoggedIn ? "Open Dashboard" : "Get Started - It's Free"}
                 <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform duration-200" />
               </Link>
             </MagneticButton>

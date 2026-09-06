@@ -31,7 +31,7 @@ export async function middleware(request: NextRequest) {
     const { data } = await supabase.auth.getUser()
     user = data.user
   } catch {
-    // Stale refresh token — clear all sb-* cookies and force re-login
+    // Stale refresh token - clear all sb-* cookies and force re-login
     const staleCookies = request.cookies.getAll().filter(c => c.name.startsWith('sb-'))
     if (staleCookies.length > 0) {
       const redirect = NextResponse.redirect(new URL('/login', request.url))

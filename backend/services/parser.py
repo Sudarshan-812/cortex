@@ -1,4 +1,4 @@
-"""StructuralDocumentParser — docling-backed PDF/DOCX/XLSX parsing.
+"""StructuralDocumentParser - docling-backed PDF/DOCX/XLSX parsing.
 
 Each returned `Chunk`:
   * carries its section-heading path in `metadata.headers` AND prepended to `text`,

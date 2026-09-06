@@ -1,4 +1,4 @@
-"""Part-3 unit tests — mocked Drive HTTP + in-memory DB.
+"""Part-3 unit tests - mocked Drive HTTP + in-memory DB.
 
 Covers: atomic chunk replace (no orphans), strict backpressure, rate-limit
 fallback, per-file failure isolation + watermark hold. Supabase-integration

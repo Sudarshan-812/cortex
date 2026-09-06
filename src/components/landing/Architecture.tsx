@@ -88,10 +88,10 @@ export function Architecture() {
             className="lp-display text-4xl md:text-5xl font-medium tracking-tight mb-3"
             style={{ color: "var(--lp-ink)" }}
           >
-            From question to <span className="lp-gradient-text">cited answer</span> — six real steps.
+            From question to <span className="lp-gradient-text">cited answer</span> - six real steps.
           </h2>
           <p className="text-[15px] max-w-xl mx-auto leading-relaxed" style={{ color: "var(--lp-mute-1)" }}>
-            This is the exact retrieval pipeline running behind every chat message — not a diagram made for marketing.
+            This is the exact retrieval pipeline running behind every chat message - not a diagram made for marketing.
           </p>
         </div>
 

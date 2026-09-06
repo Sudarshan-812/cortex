@@ -1,11 +1,11 @@
-"""Part-5 integration harness — mocked Drive feeds + in-memory Supabase (FakeDB).
+"""Part-5 integration harness - mocked Drive feeds + in-memory Supabase (FakeDB).
 
 Three brief-mandated guarantees, exercised end-to-end through the real
 DriveSyncer / HybridRetriever / RAGOrchestrator code paths:
 
-  A. Atomic cleanup on file updates — no duplicate / orphaned chunks; a mid-write
+  A. Atomic cleanup on file updates - no duplicate / orphaned chunks; a mid-write
      failure rolls the whole replace back.
-  B. Non-leaking ACL pre-filter across user ids — owner / member / explicit grant
+  B. Non-leaking ACL pre-filter across user ids - owner / member / explicit grant
      / public / stranger, identical under rpc and app retrieval modes.
   C. Graceful fallback when the reranker or external APIs are rate-limited.
 """
@@ -243,7 +243,7 @@ async def test_pipeline_embedder_rate_limit_propagates(no_backoff):
 
     emb = GeminiEmbedder(client=rate_limited_client(), max_retries=2)
     with pytest.raises(httpx.HTTPStatusError):
-        await emb.embed(["hello"])  # essential dependency — must NOT be swallowed
+        await emb.embed(["hello"])  # essential dependency - must NOT be swallowed
 
 
 @pytest.mark.asyncio

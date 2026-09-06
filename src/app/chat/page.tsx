@@ -38,7 +38,7 @@ export default async function ChatIndexPage() {
       className="flex flex-col h-full"
       style={{ background: 'var(--cx-paper)' }}
     >
-      {/* Top bar — shared with ChatWindow */}
+      {/* Top bar - shared with ChatWindow */}
       <ChatTopBar subtitle="Document Chat">
         <span className="size-1.5 rounded-full" style={{ background: 'var(--cx-ok)' }} />
         <span className="text-[11.5px] cx-num" style={{ color: 'var(--cx-mute-1)' }}>Gemini Flash</span>

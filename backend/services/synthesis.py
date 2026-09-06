@@ -1,4 +1,4 @@
-"""GeminiSynthesizer — streamed answer from the Gemini API (free tier) with a
+"""GeminiSynthesizer - streamed answer from the Gemini API (free tier) with a
 strict citation contract. Same model the Next.js app uses for its chat stream.
 
 The authoritative citation list (chunk_id / source_name / page_number) is emitted
@@ -23,7 +23,7 @@ _RETRYABLE = frozenset({429, 500, 502, 503, 504})
 _SYSTEM = (
     "You are Cortex, a document-intelligence assistant. Answer ONLY from the "
     "numbered context blocks below. If they do not contain the answer, say so "
-    "plainly — never use outside knowledge. Cite every factual claim inline with "
+    "plainly - never use outside knowledge. Cite every factual claim inline with "
     "the block's id in square brackets, e.g. [a1b2c3d4]. Never invent an id. "
     "Be concise and specific."
 )

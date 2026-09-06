@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import Image from 'next/image'
 
-/* ── Inline spinner — use anywhere ─────────────────────────────── */
+/* ── Inline spinner - use anywhere ─────────────────────────────── */
 export function Spinner({ size = 48 }: { size?: number }) {
   const stroke = 1.5
   const r      = (size - stroke * 2) / 2

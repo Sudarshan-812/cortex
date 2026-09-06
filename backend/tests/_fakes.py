@@ -320,7 +320,7 @@ class FakeParser:
 
 
 def rate_limited_client(status: int = 429) -> httpx.AsyncClient:
-    """AsyncClient whose every request returns `status` — drives retry exhaustion."""
+    """AsyncClient whose every request returns `status` - drives retry exhaustion."""
 
     def handler(request: httpx.Request) -> httpx.Response:
         return httpx.Response(status, json={"error": "rate_limited"}, request=request)

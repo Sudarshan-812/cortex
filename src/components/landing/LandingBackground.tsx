@@ -164,7 +164,7 @@ export function LandingBackground() {
       className="fixed inset-0 z-0 overflow-hidden pointer-events-none"
       style={{ background: "var(--lp-bg)" }}
     >
-      {/* Shader-driven flowing ink field — domain-warped fbm noise, continuous organic motion */}
+      {/* Shader-driven flowing ink field - domain-warped fbm noise, continuous organic motion */}
       <canvas ref={canvasRef} className="absolute inset-0" />
 
       {/* Paper grain */}

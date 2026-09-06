@@ -1,7 +1,7 @@
 [project]
 name = "cortex-backend"
 version = "0.1.0"
-description = "Cortex document-intelligence backend — parsing, sync, retrieval."
+description = "Cortex document-intelligence backend - parsing, sync, retrieval."
 requires-python = ">=3.11"
 dependencies = [
   "pydantic>=2.7",

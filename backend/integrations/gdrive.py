@@ -319,7 +319,7 @@ class DriveSyncer:
     async def _process_one(
         self, client: GoogleDriveClient, creds: ConnectorCredentials, f: DriveFile, sem
     ) -> SyncItemResult:
-        async with sem:  # strict backpressure — never more than N files in flight
+        async with sem:  # strict backpressure - never more than N files in flight
             try:
                 data, ext = await client.download(f)
                 parsed = self._parser.parse_document(
@@ -386,7 +386,7 @@ class DriveSyncer:
                     f.id,
                     f.modified_time,
                 )
-                # Atomic replace — old chunks for this external file go, new ones land,
+                # Atomic replace - old chunks for this external file go, new ones land,
                 # all-or-nothing. No window with duplicates or orphans.
                 await conn.execute(
                     "DELETE FROM document_chunks WHERE document_id = $1 AND external_id = $2",

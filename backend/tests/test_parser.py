@@ -1,4 +1,4 @@
-"""Part-2 unit tests — framework-agnostic helpers only (no docling, no I/O).
+"""Part-2 unit tests - framework-agnostic helpers only (no docling, no I/O).
 Structural / end-to-end parsing tests land in Part 5."""
 import pytest
 

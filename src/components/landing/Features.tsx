@@ -6,7 +6,7 @@ import { Spotlight } from "./Spotlight";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-const streamWords = "Q3 revenue reached $4.2M — up 23% YoY from enterprise contract growth in APAC.".split(" ");
+const streamWords = "Q3 revenue reached $4.2M - up 23% YoY from enterprise contract growth in APAC.".split(" ");
 
 function TileHeader({ icon: Icon, label }: { icon: typeof Search; label: string }) {
   return (
@@ -71,19 +71,19 @@ export function Features() {
           Built for <span className="lp-gradient-text">correctness</span>, not vibes
         </h2>
         <p className="text-[15px] max-w-xl mx-auto" style={{ color: "var(--lp-mute-1)" }}>
-          Every answer is retrieved, re-ranked, and streamed by real infrastructure — here&apos;s what&apos;s actually running.
+          Every answer is retrieved, re-ranked, and streamed by real infrastructure - here&apos;s what&apos;s actually running.
         </p>
       </motion.div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 auto-rows-[minmax(170px,auto)] gap-4">
-        {/* Hybrid Search — large */}
+        {/* Hybrid Search - large */}
         <Tile className="md:col-span-2 md:row-span-2" delay={0}>
           <TileHeader icon={Search} label="Retrieval" />
           <h3 className="text-2xl md:text-[1.6rem] font-bold tracking-tight mb-3" style={{ color: "var(--lp-ink)" }}>
             Finds what you mean, not just what you type
           </h3>
           <p className="text-[14.5px] leading-relaxed max-w-md mb-6" style={{ color: "var(--lp-mute-1)" }}>
-            Every query runs two searches in parallel — dense vector similarity and Postgres full-text search — then fuses the results with Reciprocal Rank Fusion.
+            Every query runs two searches in parallel - dense vector similarity and Postgres full-text search - then fuses the results with Reciprocal Rank Fusion.
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <span className="lp-mono text-[11px] px-2.5 py-1.5 rounded-lg border" style={{ background: "var(--lp-surface-2)", borderColor: "var(--lp-border)", color: "var(--lp-ink-2)" }}>
@@ -120,7 +120,7 @@ export function Features() {
           </p>
         </Tile>
 
-        {/* SSE Streaming — wide */}
+        {/* SSE Streaming - wide */}
         <Tile className="md:col-span-2" delay={0.21}>
           <TileHeader icon={Radio} label="Streaming" />
           <h3 className="text-xl font-bold tracking-tight mb-3" style={{ color: "var(--lp-ink)" }}>
@@ -156,7 +156,7 @@ export function Features() {
           </p>
         </Tile>
 
-        {/* Citations — closing strip */}
+        {/* Citations - closing strip */}
         <Tile className="md:col-span-3" delay={0.35}>
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8">
             <div className="flex items-center gap-3 flex-shrink-0">
@@ -168,7 +168,7 @@ export function Features() {
               </h3>
             </div>
             <p className="text-[13.5px] leading-relaxed flex-1" style={{ color: "var(--lp-mute-1)" }}>
-              Every claim traces back to the exact document and chunk it came from — click a citation to see the source.
+              Every claim traces back to the exact document and chunk it came from - click a citation to see the source.
             </p>
             <div className="flex gap-1.5 flex-shrink-0">
               {["Q3_Results.pdf · p.12", "Annual_Report_2024.pdf · p.4"].map((cite) => (

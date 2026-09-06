@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import Lenis from 'lenis'
 
-// These routes have their own scroll containers — Lenis must not run on them
+// These routes have their own scroll containers - Lenis must not run on them
 const LENIS_DISABLED_PREFIXES = ['/chat', '/dashboard', '/login']
 
 export function SmoothScrollProvider({ children }: { children: React.ReactNode }) {

@@ -31,7 +31,7 @@ export default async function SettingsPage() {
       description: "Your account identity and display name.",
       items: [
         { label: "Display name",   value: userName },
-        { label: "Email",          value: user.email ?? "—" },
+        { label: "Email",          value: user.email ?? "-" },
         { label: "Auth provider",  value: user.app_metadata?.provider === "google" ? "Google OAuth" : "Email / Password" },
       ],
     },
@@ -40,9 +40,9 @@ export default async function SettingsPage() {
       title: "Workspace",
       description: "Details about your knowledge base workspace.",
       items: [
-        { label: "Workspace name", value: workspace?.name ?? "—" },
-        { label: "Workspace ID",   value: workspace?.id ? workspace.id.slice(0, 8) + "…" : "—" },
-        { label: "Created",        value: workspace?.created_at ? new Date(workspace.created_at).toLocaleDateString() : "—" },
+        { label: "Workspace name", value: workspace?.name ?? "-" },
+        { label: "Workspace ID",   value: workspace?.id ? workspace.id.slice(0, 8) + "…" : "-" },
+        { label: "Created",        value: workspace?.created_at ? new Date(workspace.created_at).toLocaleDateString() : "-" },
       ],
     },
     {
@@ -50,8 +50,8 @@ export default async function SettingsPage() {
       title: "Security",
       description: "Session and authentication settings.",
       items: [
-        { label: "Last sign in",     value: user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : "—" },
-        { label: "Account created",  value: user.created_at ? new Date(user.created_at).toLocaleDateString() : "—" },
+        { label: "Last sign in",     value: user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString() : "-" },
+        { label: "Account created",  value: user.created_at ? new Date(user.created_at).toLocaleDateString() : "-" },
         { label: "User ID",          value: (user.id?.slice(0, 8) ?? "") + "…" },
       ],
     },

@@ -58,7 +58,7 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
           </span>
         </motion.div>
 
-        {/* Headline — staggered per line */}
+        {/* Headline - staggered per line */}
         <motion.div
           initial="hidden"
           animate="visible"
@@ -246,7 +246,7 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
                       <span className="font-semibold" style={{ color: 'var(--lp-ink)' }}>Q3_Results.pdf</span>
                       , Q3 revenue reached{" "}
                       <span className="font-semibold" style={{ color: 'var(--lp-ink)' }}>$4.2M</span>
-                      {" "}— up{" "}
+                      {" "}- up{" "}
                       <span className="font-semibold" style={{ color: 'var(--lp-ok)' }}>23% YoY</span>
                       {" "}from $3.4M in Q3 2023, driven by enterprise contract growth in APAC.
                     </div>

@@ -1,4 +1,4 @@
-"""JWT verification — ES256 via mocked JWKS, plus the legacy HS256 fallback."""
+"""JWT verification - ES256 via mocked JWKS, plus the legacy HS256 fallback."""
 from __future__ import annotations
 
 import time

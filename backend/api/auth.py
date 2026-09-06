@@ -2,7 +2,7 @@
 
 Supabase projects now sign access tokens with an asymmetric key (ES256 / P-256,
 sometimes RS256). We verify against the project's published JWKS
-(`<url>/auth/v1/.well-known/jwks.json`) — no shared secret. A legacy HS256 shared
+(`<url>/auth/v1/.well-known/jwks.json`) - no shared secret. A legacy HS256 shared
 secret is accepted only if one is explicitly configured (older projects).
 """
 from __future__ import annotations

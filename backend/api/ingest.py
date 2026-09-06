@@ -1,4 +1,4 @@
-"""POST /v1/ingest — parse + embed + chunk a document already uploaded to Storage."""
+"""POST /v1/ingest - parse + embed + chunk a document already uploaded to Storage."""
 from __future__ import annotations
 
 import json
