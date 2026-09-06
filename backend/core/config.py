@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     crag_threshold: float = 0.65
     synthesis_model: str = "gemini-2.5-flash"  # free-tier; same model the Next.js chat stream uses
     synthesis_max_tokens: int = 2048
+    summary_model: str = "gemini-3.1-flash-lite"  # document auto-summary on ingest
 
     # Auth: JWT verified against the project's JWKS (ES256/RS256). No secret needed.
     supabase_url: str = ""            # https://<ref>.supabase.co

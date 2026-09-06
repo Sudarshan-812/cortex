@@ -1,18 +1,20 @@
-"""FastAPI surface: POST /v1/query streams the RAG pipeline as SSE."""
+"""FastAPI surface: POST /v1/query (RAG SSE) + POST /v1/ingest."""
 from __future__ import annotations
 
 import json
 
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import Depends, FastAPI
 from fastapi.responses import StreamingResponse
 
-from api.auth import AuthError, verify_supabase_jwt
+from api.deps import require_user
+from api.ingest import router as ingest_router
 from core.config import get_settings
 from db.pool import get_pool
 from models.retrieval import QueryRequest
 from services.retrieval import RAGOrchestrator
 
 app = FastAPI(title="Cortex Retrieval API")
+app.include_router(ingest_router)
 
 
 @app.get("/health")
@@ -21,18 +23,10 @@ async def health() -> dict:
 
 
 @app.post("/v1/query")
-async def query(req: QueryRequest, authorization: str = Header(...)) -> StreamingResponse:
-    s = get_settings()
-    token = authorization.removeprefix("Bearer ").strip()
-    jwks_url = f"{s.supabase_url.rstrip('/')}/auth/v1/.well-known/jwks.json"
-    try:
-        auth_uid = await verify_supabase_jwt(
-            token, jwks_url=jwks_url, legacy_hs256_secret=s.supabase_jwt_secret
-        )
-    except AuthError as exc:
-        raise HTTPException(status_code=401, detail=str(exc)) from exc
-
-    orchestrator = RAGOrchestrator(await get_pool(), s)
+async def query(
+    req: QueryRequest, auth_uid: str = Depends(require_user)
+) -> StreamingResponse:
+    orchestrator = RAGOrchestrator(await get_pool(), get_settings())
 
     async def event_stream():
         try:

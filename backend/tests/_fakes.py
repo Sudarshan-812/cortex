@@ -33,6 +33,7 @@ class FakeDB:
         self.sync_state: dict[tuple[str, str], dict] = {}
         self.connectors: dict[tuple[str, str], dict] = {}
         self.saved_tokens: list = []
+        self.doc_updates: list = []  # (doc_id, *rest) from UPDATE documents
         self.raise_on_executemany = False
 
     # -- seeding --
@@ -180,12 +181,17 @@ class FakeConn:
     async def execute(self, sql, *args):
         s = " ".join(sql.split())
         if s.startswith("DELETE FROM document_chunks"):
-            doc_id, ext = args
-            self.db.chunks = [
-                c
-                for c in self.db.chunks
-                if not (c["document_id"] == doc_id and c["external_id"] == ext)
-            ]
+            doc_id = args[0]
+            if "external_id IS NULL" in s:  # upload path
+                keep = lambda c: not (c["document_id"] == doc_id and c["external_id"] is None)
+            else:  # gdrive path: WHERE document_id = $1 AND external_id = $2
+                ext = args[1]
+                keep = lambda c: not (
+                    c["document_id"] == doc_id and c["external_id"] == ext
+                )
+            self.db.chunks = [c for c in self.db.chunks if keep(c)]
+        elif s.startswith("UPDATE documents"):
+            self.db.doc_updates.append(args)
         elif s.startswith("INSERT INTO drive_sync_state"):
             self.db.sync_state[(args[0], args[1])] = {
                 "last_synced_at": args[2],
@@ -203,7 +209,10 @@ class FakeConn:
         if self.db.raise_on_executemany:
             raise RuntimeError("simulated write failure")
         for r in rows:
-            doc_id, content, _emb, _model, ext, meta_json, _mtime = r
+            doc_id, content = r[0], r[1]
+            # gdrive rows: (doc_id, content, emb, model, ext, meta_json, mtime)
+            # upload rows: (doc_id, content, emb, model, meta_json)
+            ext, meta_json = (r[4], r[5]) if len(r) >= 7 else (None, r[4])
             self.db.chunks.append(
                 {
                     "id": _uid(),
