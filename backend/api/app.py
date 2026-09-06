@@ -24,8 +24,11 @@ async def health() -> dict:
 async def query(req: QueryRequest, authorization: str = Header(...)) -> StreamingResponse:
     s = get_settings()
     token = authorization.removeprefix("Bearer ").strip()
+    jwks_url = f"{s.supabase_url.rstrip('/')}/auth/v1/.well-known/jwks.json"
     try:
-        auth_uid = verify_supabase_jwt(token, secret=s.supabase_jwt_secret)
+        auth_uid = await verify_supabase_jwt(
+            token, jwks_url=jwks_url, legacy_hs256_secret=s.supabase_jwt_secret
+        )
     except AuthError as exc:
         raise HTTPException(status_code=401, detail=str(exc)) from exc
 

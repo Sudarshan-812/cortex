@@ -18,7 +18,7 @@ Status: **Part 5 — integration test harness complete (48 tests).**
 | `services/gemini.py` | 4 — `GeminiStructured` (rerank + CRAG) |
 | `services/retrieval.py` | 4 — RRF, `HybridRetriever`, `Reranker`, `CragEvaluator`, `RAGOrchestrator` |
 | `services/synthesis.py` | 4 — `GeminiSynthesizer` (streamed answer + citation contract) |
-| `api/` | 4 — FastAPI `POST /v1/query` (SSE), Supabase JWT verify |
+| `api/` | 4 — FastAPI `POST /v1/query` (SSE); Supabase JWT verified via project JWKS (ES256/RS256) |
 | `tests/test_pipeline.py` | 5 — integration harness: atomic cleanup, ACL non-leak (rpc+app), rate-limit fallback |
 | `tests/_fakes.py` | shared `FakeDB` (ACL predicate + txn snapshot), Drive/HTTP doubles |
 
