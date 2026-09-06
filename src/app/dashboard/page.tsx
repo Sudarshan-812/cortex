@@ -3,7 +3,7 @@ import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import Link from "next/link"
 import Image from "next/image"
-import { Search, FileText, MessageSquare, Zap } from "lucide-react"
+import { Search, FileText, MessageSquare, Zap, HardDrive } from "lucide-react"
 
 import { MagneticButton }   from "@/components/MagneticButton"
 import { UploadTriggerButton } from "@/components/dashboard/UploadTriggerButton"
@@ -88,9 +88,19 @@ export default async function Dashboard() {
   /* ── Fetch data ───────────────────────────────────────────────── */
   const { data: documents, count: docCount } = await supabase
     .from("documents")
-    .select("id, name, size_bytes, created_at, summary, topics", { count: "exact" })
+    .select("id, name, size_bytes, created_at, summary, topics, source_type, external_id, last_synced_at", { count: "exact" })
     .eq("workspace_id", workspace.id)
     .order("created_at", { ascending: false })
+
+  const { data: driveConn } = await supabase
+    .from("connector_accounts")
+    .select("id, drive_sync_state(last_synced_at, last_status)")
+    .eq("provider", "gdrive")
+    .eq("workspace_id", workspace.id)
+    .maybeSingle()
+  const driveSync = Array.isArray(driveConn?.drive_sync_state)
+    ? driveConn?.drive_sync_state[0]
+    : driveConn?.drive_sync_state
 
   const docIds = documents?.map(d => d.id) ?? []
   const { count: chunkCount } = docIds.length > 0
@@ -116,6 +126,12 @@ export default async function Dashboard() {
   const sessionsThisWeek = (sessions ?? []).filter(s => now - new Date(s.created_at).getTime() < weekMs).length
   const hasKnowledgeGraph = (documents ?? []).some(d => Array.isArray(d.topics) && d.topics.length > 0)
 
+  const driveSyncedAgo = (() => {
+    if (!driveSync?.last_synced_at) return null
+    const m = Math.floor((now - new Date(driveSync.last_synced_at).getTime()) / 60000)
+    return m < 1 ? "just now" : m < 60 ? `${m}m ago` : m < 1440 ? `${Math.floor(m / 60)}h ago` : `${Math.floor(m / 1440)}d ago`
+  })()
+
   return (
     <div className="min-h-screen">
       <div className="max-w-[1240px] mx-auto px-6 md:px-8 pt-10 pb-16">
@@ -126,6 +142,19 @@ export default async function Dashboard() {
             <div className="flex items-center gap-2.5 mb-5">
               <span className="cx-dot" style={{ background: "var(--cx-ok)" }} />
               <span className="cx-rule-label">Workspace</span>
+              {driveConn && (
+                <>
+                  <span className="cx-hdiv w-8 hidden sm:block" />
+                  <Link
+                    href="/dashboard/settings#google-drive"
+                    className="hidden sm:inline-flex items-center gap-1.5 text-[11px] hover:underline"
+                    style={{ color: "var(--cx-mute-1)" }}
+                  >
+                    <HardDrive size={11} style={{ color: "var(--cx-accent)" }} />
+                    Google Drive · {driveSyncedAgo ? `synced ${driveSyncedAgo}` : "not synced yet"}
+                  </Link>
+                </>
+              )}
             </div>
             <h1
               className="cx-display text-[36px] md:text-[44px] font-bold tracking-[-0.03em] leading-[1.02]"
@@ -153,11 +182,17 @@ export default async function Dashboard() {
           <div className="flex items-center gap-2 flex-shrink-0">
             {isEmpty ? (
               <>
+                <UploadTriggerButton
+                  label="Upload files"
+                  className="cx-btn-ghost h-9 px-4 rounded-full text-[12.5px] font-medium flex items-center gap-1.5"
+                />
                 <MagneticButton>
-                  <UploadTriggerButton
-                    label="Upload documents"
+                  <Link
+                    href="/dashboard/settings#google-drive"
                     className="cx-btn-ink h-9 px-4 rounded-full text-[12.5px] font-medium flex items-center gap-1.5"
-                  />
+                  >
+                    <HardDrive size={13} /> Connect Google Drive
+                  </Link>
                 </MagneticButton>
               </>
             ) : (

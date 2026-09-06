@@ -22,11 +22,12 @@ function sse(data: object) {
 }
 
 type Citation = { chunk_id: string; source_name: string; page_number: number | null; score: number }
+type DocRel = { name: string; source_type: string | null; external_id: string | null }
 type ChunkRow = {
   id: string
   content: string | null
   document_id: string | null
-  documents: { name: string } | { name: string }[] | null
+  documents: DocRel | DocRel[] | null
 }
 type BackendEvent = {
   type?: string
@@ -45,20 +46,22 @@ async function enrichCitations(
   const ids = citations.map(c => c.chunk_id)
   const { data } = await supabase
     .from("document_chunks")
-    .select("id, content, document_id, documents(name)")
+    .select("id, content, document_id, documents(name, source_type, external_id)")
     .in("id", ids)
   const rows = (data ?? []) as unknown as ChunkRow[]
 
   return citations.map(c => {
     const d = rows.find(x => x.id === c.chunk_id)
-    const docName = Array.isArray(d?.documents) ? d?.documents[0]?.name : d?.documents?.name
+    const doc = Array.isArray(d?.documents) ? d?.documents[0] : d?.documents
+    const isDrive = doc?.source_type === "gdrive" && !!doc?.external_id
     return {
       chunk_id: c.chunk_id,
       document_id: d?.document_id ?? null,
-      document_name: docName ?? c.source_name ?? "Unknown",
+      document_name: doc?.name ?? c.source_name ?? "Unknown",
       content: d?.content ?? "",
       similarity: Math.round((c.score ?? 0) * 100),
       page_number: c.page_number ?? null,
+      drive_url: isDrive ? `https://drive.google.com/file/d/${doc!.external_id}/view` : null,
     }
   })
 }

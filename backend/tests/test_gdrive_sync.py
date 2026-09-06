@@ -47,7 +47,20 @@ class FakeConn:
             return self.store.upsert_document(workspace_id, external_id)
         if s.startswith("SELECT last_synced_at FROM drive_sync_state"):
             return self.store.watermarks.get((args[0], args[1]))
+        if s.startswith("SELECT summary FROM documents"):
+            return self.store.summaries.get(args[0])
         raise AssertionError(f"unexpected fetchval: {s[:70]}")
+
+    async def fetch(self, sql, *args):
+        s = " ".join(sql.split())
+        if s.startswith("SELECT id, external_id FROM documents"):
+            ws = args[0]
+            return [
+                {"id": doc_id, "external_id": ext}
+                for (w, ext), doc_id in self.store.docs.items()
+                if w == ws
+            ]
+        raise AssertionError(f"unexpected fetch: {s[:70]}")
 
     async def fetchrow(self, sql, *args):
         return self.store.connector_row(*args)
@@ -56,6 +69,10 @@ class FakeConn:
         s = " ".join(sql.split())
         if s.startswith("DELETE FROM document_chunks"):
             self.store.delete_chunks(doc_id=args[0], external_id=args[1])
+        elif s.startswith("DELETE FROM documents WHERE id = ANY"):
+            self.store.delete_documents(args[0])
+        elif s.startswith("UPDATE documents SET summary"):
+            self.store.summaries[args[0]] = args[1]
         elif s.startswith("INSERT INTO drive_sync_state"):
             self.store.watermarks[(args[0], args[1])] = args[2]
             self.store.last_status = args[3]
@@ -78,6 +95,7 @@ class FakeStore:
     def __init__(self, watermark: datetime | None = None) -> None:
         self.chunks: list[dict] = []
         self.docs: dict[tuple, str] = {}
+        self.summaries: dict[str, str] = {}
         self.watermarks: dict[tuple, datetime] = {}
         self.saved_tokens: list = []
         self.last_status: str | None = None
@@ -93,6 +111,11 @@ class FakeStore:
             for c in self.chunks
             if not (c["document_id"] == doc_id and c["external_id"] == external_id)
         ]
+
+    def delete_documents(self, ids):
+        gone = set(ids)
+        self.docs = {k: v for k, v in self.docs.items() if v not in gone}
+        self.chunks = [c for c in self.chunks if c["document_id"] not in gone]
 
     def connector_row(self, user_id, provider):
         return {
@@ -185,6 +208,15 @@ class FakeEmbedder:
         return [[0.0] * 8 for _ in texts]
 
 
+class FakeSummarizer:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    async def generate(self, *, system, prompt, schema, temperature=0.0):
+        self.calls += 1
+        return {"summary": "a two sentence summary.", "topics": ["alpha", "beta"]}
+
+
 class _FakeTokenStore:
     def __init__(self, store: FakeStore) -> None:
         self._store = store
@@ -220,7 +252,7 @@ def _creds():
     )
 
 
-def _syncer(store, drive, parser, *, settings: Settings | None = None):
+def _syncer(store, drive, parser, *, settings: Settings | None = None, summarizer=None):
     s = settings or Settings(sync_max_concurrency=4, sync_batch_size=25, embed_batch_size=16)
 
     async def factory(_creds_):
@@ -231,6 +263,7 @@ def _syncer(store, drive, parser, *, settings: Settings | None = None):
         s,
         parser=parser,
         embedder=FakeEmbedder(),
+        summarizer=summarizer or FakeSummarizer(),
         token_store=_FakeTokenStore(store),
         drive_client_factory=factory,
     )
@@ -315,6 +348,62 @@ async def test_one_bad_file_does_not_abort_batch_and_holds_watermark():
     assert (report.synced, report.failed) == (2, 1)
     assert len(store.chunks) == 4  # 2 good files x 2 chunks
     assert store.watermarks[("acct-1", "folder-1")] == datetime(2023, 1, 1, tzinfo=UTC)
+
+
+@pytest.mark.asyncio
+async def test_reconcile_prunes_documents_whose_file_left_the_folder():
+    store = FakeStore()
+    v1 = _mk_files(3, datetime(2024, 1, 1, tzinfo=UTC))
+    await _syncer(store, FakeDriveClient(v1), FakeParser(k=2)).sync_drive_folder(
+        "folder-1", "user-1"
+    )
+    assert len(store.docs) == 3 and len(store.chunks) == 6
+
+    # file-1 deleted in Drive; a fresh run lists only file-0 and file-2.
+    v2 = [f for f in _mk_files(3, datetime(2024, 1, 1, tzinfo=UTC)) if f.id != "file-1"]
+    report = await _syncer(store, FakeDriveClient(v2), FakeParser(k=2)).sync_drive_folder(
+        "folder-1", "user-1"
+    )
+    assert report.removed == 1
+    assert {ext for (_ws, ext) in store.docs} == {"file-0", "file-2"}
+    assert {c["external_id"] for c in store.chunks} == {"file-0", "file-2"}
+
+
+@pytest.mark.asyncio
+async def test_failed_run_does_not_reconcile():
+    store = FakeStore()
+    v1 = _mk_files(2, datetime(2024, 1, 1, tzinfo=UTC))
+    await _syncer(store, FakeDriveClient(v1), FakeParser(k=1)).sync_drive_folder(
+        "folder-1", "user-1"
+    )
+    # newer mtimes so both re-process; one fails -> no pruning even though the
+    # listing would otherwise drop file-0.
+    v2 = _mk_files(2, datetime(2024, 2, 1, tzinfo=UTC))[1:]  # only file-1, and it fails
+    report = await _syncer(
+        store, FakeDriveClient(v2), FakeParser(k=1, fail_ids={"file-1"})
+    ).sync_drive_folder("folder-1", "user-1")
+    assert report.failed == 1 and report.removed == 0
+    assert {ext for (_ws, ext) in store.docs} == {"file-0", "file-1"}
+
+
+@pytest.mark.asyncio
+async def test_synced_doc_gets_a_summary_once():
+    store = FakeStore()
+    summ = FakeSummarizer()
+    files = _mk_files(1, datetime(2024, 1, 1, tzinfo=UTC))
+    await _syncer(
+        store, FakeDriveClient(files), FakeParser(k=2), summarizer=summ
+    ).sync_drive_folder("folder-1", "user-1")
+    assert summ.calls == 1
+    doc_id = next(iter(store.docs.values()))
+    assert store.summaries[doc_id] == "a two sentence summary."
+
+    # re-sync of the edited file must not summarise again (summary already set)
+    v2 = _mk_files(1, datetime(2024, 1, 2, tzinfo=UTC))
+    await _syncer(
+        store, FakeDriveClient(v2), FakeParser(k=1), summarizer=summ
+    ).sync_drive_folder("folder-1", "user-1")
+    assert summ.calls == 1
 
 
 @pytest.mark.asyncio

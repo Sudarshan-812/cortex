@@ -35,6 +35,10 @@ class Settings(BaseSettings):
     embed_max_concurrency: int = 2
     http_max_retries: int = 5
 
+    # Periodic Drive re-sync. 0 = disabled (sync only runs on demand / on connect).
+    # Set e.g. 15 to re-sync every tracked folder every 15 minutes.
+    sync_interval_minutes: int = 0
+
     # Retrieval / synthesis (Part 4)
     retrieval_mode: str = "rpc"  # rpc (match_hybrid_documents) | app (parallel + Python RRF)
     retrieval_candidates: int = 25

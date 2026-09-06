@@ -29,9 +29,20 @@ from core.retry import request_with_retry
 from models.chunk import Chunk
 from models.sync import ConnectorCredentials, DriveFile, SyncItemResult, SyncReport
 from services.embeddings import GeminiEmbedder
+from services.gemini import GeminiStructured
 from services.parser import DocumentParseError, StructuralDocumentParser, UnsupportedFormatError
 
 logger = logging.getLogger("cortex.gdrive")
+
+_SUMMARY_SYS = "Summarize the document in 2 sentences, then list exactly 5 key topics."
+_SUMMARY_SCHEMA = {
+    "type": "object",
+    "properties": {
+        "summary": {"type": "string"},
+        "topics": {"type": "array", "items": {"type": "string"}},
+    },
+    "required": ["summary", "topics"],
+}
 
 _DRIVE_FILES = "https://www.googleapis.com/drive/v3/files"
 _OAUTH_TOKEN = "https://oauth2.googleapis.com/token"
@@ -232,6 +243,32 @@ class GoogleDriveClient:
                     break
         return out
 
+    async def list_child_folders(self, parent_id: str) -> list[dict]:
+        """Immediate sub-folders of `parent_id` (or 'root'). For the folder picker."""
+        if parent_id != "root" and not _FOLDER_ID_RE.match(parent_id):
+            raise ValueError(f"invalid drive folder id: {parent_id!r}")
+        out: list[dict] = []
+        page_token: str | None = None
+        while True:
+            params = {
+                "q": (
+                    f"'{parent_id}' in parents and trashed = false "
+                    "and mimeType = 'application/vnd.google-apps.folder'"
+                ),
+                "fields": "nextPageToken, files(id,name)",
+                "orderBy": "name",
+                "pageSize": 200,
+                "supportsAllDrives": "true",
+                "includeItemsFromAllDrives": "true",
+            }
+            if page_token:
+                params["pageToken"] = page_token
+            data = (await self._get(_DRIVE_FILES, **params)).json()
+            out.extend({"id": r["id"], "name": r.get("name", r["id"])} for r in data.get("files", []))
+            page_token = data.get("nextPageToken")
+            if not page_token:
+                return out
+
     async def download(self, f: DriveFile) -> tuple[bytes, str]:
         """(bytes, extension). Raises UnsupportedFormatError for mimes the parser can't take."""
         if f.mime_type in _EXPORT_MAP:
@@ -257,6 +294,7 @@ class DriveSyncer:
         *,
         parser: StructuralDocumentParser | None = None,
         embedder: GeminiEmbedder | None = None,
+        summarizer: GeminiStructured | None = None,
         token_store: SupabaseTokenStore | None = None,
         drive_client_factory=None,
     ) -> None:
@@ -264,6 +302,7 @@ class DriveSyncer:
         self._s = settings or get_settings()
         self._parser = parser or StructuralDocumentParser()
         self._embedder = embedder or GeminiEmbedder()
+        self._summarizer = summarizer  # lazily constructed on first use
         self._store = token_store or SupabaseTokenStore(pool)
         self._make_client = drive_client_factory or self._default_client
 
@@ -283,7 +322,13 @@ class DriveSyncer:
 
         client = await self._make_client(creds)
         try:
-            files = await client.list_folder_tree(folder_id, modified_since=watermark)
+            # One full listing: drives both the delta (what to re-parse) and
+            # reconciliation (what has left the folder and must be pruned).
+            all_files = await client.list_folder_tree(folder_id)
+            files = [
+                f for f in all_files
+                if watermark is None or f.modified_time > watermark
+            ]
             report.scanned = len(files)
             sem = asyncio.Semaphore(self._s.sync_max_concurrency)
 
@@ -300,6 +345,14 @@ class DriveSyncer:
                         high_water is None or f.modified_time > high_water
                     ):
                         high_water = f.modified_time
+
+            # Prune documents whose source file is no longer in the folder.
+            # Only on a clean run so a transient listing error can't wipe the index.
+            # Workspace-scoped: correct for the current one-folder-per-connector model.
+            if report.failed == 0:
+                report.removed = await self._reconcile(
+                    creds.workspace_id, {f.id for f in all_files}
+                )
         finally:
             await client.aclose()
 
@@ -307,12 +360,13 @@ class DriveSyncer:
         report.watermark = high_water if report.failed == 0 else watermark
         await self._save_watermark(creds.account_id, folder_id, report)
         logger.info(
-            "drive sync %s: scanned=%d synced=%d skipped=%d failed=%d",
+            "drive sync %s: scanned=%d synced=%d skipped=%d failed=%d removed=%d",
             folder_id,
             report.scanned,
             report.synced,
             report.skipped,
             report.failed,
+            report.removed,
         )
         return report
 
@@ -333,7 +387,10 @@ class DriveSyncer:
                         reason="no_extractable_content",
                     )
                 vectors = await self._embed_chunks(parsed.chunks)
-                written = await self._replace_document(creds, f, parsed.chunks, vectors)
+                doc_id, written = await self._replace_document(
+                    creds, f, parsed.chunks, vectors
+                )
+                await self._summarize_if_needed(doc_id, parsed)
                 return SyncItemResult(
                     file_id=f.id, name=f.name, status="synced", chunks_written=written
                 )
@@ -359,7 +416,7 @@ class DriveSyncer:
         f: DriveFile,
         chunks: Sequence[Chunk],
         vectors: Sequence[list[float]],
-    ) -> int:
+    ) -> tuple[str, int]:
         storage_path = f"gdrive://{f.id}"
         async with self._pool.acquire() as conn:
             async with conn.transaction():
@@ -413,7 +470,51 @@ class DriveSyncer:
                         for c, v in zip(chunks, vectors)
                     ],
                 )
-        return len(chunks)
+        return str(doc_id), len(chunks)
+
+    # -- summary / reconciliation --
+
+    async def _summarize_if_needed(self, doc_id: str, parsed) -> None:
+        """Best-effort 2-sentence summary + topics, only for docs that lack one."""
+        async with self._pool.acquire() as conn:
+            existing = await conn.fetchval(
+                "SELECT summary FROM documents WHERE id = $1", doc_id
+            )
+        if existing:
+            return
+        if self._summarizer is None:
+            self._summarizer = GeminiStructured(model=self._s.summary_model)
+        try:
+            text = (parsed.markdown or (parsed.chunks[0].text if parsed.chunks else ""))[:8000]
+            out = await self._summarizer.generate(
+                system=_SUMMARY_SYS, prompt=text, schema=_SUMMARY_SCHEMA
+            )
+            async with self._pool.acquire() as conn:
+                await conn.execute(
+                    "UPDATE documents SET summary = $2, topics = $3::jsonb WHERE id = $1",
+                    doc_id,
+                    str(out.get("summary", ""))[:2000],
+                    json.dumps(list(out.get("topics", []))[:8]),
+                )
+        except Exception as exc:  # noqa: BLE001 - summary is an enhancement only
+            logger.warning("drive summary failed for %s: %s", doc_id, exc)
+
+    async def _reconcile(self, workspace_id: str, current_ids: set[str]) -> int:
+        """Delete gdrive documents in this workspace whose file id is no longer present.
+        Chunks cascade via the documents FK."""
+        async with self._pool.acquire() as conn:
+            rows = await conn.fetch(
+                "SELECT id, external_id FROM documents "
+                "WHERE workspace_id = $1 AND source_type = 'gdrive' "
+                "AND external_id IS NOT NULL",
+                workspace_id,
+            )
+            stale = [r["id"] for r in rows if r["external_id"] not in current_ids]
+            if stale:
+                await conn.execute(
+                    "DELETE FROM documents WHERE id = ANY($1::uuid[])", stale
+                )
+        return len(stale)
 
     # -- watermark --
 

@@ -1,4 +1,5 @@
 import { createClient } from "@/utils/supabase/server";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { SettingsContent } from "@/components/dashboard/SettingsContent";
 import { GoogleDriveCard } from "@/components/dashboard/GoogleDriveCard";
@@ -18,13 +19,17 @@ export default async function SettingsPage() {
     user.email?.split("@")[0] ||
     "User";
 
-  const { data: workspace } = await supabase
+  // Bind the Drive connector to the workspace the user is actually in (same
+  // cookie the dashboard and chat use), not just the oldest one.
+  const { data: workspaces } = await supabase
     .from("workspaces")
     .select("id, name, created_at")
     .eq("owner_id", user.id)
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
+    .order("created_at", { ascending: true });
+  const cookieStore = await cookies();
+  const activeId = cookieStore.get("cortex_active_workspace")?.value;
+  const workspace =
+    workspaces?.find((w) => w.id === activeId) ?? workspaces?.[0] ?? null;
 
   const sections = [
     {
@@ -73,7 +78,7 @@ export default async function SettingsPage() {
               onSave={renameWorkspace.bind(null, workspace.id)}
             />
           )}
-          <GoogleDriveCard workspaceId={workspace?.id} />
+          <GoogleDriveCard workspaceId={workspace?.id} workspaceName={workspace?.name} />
         </>
       }
     />

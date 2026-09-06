@@ -48,5 +48,6 @@ class SyncReport(BaseModel):
     synced: int = 0
     skipped: int = 0
     failed: int = 0
+    removed: int = 0  # documents pruned because the source file left the folder
     watermark: datetime | None = None
     items: list[SyncItemResult] = Field(default_factory=list)

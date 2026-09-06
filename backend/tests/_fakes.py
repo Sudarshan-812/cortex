@@ -155,6 +155,13 @@ class FakeConn:
         if "ts_rank_cd(" in s:  # lexical (app mode)
             _q, auth_uid, ws, n = args
             return self.db.search(auth_uid, ws, n)
+        if s.startswith("SELECT id, external_id FROM documents"):  # reconciliation
+            ws = args[0]
+            return [
+                {"id": did, "external_id": row["external_id"]}
+                for did, row in self.db.documents.items()
+                if row["workspace_id"] == ws and row.get("external_id") is not None
+            ]
         raise AssertionError(f"unhandled fetch: {s[:90]}")
 
     async def fetchval(self, sql, *args):
@@ -170,6 +177,19 @@ class FakeConn:
         if s.startswith("SELECT last_synced_at FROM drive_sync_state"):
             st = self.db.sync_state.get((args[0], args[1]))
             return st["last_synced_at"] if st else None
+        if s.startswith("SELECT summary FROM documents"):
+            return self.db.documents.get(args[0], {}).get("summary")
+        if s.startswith("SELECT count(*) FROM documents"):  # /status doc count
+            ws = args[0]
+            return sum(1 for r in self.db.documents.values() if r["workspace_id"] == ws)
+        if "SELECT ss.folder_id FROM drive_sync_state ss" in s:  # /callback reconnect probe
+            c = self.db.connectors.get((args[0], "gdrive"))
+            if not c:
+                return None
+            for (acc_id, folder), _st in self.db.sync_state.items():
+                if acc_id == c["id"]:
+                    return folder
+            return None
         if s.startswith("SELECT 1 FROM workspaces WHERE id = $1 AND owner_id = $2"):
             return 1 if self.db.workspaces.get(args[0]) == args[1] else None
         if s.startswith("SELECT 1 FROM documents d JOIN workspaces w"):
@@ -216,8 +236,10 @@ class FakeConn:
                     latest = (folder, st)
             return {
                 "email": c["external_account_email"],
+                "workspace_id": c["workspace_id"],
                 "folder_id": latest[0] if latest else None,
                 "last_synced_at": latest[1]["last_synced_at"] if latest else None,
+                "last_run_at": latest[1].get("last_run_at") if latest else None,
                 "last_status": latest[1].get("last_status") if latest else None,
             }
         raise AssertionError(f"unhandled fetchrow: {s[:90]}")
@@ -234,6 +256,19 @@ class FakeConn:
                     c["document_id"] == doc_id and c["external_id"] == ext
                 )
             self.db.chunks = [c for c in self.db.chunks if keep(c)]
+        elif s.startswith("DELETE FROM documents WHERE id = ANY"):
+            gone = set(args[0])
+            for did in gone:
+                self.db.documents.pop(did, None)
+            self.db._doc_by_ext = {
+                k: v for k, v in self.db._doc_by_ext.items() if v not in gone
+            }
+            self.db.chunks = [c for c in self.db.chunks if c["document_id"] not in gone]
+        elif s.startswith("UPDATE documents SET summary"):
+            doc = self.db.documents.get(args[0])
+            if doc is not None:
+                doc["summary"] = args[1]
+            self.db.doc_updates.append(args)
         elif s.startswith("UPDATE documents"):
             self.db.doc_updates.append(args)
         elif "vault.update_secret" in s:

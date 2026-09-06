@@ -74,6 +74,11 @@ def _drive_factory(transport: FakeDriveTransport, settings: Settings, store):
     return factory
 
 
+class _FakeSummarizer:
+    async def generate(self, *, system, prompt, schema, temperature=0.0):
+        return {"summary": "s.", "topics": ["t"]}
+
+
 def _syncer(db: FakeDB, transport: FakeDriveTransport, parser: FakeParser, settings: Settings):
     store = SupabaseTokenStore(FakePool(db))
     return DriveSyncer(
@@ -81,6 +86,7 @@ def _syncer(db: FakeDB, transport: FakeDriveTransport, parser: FakeParser, setti
         settings,
         parser=parser,
         embedder=FakeEmbedder(),
+        summarizer=_FakeSummarizer(),
         token_store=store,
         drive_client_factory=_drive_factory(transport, settings, store),
     )

@@ -213,6 +213,37 @@ def test_sync_route_404_without_connector(client):
     assert r.status_code == 404
 
 
+def test_folders_route_404_without_connector(client):
+    r = client.get("/v1/connectors/google-drive/folders")
+    assert r.status_code == 404
+
+
+def test_folders_route_lists_children(client, monkeypatch):
+    client.db.add_workspace("U", "ws-1")
+    client.db.connectors[("U", "gdrive")] = {
+        "id": "acc-1", "user_id": "U", "workspace_id": "ws-1", "provider": "gdrive",
+        "external_account_email": "me@example.com", "refresh_token_secret_id": "sid",
+        "access_token": None, "access_token_expires_at": None, "scopes": [],
+        "refresh_token": "rt",
+    }
+
+    class FakeClient:
+        def __init__(self, *a, **k):
+            pass
+
+        async def list_child_folders(self, parent):
+            assert parent == "root"
+            return [{"id": "f1", "name": "Contracts"}]
+
+        async def aclose(self):
+            pass
+
+    monkeypatch.setattr("api.connectors.GoogleDriveClient", FakeClient)
+    r = client.get("/v1/connectors/google-drive/folders")
+    assert r.status_code == 200
+    assert r.json() == {"parent": "root", "folders": [{"id": "f1", "name": "Contracts"}]}
+
+
 def test_disconnect_route_removes_connector(client):
     client.db.add_workspace("U", "ws-1")
     client.db.connectors[("U", "gdrive")] = {

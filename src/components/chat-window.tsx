@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import Image from 'next/image'
 import {
-  FileText, ArrowUp, Plus, Square,
+  FileText, ArrowUp, Plus, Square, HardDrive,
   ChevronDown, Sparkles, CheckCircle2, UploadCloud, Copy, Check, Database, ExternalLink, Download, RotateCcw,
 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
@@ -22,6 +22,7 @@ type Source = {
   document_name: string
   content: string
   similarity: number
+  drive_url?: string | null
 }
 type ToolEvent = { name: string; status: 'running' | 'done'; count?: number }
 type Message   = { id?: string; role: 'user' | 'assistant'; content: string; sources?: Source[]; created_at?: string; answered_from?: 'documents' | 'web' | 'both' | 'none'; error?: string }
@@ -261,16 +262,33 @@ function SourceCitations({ sources, onViewChunk }: { sources: Source[]; onViewCh
                     >
                       &ldquo;{src.content}&rdquo;
                     </p>
-                    <button
-                      onClick={e => { e.stopPropagation(); onViewChunk(src.chunk_id) }}
-                      className="mt-2.5 inline-flex items-center gap-1 text-[11px] font-medium transition-colors duration-150"
-                      style={{ color: 'var(--cx-mute-2)' }}
-                      onMouseEnter={e => (e.currentTarget.style.color = 'var(--cx-accent)')}
-                      onMouseLeave={e => (e.currentTarget.style.color = 'var(--cx-mute-2)')}
-                    >
-                      <ExternalLink size={10} />
-                      View passage
-                    </button>
+                    <div className="mt-2.5 flex items-center gap-3">
+                      <button
+                        onClick={e => { e.stopPropagation(); onViewChunk(src.chunk_id) }}
+                        className="inline-flex items-center gap-1 text-[11px] font-medium transition-colors duration-150"
+                        style={{ color: 'var(--cx-mute-2)' }}
+                        onMouseEnter={e => (e.currentTarget.style.color = 'var(--cx-accent)')}
+                        onMouseLeave={e => (e.currentTarget.style.color = 'var(--cx-mute-2)')}
+                      >
+                        <ExternalLink size={10} />
+                        View passage
+                      </button>
+                      {src.drive_url && (
+                        <a
+                          href={src.drive_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={e => e.stopPropagation()}
+                          className="inline-flex items-center gap-1 text-[11px] font-medium transition-colors duration-150"
+                          style={{ color: 'var(--cx-mute-2)' }}
+                          onMouseEnter={e => (e.currentTarget.style.color = 'var(--cx-accent)')}
+                          onMouseLeave={e => (e.currentTarget.style.color = 'var(--cx-mute-2)')}
+                        >
+                          <HardDrive size={10} />
+                          Open in Drive
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </motion.div>
               ))}
@@ -762,24 +780,24 @@ export function ChatWindow({
                     Connect Google Drive in Settings, or upload a file here. Cortex reads it so you can ask questions and get cited answers.
                   </p>
                 </div>
-                <motion.button
-                  whileTap={{ scale: 0.95 }}
-                  whileHover={{ scale: 1.02 }}
-                  onClick={() => emptyUploadRef.current?.click()}
-                  disabled={uploading}
-                  className="flex items-center gap-2 h-10 px-6 rounded-full text-[13.5px] font-semibold border-2 transition-all duration-200 disabled:opacity-60"
-                  style={{
-                    borderColor: 'var(--cx-accent)',
-                    color: 'var(--cx-accent)',
-                    background: 'var(--cx-accent-wash)',
-                  }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--cx-accent)', e.currentTarget.style.color = '#fff')}
-                  onMouseLeave={e => (e.currentTarget.style.background = 'var(--cx-accent-wash)', e.currentTarget.style.color = 'var(--cx-accent)')}
-                >
-                  {uploading
-                    ? <><span className="size-4 border-2 border-current border-t-transparent rounded-full animate-spin" />Uploading…</>
-                    : <><UploadCloud size={15} />Upload a file</>}
-                </motion.button>
+                <div className="flex flex-wrap items-center justify-center gap-2.5">
+                  <a
+                    href="/dashboard/settings#google-drive"
+                    className="cx-btn-ink flex items-center gap-2 h-10 px-5 rounded-full text-[13.5px] font-semibold"
+                  >
+                    <HardDrive size={15} /> Connect Google Drive
+                  </a>
+                  <button
+                    onClick={() => emptyUploadRef.current?.click()}
+                    disabled={uploading}
+                    className="flex items-center gap-2 h-10 px-5 rounded-full text-[13.5px] font-semibold border transition-colors disabled:opacity-60 hover:bg-[var(--cx-accent-wash)]"
+                    style={{ borderColor: 'var(--cx-line-2)', color: 'var(--cx-ink-2)' }}
+                  >
+                    {uploading
+                      ? <><span className="size-4 border-2 border-current border-t-transparent rounded-full animate-spin" />Uploading…</>
+                      : <><UploadCloud size={15} />Upload a file</>}
+                  </button>
+                </div>
                 {uploadNote && (
                   <p className="text-[12px]" style={{ color: 'var(--cx-mute-1)' }}>{uploadNote}</p>
                 )}

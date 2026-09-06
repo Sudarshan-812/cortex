@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FileText, Loader2, Trash2, Info } from 'lucide-react'
+import { FileText, Loader2, Trash2, Info, HardDrive, ExternalLink } from 'lucide-react'
 import { deleteDocument } from '@/app/actions'
 
 type Doc = {
@@ -12,6 +12,8 @@ type Doc = {
   created_at: string
   summary?: string | null
   topics?: string[] | null
+  source_type?: string | null
+  external_id?: string | null
 }
 
 function formatBytes(bytes: number) {
@@ -174,12 +176,28 @@ export function DocumentTable({
                 onMouseEnter={e => (e.currentTarget.style.background = 'var(--cx-paper)')}
                 onMouseLeave={e => (e.currentTarget.style.background = '')}
               >
-                {/* Name + summary icon */}
+                {/* Name + source + summary icon */}
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <FileText size={14} className="flex-shrink-0" style={{ color: 'var(--cx-mute-2)' }} />
-                  <span className="text-[13px] font-medium truncate" style={{ color: 'var(--cx-ink)' }}>
-                    {doc.name}
-                  </span>
+                  {doc.source_type === 'gdrive'
+                    ? <HardDrive size={14} className="flex-shrink-0" style={{ color: 'var(--cx-accent)' }} />
+                    : <FileText size={14} className="flex-shrink-0" style={{ color: 'var(--cx-mute-2)' }} />}
+                  {doc.source_type === 'gdrive' && doc.external_id ? (
+                    <a
+                      href={`https://drive.google.com/file/d/${doc.external_id}/view`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[13px] font-medium truncate inline-flex items-center gap-1 hover:underline"
+                      style={{ color: 'var(--cx-ink)' }}
+                      title="Open in Google Drive"
+                    >
+                      <span className="truncate">{doc.name}</span>
+                      <ExternalLink size={10} className="flex-shrink-0" style={{ color: 'var(--cx-mute-2)' }} />
+                    </a>
+                  ) : (
+                    <span className="text-[13px] font-medium truncate" style={{ color: 'var(--cx-ink)' }}>
+                      {doc.name}
+                    </span>
+                  )}
                   {doc.summary && <SummaryPopover summary={doc.summary} />}
                 </div>
 

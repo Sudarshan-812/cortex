@@ -1,5 +1,8 @@
-"""Google Drive connector: OAuth authorize/callback, sync trigger, status."""
+"""Google Drive connector: OAuth authorize/callback, folder picker, sync, status."""
 from __future__ import annotations
+
+import asyncio
+import logging
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import RedirectResponse
@@ -8,7 +11,7 @@ from pydantic import BaseModel
 from api.deps import require_user
 from core.config import get_settings
 from db.pool import get_pool
-from integrations.gdrive import DriveSyncer
+from integrations.gdrive import DriveAuthError, DriveSyncer, GoogleDriveClient, SupabaseTokenStore
 from services.gdrive_oauth import (
     GoogleOAuthClient,
     OAuthError,
@@ -16,6 +19,16 @@ from services.gdrive_oauth import (
     store_connector,
     verify_state,
 )
+
+logger = logging.getLogger("cortex.connectors")
+
+
+async def _run_sync_safe(folder_id: str, auth_uid: str) -> None:
+    """Fire-and-forget sync used after (re)connect. Never raises into the task loop."""
+    try:
+        await DriveSyncer(await get_pool()).sync_drive_folder(folder_id, auth_uid)
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("post-connect sync for %s failed: %s", auth_uid, exc)
 
 router = APIRouter(prefix="/v1/connectors/google-drive", tags=["connectors"])
 
@@ -66,7 +79,46 @@ async def callback(code: str = Query(...), state: str = Query(...)) -> RedirectR
         refresh_token=tok["refresh_token"],
         email=info.get("email"),
     )
+
+    # Reconnect case: a folder is already chosen -> kick a background re-sync now
+    # so the workspace is current the moment the user lands back on Settings.
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        folder = await conn.fetchval(
+            """SELECT ss.folder_id
+               FROM drive_sync_state ss
+               JOIN connector_accounts ca ON ca.id = ss.connector_account_id
+               WHERE ca.user_id = $1 AND ca.provider = 'gdrive'
+               ORDER BY ss.last_run_at DESC NULLS LAST
+               LIMIT 1""",
+            payload["uid"],
+        )
+    if folder:
+        asyncio.create_task(_run_sync_safe(folder, payload["uid"]))
+
     return RedirectResponse(f"{dest}?gdrive=connected", status_code=302)
+
+
+@router.get("/folders")
+async def folders(
+    parent: str = Query("root"), auth_uid: str = Depends(require_user)
+) -> dict:
+    """Immediate sub-folders of `parent` ('root' or a folder id) - drives the picker."""
+    s = get_settings()
+    pool = await get_pool()
+    store = SupabaseTokenStore(pool)
+    try:
+        creds = await store.load(auth_uid, "gdrive")
+    except DriveAuthError:
+        raise HTTPException(status_code=404, detail="no Google Drive connector for this user")
+    client = GoogleDriveClient(creds, s, token_store=store)
+    try:
+        items = await client.list_child_folders(parent)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    finally:
+        await client.aclose()
+    return {"parent": parent, "folders": items}
 
 
 @router.post("/sync")
@@ -104,7 +156,8 @@ async def status(auth_uid: str = Depends(require_user)) -> dict:
         row = await conn.fetchrow(
             """
             SELECT ca.external_account_email AS email,
-                   ss.last_synced_at, ss.last_status, ss.folder_id
+                   ca.workspace_id,
+                   ss.last_synced_at, ss.last_run_at, ss.last_status, ss.folder_id
             FROM connector_accounts ca
             LEFT JOIN drive_sync_state ss ON ss.connector_account_id = ca.id
             WHERE ca.user_id = $1 AND ca.provider = 'gdrive'
@@ -113,13 +166,22 @@ async def status(auth_uid: str = Depends(require_user)) -> dict:
             """,
             auth_uid,
         )
-    if row is None:
-        return {"connected": False}
+        if row is None:
+            return {"connected": False}
+        doc_count = await conn.fetchval(
+            "SELECT count(*) FROM documents "
+            "WHERE workspace_id = $1 AND source_type = 'gdrive'",
+            row["workspace_id"],
+        )
     lsa = row["last_synced_at"]
+    lra = row["last_run_at"]
     return {
         "connected": True,
         "email": row["email"],
+        "workspace_id": str(row["workspace_id"]) if row["workspace_id"] else None,
         "folder_id": row["folder_id"],
         "last_synced_at": lsa.isoformat() if lsa else None,
+        "last_run_at": lra.isoformat() if lra else None,
         "last_status": row["last_status"],
+        "document_count": doc_count or 0,
     }
