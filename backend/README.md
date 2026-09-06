@@ -4,7 +4,7 @@ Python service for the document-intelligence pipeline: structural parsing (2),
 Google Drive delta sync (3), ACL-aware hybrid retrieval (4). Same Supabase
 project as the Next.js app.
 
-Status: **Part 4 — advanced retrieval pipeline (`RAGOrchestrator`) + `/v1/query` API.**
+Status: **Part 5 — integration test harness complete (48 tests).**
 
 | Path | Workstream |
 |------|-----------|
@@ -19,7 +19,8 @@ Status: **Part 4 — advanced retrieval pipeline (`RAGOrchestrator`) + `/v1/quer
 | `services/retrieval.py` | 4 — RRF, `HybridRetriever`, `Reranker`, `CragEvaluator`, `RAGOrchestrator` |
 | `services/synthesis.py` | 4 — `ClaudeSynthesizer` (streamed answer + citation contract) |
 | `api/` | 4 — FastAPI `POST /v1/query` (SSE), Supabase JWT verify |
-| `tests/` | 5 — pytest harness *(helper unit tests land per part)* |
+| `tests/test_pipeline.py` | 5 — integration harness: atomic cleanup, ACL non-leak (rpc+app), rate-limit fallback |
+| `tests/_fakes.py` | shared `FakeDB` (ACL predicate + txn snapshot), Drive/HTTP doubles |
 
 Config: copy `.env.example` to `.env`. Migrations `0001`/`0002` apply via
 `python -m db.migrate` (or paste the SQL in the Supabase SQL Editor).
