@@ -4,16 +4,22 @@ Python service for the document-intelligence pipeline: structural parsing (2),
 Google Drive delta sync (3), ACL-aware hybrid retrieval (4). Same Supabase
 project as the Next.js app.
 
-Status: **Part 2 — parsing layer.**
+Status: **Part 3 — Google Drive connector + delta syncer.**
 
 | Path | Workstream |
 |------|-----------|
-| `db/migrations/` | 1 — schema (applied) |
+| `db/migrations/` | 1–3 — schema (`0001`, `0002`) |
+| `db/migrate.py` | forward-only runner — `python -m db.migrate` |
+| `core/` | settings + shared async HTTP retry |
 | `models/` | shared Pydantic v2 models |
 | `services/parser.py` | 2 — `StructuralDocumentParser` (docling) |
+| `services/embeddings.py` | `GeminiEmbedder` (shared with Part 4) |
+| `integrations/gdrive.py` | 3 — Drive client, Vault token store, `DriveSyncer` |
 | `services/retrieval.py` | 4 — `RAGOrchestrator` *(pending)* |
-| `integrations/gdrive.py` | 3 — Drive connector + delta syncer *(pending)* |
 | `tests/` | 5 — pytest harness *(helper unit tests land per part)* |
+
+Config: copy `.env.example` to `.env`. Migrations `0001`/`0002` apply via
+`python -m db.migrate` (or paste the SQL in the Supabase SQL Editor).
 
 ## Setup
 
