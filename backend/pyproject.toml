@@ -10,19 +10,21 @@ dependencies = [
   "httpx>=0.27",            # async Drive REST + OAuth + Gemini (Part 3)
   "asyncpg>=0.29",          # atomic transactions for delta sync (Part 3)
   "pgvector>=0.3",          # vector codec for asyncpg (Part 3)
+  "anthropic>=0.40",        # streamed answer synthesis (Part 4)
+  "fastapi>=0.115",         # /v1/query SSE endpoint (Part 4)
+  "uvicorn[standard]>=0.30",
+  "python-jose[cryptography]>=3.3",  # Supabase JWT verification (Part 4)
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.2", "pytest-asyncio>=0.23", "ruff>=0.6"]
-# Later workstreams append their own deps:
-#   Part 4  fastapi, uvicorn[standard], anthropic, cohere, python-jose[cryptography]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["core", "db", "models", "services", "integrations"]
+packages = ["api", "core", "db", "models", "services", "integrations"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]

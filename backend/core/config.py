@@ -32,6 +32,18 @@ class Settings(BaseSettings):
     embed_max_concurrency: int = 2
     http_max_retries: int = 5
 
+    # Retrieval / synthesis (Part 4)
+    retrieval_mode: str = "rpc"  # rpc (match_hybrid_documents) | app (parallel + Python RRF)
+    retrieval_candidates: int = 25
+    answer_top_k: int = 5
+    rerank_model: str = "gemini-3.1-flash-lite"
+    crag_model: str = "gemini-3.1-flash-lite"
+    crag_threshold: float = 0.65
+    anthropic_api_key: str = ""
+    synthesis_model: str = "claude-opus-5"
+    synthesis_max_tokens: int = 2048
+    supabase_jwt_secret: str = ""
+
 
 @lru_cache
 def get_settings() -> Settings:
