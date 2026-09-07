@@ -36,7 +36,7 @@ export async function createNewWorkspace(name: string) {
     sameSite: 'lax',
   })
 
-  revalidatePath('/dashboard')
+  revalidatePath('/')
   revalidatePath('/chat')
   return { success: true, workspaceId: workspace.id }
 }
@@ -48,7 +48,7 @@ export async function switchWorkspace(workspaceId: string) {
     path: '/',
     sameSite: 'lax',
   })
-  revalidatePath('/dashboard')
+  revalidatePath('/')
   revalidatePath('/chat')
 }
 
@@ -64,7 +64,7 @@ export async function renameWorkspace(workspaceId: string, name: string) {
     .eq('id', workspaceId)
     .eq('owner_id', user.id)
   if (error) return { error: error.message }
-  revalidatePath('/dashboard')
+  revalidatePath('/')
   revalidatePath('/chat')
   return { success: true, name: trimmed }
 }
@@ -75,7 +75,7 @@ export async function updateDisplayName(name: string) {
   const supabase = await createClient()
   const { error } = await supabase.auth.updateUser({ data: { full_name: trimmed } })
   if (error) return { error: error.message }
-  revalidatePath('/dashboard')
+  revalidatePath('/')
   return { success: true, name: trimmed }
 }
 
@@ -114,7 +114,7 @@ export async function deleteWorkspace(workspaceId: string) {
     cookieStore.delete('cortex_active_workspace')
   }
 
-  revalidatePath('/dashboard')
+  revalidatePath('/')
   revalidatePath('/chat')
   return { success: true }
 }
@@ -139,7 +139,7 @@ export async function deleteDocument(documentId: string) {
     await supabase.storage.from('synapse-uploads').remove([doc.storage_path])
   }
 
-  revalidatePath('/dashboard')
+  revalidatePath('/')
   return { success: true }
 }
 
@@ -249,6 +249,6 @@ export async function uploadDocument(formData: FormData) {
     return { error: `Processing error: ${err.message ?? String(err)}` }
   }
 
-  revalidatePath("/dashboard")
+  revalidatePath("/")
   return { success: true }
 }

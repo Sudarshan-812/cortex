@@ -21,7 +21,7 @@ export function MobileHeader({ title = 'Cortex' }: { title?: string }) {
       >
         <Menu size={18} />
       </button>
-      <Link href="/dashboard" className="flex items-center gap-2 min-w-0">
+      <Link href="/" className="flex items-center gap-2 min-w-0">
         <Image src="/CortexLogo.png" alt="" width={20} height={20} className="object-contain flex-shrink-0" />
         <span className="text-[14px] font-semibold truncate" style={{ color: 'var(--cx-ink)' }}>{title}</span>
       </Link>

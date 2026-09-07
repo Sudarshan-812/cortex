@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ChevronDown, LogOut, LayoutDashboard, Settings, Menu, X,
+  ChevronDown, LogOut, Home, Settings, Menu, X,
 } from "lucide-react";
 
 type DropdownKey = "avatar" | null;
@@ -165,12 +165,12 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
                         </div>
                       </div>
                       <div className="border-t my-1" style={{ borderColor: 'var(--lp-border)' }} />
-                      <Link href="/dashboard" role="menuitem" onClick={() => setOpen(null)}
+                      <Link href="/" role="menuitem" onClick={() => setOpen(null)}
                         className="flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors text-[13px] font-medium outline-none"
                         style={{ color: 'var(--lp-ink-2)' }} {...rowHover}>
-                        <LayoutDashboard size={14} style={{ color: 'var(--lp-mute-2)' }} /> Dashboard
+                        <Home size={14} style={{ color: 'var(--lp-mute-2)' }} /> Home
                       </Link>
-                      <Link href="/dashboard/settings" role="menuitem" onClick={() => setOpen(null)}
+                      <Link href="/settings" role="menuitem" onClick={() => setOpen(null)}
                         className="flex items-center gap-2.5 px-3 py-2 rounded-xl transition-colors text-[13px] font-medium outline-none"
                         style={{ color: 'var(--lp-ink-2)' }} {...rowHover}>
                         <Settings size={14} style={{ color: 'var(--lp-mute-2)' }} /> Settings
@@ -235,10 +235,10 @@ export function Navbar({ isLoggedIn = false, avatarUrl, userName = "User" }: Nav
 
               {isLoggedIn ? (
                 <>
-                  <Link href="/dashboard" onClick={() => setMobileOpen(false)}
+                  <Link href="/" onClick={() => setMobileOpen(false)}
                     className="flex items-center gap-2.5 px-3 py-2.5 text-[14px] font-medium rounded-xl transition-colors"
                     style={{ color: 'var(--lp-ink-2)' }} {...rowHover}>
-                    <LayoutDashboard size={15} style={{ color: 'var(--lp-mute-2)' }} /> Dashboard
+                    <Home size={15} style={{ color: 'var(--lp-mute-2)' }} /> Home
                   </Link>
                   <button onClick={handleSignOut}
                     className="flex items-center gap-2.5 px-3 py-2.5 text-[14px] font-medium rounded-xl transition-colors w-full text-left outline-none"

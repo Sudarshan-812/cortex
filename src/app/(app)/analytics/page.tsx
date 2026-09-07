@@ -20,7 +20,7 @@ export default async function AnalyticsPage() {
   const cookieStore = await cookies()
   const activeId    = cookieStore.get('cortex_active_workspace')?.value
   const workspace   = workspaces?.find(w => w.id === activeId) ?? workspaces?.[0] ?? null
-  if (!workspace) redirect('/dashboard')
+  if (!workspace) redirect('/')
 
   // Fetch documents with topics
   const { data: documents } = await supabase

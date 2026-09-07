@@ -53,19 +53,19 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
         {isLoggedIn ? (
           <>
             <MagneticButton>
-              <Link href="/dashboard"
+              <Link href="/"
                 className="lp-btn-accent group inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-full font-semibold text-[15px]"
               >
-                Open dashboard
+                Open Cortex
                 <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform duration-200" />
               </Link>
             </MagneticButton>
             <MagneticButton>
-              <Link href="/dashboard"
+              <Link href="/chat"
                 className="lp-btn-ghost group inline-flex items-center justify-center gap-2.5 px-8 py-3.5 rounded-full font-semibold text-[15px]"
               >
                 <Plus size={15} />
-                New workspace
+                New chat
               </Link>
             </MagneticButton>
           </>
@@ -112,7 +112,7 @@ export function Hero({ isLoggedIn = false }: HeroProps) {
             </div>
             <div className="flex-1 mx-2 px-3 py-1 rounded-md border text-[11px] font-mono text-left cx-num"
               style={{ background: 'rgba(28,25,23,0.025)', borderColor: 'var(--lp-border)', color: 'var(--lp-mute-2)' }}>
-              app.cortex.ai/dashboard
+              app.cortex.ai
             </div>
           </div>
 

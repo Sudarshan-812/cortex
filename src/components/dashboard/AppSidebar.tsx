@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import {
-  LayoutDashboard, BarChart2, Settings, MessageSquare, Search,
+  Home, BarChart2, Settings, MessageSquare, Search,
   ChevronDown, Check, Building2, Plus, Loader2, X, LogOut,
   PanelLeftClose, PanelLeftOpen,
 } from 'lucide-react'
@@ -18,10 +18,10 @@ type Workspace = { id: string; name: string; created_at: string }
 type User = { name: string; email: string; avatarUrl?: string }
 
 const NAV_ITEMS = [
-  { href: '/dashboard', label: 'Overview', icon: LayoutDashboard, exact: true },
+  { href: '/', label: 'Home', icon: Home, exact: true },
   { href: '/chat', label: 'Chat', icon: MessageSquare, exact: false },
-  { href: '/dashboard/analytics', label: 'Analytics', icon: BarChart2, exact: true },
-  { href: '/dashboard/settings', label: 'Settings', icon: Settings, exact: true },
+  { href: '/analytics', label: 'Analytics', icon: BarChart2, exact: true },
+  { href: '/settings', label: 'Settings', icon: Settings, exact: true },
 ]
 
 export function AppSidebar({
@@ -71,7 +71,7 @@ export function AppSidebar({
     await switchWorkspace(id)
     setSwitching(null)
     close()
-    router.push('/dashboard')
+    router.push('/')
     router.refresh()
   }
 
@@ -112,7 +112,7 @@ export function AppSidebar({
         <div className={`flex items-center h-[58px] px-3.5 border-b flex-shrink-0 ${collapsed ? 'md:justify-center' : 'justify-between'}`}
           style={{ borderColor: 'var(--cx-line)' }}>
           {!collapsed && (
-            <Link href="/dashboard" className="flex items-center gap-2 min-w-0">
+            <Link href="/" className="flex items-center gap-2 min-w-0">
               <Image src="/CortexLogo.png" alt="Cortex" width={22} height={22} className="object-contain flex-shrink-0" />
               <span className="text-[14px] font-semibold tracking-tight truncate" style={{ color: 'var(--cx-ink)' }}>Cortex</span>
             </Link>
@@ -331,7 +331,7 @@ export function AppSidebar({
             {() => (
               <>
                 <Link
-                  href="/dashboard/settings"
+                  href="/settings"
                   className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-[12.5px] font-medium transition-colors"
                   style={{ color: 'var(--cx-ink-2)' }}
                   {...rowHover}

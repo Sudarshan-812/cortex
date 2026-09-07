@@ -39,10 +39,10 @@ export function CTA({ isLoggedIn = false }: CTAProps) {
           <div className="mt-2">
             <MagneticButton>
               <Link
-                href={isLoggedIn ? "/dashboard" : "/login"}
+                href={isLoggedIn ? "/" : "/login"}
                 className="lp-btn-accent group inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full font-semibold text-[15px]"
               >
-                {isLoggedIn ? "Open dashboard" : "Connect Google Drive"}
+                {isLoggedIn ? "Open Cortex" : "Connect Google Drive"}
                 <ArrowRight size={15} className="group-hover:translate-x-0.5 transition-transform duration-200" />
               </Link>
             </MagneticButton>

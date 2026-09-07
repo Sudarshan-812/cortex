@@ -8,6 +8,14 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "ui-avatars.com" },
     ],
   },
+  async redirects() {
+    return [
+      { source: "/dashboard", destination: "/", permanent: true },
+      { source: "/dashboard/settings", destination: "/settings", permanent: true },
+      { source: "/dashboard/analytics", destination: "/analytics", permanent: true },
+      { source: "/dashboard/:path*", destination: "/", permanent: true },
+    ]
+  },
   async rewrites() {
     return [
       {

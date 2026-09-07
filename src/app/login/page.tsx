@@ -5,10 +5,10 @@ import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import {
   Loader2, Mail, Lock, ArrowRight, Eye, EyeOff,
-  AlertCircle, CheckCircle2,
+  AlertCircle, CheckCircle2, Check,
 } from 'lucide-react';
 
 export default function LoginPage() {
@@ -23,6 +23,8 @@ export default function LoginPage() {
 
   const router = useRouter();
   const supabase = createClient();
+  const reduce = useReducedMotion();
+  const rise = (y: number) => (reduce ? 0 : y);
 
   const handleEmailAuth = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,12 +41,12 @@ export default function LoginPage() {
           setEmail('');
           setPassword('');
         } else {
-          router.push('/dashboard');
+          router.push('/');
         }
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
-        router.push('/dashboard');
+        router.push('/');
       }
     } catch (err: any) {
       setError(err.message || "Something went wrong. Please try again.");
@@ -70,48 +72,44 @@ export default function LoginPage() {
 
   return (
     <div className="grid h-screen w-screen overflow-hidden lg:grid-cols-2" style={{ background: 'var(--cx-paper)' }}>
-      <div className="relative hidden h-full flex-col border-r p-10 lg:flex overflow-hidden" style={{ background: 'var(--cx-paper-2)', borderColor: 'var(--cx-line)' }}>
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                'radial-gradient(120% 90% at 12% 8%, rgba(161,98,7,0.12), transparent 55%),' +
-                'radial-gradient(120% 90% at 92% 92%, rgba(120,53,15,0.10), transparent 55%),' +
-                'linear-gradient(160deg, var(--cx-paper-2), var(--cx-paper))',
-            }}
-          />
-          <div className="absolute inset-0 cx-grain opacity-30" />
-        </div>
-
-        <div className="relative z-10 flex flex-col h-full">
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="flex items-center justify-between mb-20"
-          >
-            <div className="flex items-center gap-3">
-              <Image src="/CortexLogo.png" alt="Cortex Logo" width={32} height={32} className="object-contain" />
-              <span className="text-[18px] font-semibold tracking-tight" style={{ color: 'var(--cx-ink)' }}>Cortex</span>
-            </div>
-          </motion.div>
+      <div className="relative hidden h-full flex-col border-r p-10 lg:flex" style={{ background: 'var(--cx-paper-2)', borderColor: 'var(--cx-line)' }}>
+        <div className="flex flex-col h-full">
+          <div className="flex items-center gap-3 mb-20">
+            <Image src="/CortexLogo.png" alt="Cortex Logo" width={30} height={30} className="object-contain" />
+            <span className="text-[17px] font-semibold tracking-tight" style={{ color: 'var(--cx-ink)' }}>Cortex</span>
+          </div>
 
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: rise(12) }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="flex-1 flex flex-col justify-center max-w-[480px]"
+            transition={{ delay: 0.05, duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            className="flex-1 flex flex-col justify-center max-w-[440px]"
           >
-            <h1 className="text-5xl font-semibold tracking-[-0.025em] leading-[1.05] mb-5" style={{ color: 'var(--cx-ink)' }}>
-              Ask your Drive.<br />
+            <h1 className="text-4xl font-semibold tracking-[-0.025em] leading-[1.1] mb-4" style={{ color: 'var(--cx-ink)' }}>
+              Ask your Drive.{' '}
               <span style={{ color: 'var(--cx-accent)' }}>Get the answer.</span>
             </h1>
-            <p className="text-[16px] leading-relaxed" style={{ color: 'var(--cx-ink-2)' }}>
-              Sign in to ask questions across your connected Google Drive - with a cited source on every answer.
+            <p className="text-[15px] leading-relaxed mb-8" style={{ color: 'var(--cx-mute-1)' }}>
+              Sign in to ask questions across your connected Google Drive.
             </p>
+            <ul className="space-y-3">
+              {[
+                'A cited source on every answer',
+                'Connects once to Google Drive',
+                'Reads PDFs, Docs, Sheets & more',
+              ].map(item => (
+                <li key={item} className="flex items-center gap-2.5 text-[13.5px]" style={{ color: 'var(--cx-ink-2)' }}>
+                  <span
+                    className="size-4 rounded-full flex items-center justify-center shrink-0"
+                    style={{ background: 'var(--cx-accent-wash)', color: 'var(--cx-accent)' }}
+                  >
+                    <Check size={11} strokeWidth={2.5} />
+                  </span>
+                  {item}
+                </li>
+              ))}
+            </ul>
           </motion.div>
-
         </div>
       </div>
 
@@ -127,16 +125,16 @@ export default function LoginPage() {
         </Link>
 
         <motion.div
-          initial={{ opacity: 0, y: 14 }}
+          initial={{ opacity: 0, y: rise(10) }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
           className="w-full max-w-[400px]"
         >
           <div className="text-center mb-10">
             <motion.div
-              initial={{ opacity: 0, scale: 0.88 }}
+              initial={{ opacity: 0, scale: reduce ? 1 : 0.92 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             >
               <Image src="/CortexLogo.png" alt="Cortex Logo" width={48} height={48} className="object-contain mx-auto mb-6" />
             </motion.div>
@@ -155,7 +153,7 @@ export default function LoginPage() {
             onClick={handleGoogleLogin}
             disabled={isLoading}
             whileTap={{ scale: 0.98 }}
-            className="w-full h-12 flex items-center justify-center gap-3 rounded-2xl border font-semibold text-[14px] transition-all mb-5 cx-panel"
+            className="w-full h-12 flex items-center justify-center gap-3 rounded-lg border font-semibold text-[14px] transition-all mb-5 cx-panel"
             style={{ color: 'var(--cx-ink-2)' }}
             onMouseEnter={e => (e.currentTarget.style.background = 'var(--cx-surface)')}
             onMouseLeave={e => (e.currentTarget.style.background = '')}
@@ -188,7 +186,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@company.com"
-                  className="w-full h-11 pl-10 pr-4 rounded-xl border text-[14px] font-medium outline-none transition-all"
+                  className="w-full h-11 pl-10 pr-4 rounded-lg border text-[14px] font-medium outline-none transition-all"
                   style={{
                     background: 'var(--cx-surface)',
                     borderColor: 'var(--cx-line)',
@@ -211,7 +209,7 @@ export default function LoginPage() {
                       if (!email) { setError("Enter your email above first."); return; }
                       setResetting(true); setError(null);
                       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                        redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+                        redirectTo: `${window.location.origin}/auth/callback?next=/`,
                       });
                       setResetting(false);
                       if (error) setError(error.message);
@@ -236,7 +234,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full h-11 pl-10 pr-11 rounded-xl border text-[14px] font-medium outline-none transition-all"
+                  className="w-full h-11 pl-10 pr-11 rounded-lg border text-[14px] font-medium outline-none transition-all"
                   style={{
                     background: 'var(--cx-surface)',
                     borderColor: 'var(--cx-line)',
@@ -273,7 +271,7 @@ export default function LoginPage() {
                   transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                   className="overflow-hidden"
                 >
-                  <div className="flex items-start gap-2.5 border p-3.5 rounded-xl mt-1" style={{ background: 'rgba(166,68,58,0.05)', borderColor: 'rgba(166,68,58,0.2)', color: 'var(--cx-err)' }}>
+                  <div className="flex items-start gap-2.5 border p-3.5 rounded-lg mt-1" style={{ background: 'rgba(166,68,58,0.05)', borderColor: 'rgba(166,68,58,0.2)', color: 'var(--cx-err)' }}>
                     <AlertCircle size={15} className="shrink-0 mt-0.5" />
                     <p className="text-[13px] font-medium leading-snug">{error}</p>
                   </div>
@@ -288,7 +286,7 @@ export default function LoginPage() {
                   transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                   className="overflow-hidden"
                 >
-                  <div className="flex items-start gap-2.5 border p-3.5 rounded-xl mt-1" style={{ background: 'var(--cx-ok-wash)', borderColor: 'rgba(60,110,71,0.2)', color: 'var(--cx-ok)' }}>
+                  <div className="flex items-start gap-2.5 border p-3.5 rounded-lg mt-1" style={{ background: 'var(--cx-ok-wash)', borderColor: 'rgba(60,110,71,0.2)', color: 'var(--cx-ok)' }}>
                     <CheckCircle2 size={15} className="shrink-0 mt-0.5" />
                     <p className="text-[13px] font-medium leading-snug">{successMsg}</p>
                   </div>
@@ -300,7 +298,7 @@ export default function LoginPage() {
               type="submit"
               disabled={isLoading}
               whileTap={{ scale: 0.985 }}
-              className="group w-full h-12 mt-2 rounded-2xl font-semibold text-[14px] flex items-center justify-center gap-2 transition-all cx-btn-ink disabled:opacity-60"
+              className="group w-full h-12 mt-2 rounded-lg font-semibold text-[14px] flex items-center justify-center gap-2 transition-all cx-btn-ink disabled:opacity-60"
             >
               {isLoading ? (
                 <>

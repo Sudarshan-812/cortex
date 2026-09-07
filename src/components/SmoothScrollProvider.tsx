@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import Lenis from 'lenis'
 
 // These routes have their own scroll containers - Lenis must not run on them
-const LENIS_DISABLED_PREFIXES = ['/chat', '/dashboard', '/login']
+const LENIS_DISABLED_PREFIXES = ['/chat', '/settings', '/analytics', '/dashboard', '/login']
 
 export function SmoothScrollProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()

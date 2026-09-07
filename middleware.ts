@@ -42,7 +42,7 @@ export async function middleware(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname
 
-  const protectedPaths = ['/dashboard', '/chat']
+  const protectedPaths = ['/chat', '/settings', '/analytics']
   const isProtectedPath = protectedPaths.some(path => pathname.startsWith(path))
 
   if (!user && isProtectedPath) {
@@ -50,7 +50,7 @@ export async function middleware(request: NextRequest) {
   }
 
   if (user && pathname.startsWith('/login')) {
-    return NextResponse.redirect(new URL('/dashboard', request.url))
+    return NextResponse.redirect(new URL('/', request.url))
   }
 
   return response

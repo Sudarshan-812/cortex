@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { createChatSession, deleteChatSession, renameChatSession } from '@/app/session-actions'
 import { switchWorkspace } from '@/app/actions'
 import {
-  Plus, MessageSquare, Trash2, LayoutDashboard,
+  Plus, MessageSquare, Trash2, Home,
   Loader2, PanelLeftClose, PanelLeftOpen, Pencil, X,
   ChevronDown, Check, Building2, UploadCloud,
 } from 'lucide-react'
@@ -375,8 +375,8 @@ export function ChatSidebar({
         style={{ borderColor: 'var(--cx-line)' }}
       >
         <Link
-          href="/dashboard"
-          title={collapsed ? 'Dashboard' : undefined}
+          href="/"
+          title={collapsed ? 'Home' : undefined}
           className="flex items-center gap-2 rounded-md text-[12.5px] transition-colors"
           style={{
             padding: collapsed ? undefined : '7px 10px',
@@ -388,8 +388,8 @@ export function ChatSidebar({
           onMouseEnter={e => { e.currentTarget.style.background = 'var(--cx-paper-2)'; e.currentTarget.style.color = 'var(--cx-ink)' }}
           onMouseLeave={e => { e.currentTarget.style.background = ''; e.currentTarget.style.color = 'var(--cx-mute-1)' }}
         >
-          <LayoutDashboard size={14} className="flex-shrink-0" />
-          {!collapsed && 'Dashboard'}
+          <Home size={14} className="flex-shrink-0" />
+          {!collapsed && 'Home'}
         </Link>
       </div>
     </aside>

@@ -5,7 +5,12 @@ import { AppSidebar } from "@/components/dashboard/AppSidebar"
 import { MobileNavProvider } from "@/components/MobileNavContext"
 import { MobileHeader } from "@/components/MobileHeader"
 
-export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
+/**
+ * The signed-in application shell: workspace-aware sidebar + mobile header.
+ * Wraps Home (`/`), `/analytics` and `/settings`. When the user has no workspace
+ * yet it renders children bare so the page can show its own onboarding card.
+ */
+export async function AppShell({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect("/login")
@@ -24,8 +29,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const activeId = cookieStore.get("cortex_active_workspace")?.value
   const workspace = workspaces?.find(w => w.id === activeId) ?? workspaces?.[0] ?? null
 
-  // No workspace yet - the dashboard page renders its own centered onboarding
-  // card, so skip the app shell entirely rather than showing an empty sidebar.
+  // No workspace yet - the page renders its own centered onboarding card, so
+  // skip the app shell entirely rather than showing an empty sidebar.
   if (!workspace || !workspaces || workspaces.length === 0) {
     return <>{children}</>
   }

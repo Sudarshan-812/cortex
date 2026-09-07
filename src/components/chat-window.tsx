@@ -13,6 +13,7 @@ import remarkGfm from 'remark-gfm'
 import { DynamicGreeting } from '@/components/DynamicGreeting'
 import { DocumentReaderPanel } from '@/components/DocumentReaderPanel'
 import { ChatTopBar } from '@/components/ChatTopBar'
+import { buildSuggestedPrompts } from '@/lib/prompts'
 
 /* ── Types ──────────────────────────────────────────────────────── */
 type Source = {
@@ -25,25 +26,6 @@ type Source = {
 }
 type ToolEvent = { name: string; status: 'running' | 'done'; count?: number }
 type Message   = { id?: string; role: 'user' | 'assistant'; content: string; sources?: Source[]; created_at?: string; answered_from?: 'documents' | 'web' | 'both' | 'none'; error?: string }
-
-function buildSuggestedPrompts(docNames: string[]): string[] {
-  if (docNames.length === 0) return [
-    'Summarize the key points',
-    'What are the main topics?',
-    'Explain the core concepts',
-    'Find specific information',
-  ]
-  const first  = docNames[0].replace(/\.(pdf|docx|doc|txt|md|csv)$/i, '')
-  const second = docNames[1]?.replace(/\.(pdf|docx|doc|txt|md|csv)$/i, '')
-  return [
-    `Summarize the key points from "${first}"`,
-    `What are the main topics in "${first}"?`,
-    second
-      ? `Compare "${first}" with "${second}"`
-      : `What conclusions can be drawn from "${first}"?`,
-    'Find specific information across all documents',
-  ]
-}
 
 function exportConversation(messages: Message[], workspaceName?: string) {
   const date = new Date().toISOString().slice(0, 10)
@@ -469,6 +451,7 @@ export function ChatWindow({
   const emptyUploadRef = useRef<HTMLInputElement>(null)
   const composerUploadRef = useRef<HTMLInputElement>(null)
   const abortRef    = useRef<AbortController | null>(null)
+  const autoSubmitRef = useRef(false)
   const router      = useRouter()
   const reduceMotion = useReducedMotion()
 
@@ -663,14 +646,15 @@ export function ChatWindow({
 
   const isEmpty = messages.length === 0
 
-  // Prefill / auto-submit from ?q= (e.g. opened from global search).
+  // Auto-send a question passed via ?q= (Home composer, global search). Fires
+  // once per mount; the guard survives strict-mode's double effect invocation.
   useEffect(() => {
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined' || autoSubmitRef.current) return
     const q = new URLSearchParams(window.location.search).get('q')
     if (!q) return
+    autoSubmitRef.current = true
     window.history.replaceState({}, '', window.location.pathname)
-    setInput(q)
-    inputRef.current?.focus()
+    handleSubmit(q)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -742,7 +726,7 @@ export function ChatWindow({
                 </div>
                 <div className="flex flex-wrap items-center justify-center gap-2">
                   <a
-                    href="/dashboard/settings#google-drive"
+                    href="/settings#google-drive"
                     className="cx-btn-ink flex items-center gap-2 h-8 px-3.5 rounded-md text-[12.5px] font-medium"
                   >
                     <HardDrive size={14} /> Connect Google Drive

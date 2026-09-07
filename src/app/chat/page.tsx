@@ -19,7 +19,7 @@ export default async function ChatIndexPage() {
     .eq("owner_id", user.id)
     .order("created_at", { ascending: true })
 
-  if (!workspaces || workspaces.length === 0) redirect("/dashboard")
+  if (!workspaces || workspaces.length === 0) redirect("/")
 
   const workspace = workspaces.find(w => w.id === activeId) ?? workspaces[0]
 
