@@ -9,7 +9,9 @@ import httpx
 from core.config import get_settings
 from core.retry import request_with_retry
 
-_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:embedContent"
+_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:batchEmbedContents"
+# Gemini's batchEmbedContents caps requests-per-call at 100.
+_API_BATCH_LIMIT = 100
 
 
 class GeminiEmbedder:
@@ -37,12 +39,24 @@ class GeminiEmbedder:
             await self._client.aclose()
 
     async def embed(self, texts: list[str]) -> list[list[float]]:
-        return list(await asyncio.gather(*(self._embed_one(t) for t in texts)))
+        """Embed via batchEmbedContents - one HTTP call per <=100 texts instead
+        of one call per text. embed_batch_size (the caller's group size) stays
+        well under the 100 API limit, so this is normally a single request."""
+        groups = [
+            texts[i : i + _API_BATCH_LIMIT] for i in range(0, len(texts), _API_BATCH_LIMIT)
+        ]
+        results = await asyncio.gather(*(self._embed_batch(g) for g in groups))
+        return [vec for group_vecs in results for vec in group_vecs]
 
-    async def _embed_one(self, text: str) -> list[float]:
+    async def _embed_batch(self, texts: list[str]) -> list[list[float]]:
         payload = {
-            "model": f"models/{self._model}",
-            "content": {"parts": [{"text": text[:8000]}]},
+            "requests": [
+                {
+                    "model": f"models/{self._model}",
+                    "content": {"parts": [{"text": t[:8000]}]},
+                }
+                for t in texts
+            ]
         }
         async with self._sem:
             resp = await request_with_retry(
@@ -53,5 +67,5 @@ class GeminiEmbedder:
                 ),
                 max_retries=self._retries,
             )
-        values = resp.json()["embedding"]["values"]
-        return [float(x) for x in values[: self._dim]]
+        embeddings = resp.json()["embeddings"]
+        return [[float(x) for x in e["values"][: self._dim]] for e in embeddings]
