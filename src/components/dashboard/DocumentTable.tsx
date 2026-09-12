@@ -24,13 +24,29 @@ function formatBytes(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-function timeAgo(dateStr: string) {
-  const mins = Math.floor((Date.now() - new Date(dateStr).getTime()) / 60000)
+function timeAgo(dateStr: string, now: number) {
+  const mins = Math.floor((now - new Date(dateStr).getTime()) / 60000)
   if (mins < 1)  return 'just now'
   if (mins < 60) return `${mins}m`
   const hrs = Math.floor(mins / 60)
   if (hrs < 24)  return `${hrs}h`
   return `${Math.floor(hrs / 24)}d`
+}
+
+// Date.now() read directly in render diverges between the server-rendered
+// pass and client hydration whenever real time crosses a minute/hour
+// boundary in between - a classic hydration mismatch. Deferring "now" to a
+// post-mount effect makes the first client render match the server exactly;
+// the periodic tick keeps "time ago" labels honest for the rest of the
+// session without ever affecting the initial render.
+function useNow(intervalMs = 60_000) {
+  const [now, setNow] = useState<number | null>(null)
+  useEffect(() => {
+    setNow(Date.now())
+    const id = setInterval(() => setNow(Date.now()), intervalMs)
+    return () => clearInterval(id)
+  }, [intervalMs])
+  return now
 }
 
 function SummaryPopover({ summary }: { summary: string }) {
@@ -64,12 +80,7 @@ export function DocumentTable({
   const [docs,       setDocs]       = useState(initial)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [confirmId,  setConfirmId]  = useState<string | null>(null)
-  const [, forceTick] = useState(0)
-
-  useEffect(() => {
-    const id = setInterval(() => forceTick(t => t + 1), 60_000)
-    return () => clearInterval(id)
-  }, [])
+  const now = useNow()
 
   async function handleDelete(id: string) {
     setDeletingId(id)
@@ -149,7 +160,9 @@ export function DocumentTable({
                   <TableCell className="cx-num text-[11.5px]" style={{ color: 'var(--cx-mute-1)' }}>{formatBytes(doc.size_bytes)}</TableCell>
 
                   {/* Added */}
-                  <TableCell className="cx-num text-[11.5px]" style={{ color: 'var(--cx-mute-1)' }}>{timeAgo(doc.created_at)}</TableCell>
+                  <TableCell className="cx-num text-[11.5px]" style={{ color: 'var(--cx-mute-1)' }}>
+                    {now === null ? ' ' : timeAgo(doc.created_at, now)}
+                  </TableCell>
 
                   {/* Status / delete */}
                   <TableCell>
