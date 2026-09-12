@@ -48,11 +48,11 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://cortex.sudarshank.c
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Cortex — Ask your Google Drive anything",
+    default: "Cortex - Ask your Google Drive anything",
     template: "%s | Cortex",
   },
   description:
-    "Connect Google Drive and ask questions across every document in plain language. Cortex answers with a direct link to the exact file and page — so you can trust it.",
+    "Connect Google Drive and ask questions across every document in plain language. Cortex answers with a direct link to the exact file and page - so you can trust it.",
   keywords: [
     "Google Drive AI", "chat with Google Drive", "ask your documents",
     "document search", "AI knowledge base", "cited answers", "PDF chat",
@@ -64,7 +64,7 @@ export const metadata: Metadata = {
     locale: "en_US",
     url: siteUrl,
     siteName: "Cortex",
-    title: "Cortex — Ask your Google Drive anything",
+    title: "Cortex - Ask your Google Drive anything",
     description:
       "Connect Google Drive once. Cortex reads every document and answers your questions in plain language, with a cited link to the exact file and page.",
     images: [
@@ -72,13 +72,13 @@ export const metadata: Metadata = {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Cortex — Ask your Google Drive anything",
+        alt: "Cortex - Ask your Google Drive anything",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Cortex — Ask your Google Drive anything",
+    title: "Cortex - Ask your Google Drive anything",
     description:
       "Connect Google Drive once. Cortex reads every document and answers in plain language, with a cited link to the exact file and page.",
     images: ["/og-image.png"],

@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils'
 /**
  * Shared responsive shell for the app/chat sidebars: a static in-flow `<aside>`
  * at md+ widths, and a shadcn `Sheet` drawer below md (Radix gives us
- * click-outside, Escape-to-close and focus return for free — the hand-rolled
+ * click-outside, Escape-to-close and focus return for free - the hand-rolled
  * backdrop div this replaces had none of that). Both branches render the same
  * `children` (never both at once), so nav/session-list state, the ⌘K
  * listener, etc. only ever exist in one place at a time.

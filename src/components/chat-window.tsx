@@ -702,7 +702,7 @@ export function ChatWindow({
       const errText = aborted
         ? 'Stopped.'
         : msg === 'rate_limit'
-          ? 'Rate limit reached — 20 messages per minute. Wait a moment and retry.'
+          ? 'Rate limit reached - 20 messages per minute. Wait a moment and retry.'
           : msg === 'unauthorized'
             ? 'Session expired. Refresh the page and try again.'
             : `Something went wrong.${msg ? ` (${msg})` : ' Please try again.'}`

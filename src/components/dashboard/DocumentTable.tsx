@@ -153,7 +153,7 @@ export function DocumentTable({
 
                   {/* Topics */}
                   <TableCell className="max-w-[220px] truncate text-[12px]" style={{ color: 'var(--cx-mute-1)' }}>
-                    {topics.length > 0 ? topics.slice(0, 3).join(', ') : <span style={{ color: 'var(--cx-mute-2)' }}>—</span>}
+                    {topics.length > 0 ? topics.slice(0, 3).join(', ') : <span style={{ color: 'var(--cx-mute-2)' }}>-</span>}
                   </TableCell>
 
                   {/* Size */}

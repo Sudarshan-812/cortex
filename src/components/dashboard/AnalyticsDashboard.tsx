@@ -22,7 +22,7 @@ const ACCENT_L = 'rgba(161,98,7,0.12)'
 const OK       = '#3c6e47'
 const OK_L     = 'rgba(60,110,71,0.12)'
 
-// Categorical ramp for per-category bars (topics, doc sizes) — richer than a
+// Categorical ramp for per-category bars (topics, doc sizes) - richer than a
 // single flat fill once there's more than a couple of bars to tell apart.
 const CHART_RAMP = ['var(--chart-1)', 'var(--chart-4)', 'var(--chart-5)', 'var(--chart-3)', 'var(--chart-2)']
 

@@ -110,7 +110,7 @@
   --sidebar-ring: var(--gold);
 }
 
-/* Legacy aliases — every existing `var(--cx-*)` / `var(--lp-*)` call-site
+/* Legacy aliases - every existing `var(--cx-*)` / `var(--lp-*)` call-site
    (inline styles + the utility classes below) now reads from the single
    brand palette above, so the marketing site and product can never drift
    into two different palettes again. */
@@ -307,7 +307,7 @@
   font-feature-settings: "tnum", "zero";
   letter-spacing: -0.01em;
 }
-/* Large hero stat figures — the one deliberate serif moment in the product,
+/* Large hero stat figures - the one deliberate serif moment in the product,
    echoing the editorial voice of the landing page's display type. */
 .cx-hero-num {
   font-family: var(--font-instrument-serif), Georgia, serif;
@@ -325,7 +325,7 @@
   color: var(--cx-mute-2);
 }
 
-/* Soft-elevated card — same glass language as .lp-panel, tuned lighter for
+/* Soft-elevated card - same glass language as .lp-panel, tuned lighter for
    dense product surfaces (less blur, a quieter shadow). */
 .cx-panel {
   background: rgba(255,255,255,0.82);
@@ -339,7 +339,7 @@
   transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
 }
 /* Explicitly flat variant for chrome that should stay quiet under a panel
-   (e.g. nested rows) — no blur/shadow. */
+   (e.g. nested rows) - no blur/shadow. */
 .cx-panel-flat {
   background: var(--cx-surface);
   border: 1px solid var(--cx-line);
@@ -484,7 +484,7 @@ input[type="range"]:focus-visible {
   outline-offset: 2px;
   border-radius: 6px;
 }
-/* Text fields get a soft ring instead of a hard outline — browsers treat
+/* Text fields get a soft ring instead of a hard outline - browsers treat
    click-focus on text inputs as focus-visible too, so the rule above would
    otherwise draw a harsh square outline on every search box / composer on
    a plain click, not just keyboard nav. */

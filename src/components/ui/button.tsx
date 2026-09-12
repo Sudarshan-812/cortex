@@ -18,7 +18,7 @@ const buttonVariants = cva(
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",
-        // Brand variants — same soft-lift language across landing + product,
+        // Brand variants - same soft-lift language across landing + product,
         // replacing the old .cx-btn-ink / .lp-btn-primary / .lp-btn-ghost /
         // .lp-btn-accent hand-rolled classes.
         ink: "cx-btn-ink rounded-xl hover:-translate-y-px",

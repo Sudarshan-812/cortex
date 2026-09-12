@@ -21,7 +21,7 @@ type Workspace = { id: string; name: string }
  *
  * `variant="full"` matches the app sidebar: an icon trigger when collapsed,
  * an inline "New workspace" creator. `variant="compact"` matches the chat
- * sidebar: label-only, no collapsed trigger, no creation — it's hidden
+ * sidebar: label-only, no collapsed trigger, no creation - it's hidden
  * entirely when collapsed or when there's nothing to switch between.
  */
 export function WorkspaceSwitcher({

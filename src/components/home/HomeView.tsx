@@ -57,7 +57,7 @@ export function HomeView({
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      {/* Ambient background — a quiet, static echo of the landing page's warm
+      {/* Ambient background - a quiet, static echo of the landing page's warm
           ink/gold field. No WebGL here: this page is seen every session, so
           it stays CSS-only (a couple of soft radial washes + the shared paper
           grain texture) rather than paying shader cost on every visit. */}
