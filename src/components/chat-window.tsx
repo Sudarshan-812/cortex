@@ -14,6 +14,8 @@ import { DynamicGreeting } from '@/components/DynamicGreeting'
 import { DocumentReaderPanel } from '@/components/DocumentReaderPanel'
 import { ChatTopBar } from '@/components/ChatTopBar'
 import { buildSuggestedPrompts } from '@/lib/prompts'
+import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 
 /* ── Types ──────────────────────────────────────────────────────── */
 type Source = {
@@ -270,11 +272,16 @@ function AnsweredFromBadge({ kind }: { kind: NonNullable<Message['answered_from'
   } as const
   const { label, ok } = map[kind]
   return (
-    <span className="inline-flex items-center gap-1.5 text-[11px] font-medium"
-      style={{ color: ok ? 'var(--cx-ok)' : 'var(--cx-mute-1)' }}>
+    <Badge
+      variant="outline"
+      className={cn(
+        'gap-1.5 border-transparent text-[11px] font-medium',
+        ok ? 'bg-[var(--cx-ok-wash)] text-[var(--cx-ok)]' : 'bg-[var(--cx-paper-2)] text-[var(--cx-mute-1)]'
+      )}
+    >
       <span className="cx-dot" style={{ background: ok ? 'var(--cx-ok)' : 'var(--cx-mute-2)' }} />
       {label}
-    </span>
+    </Badge>
   )
 }
 
@@ -388,14 +395,15 @@ function Markdown({ content, onCite }: { content: string; onCite?: (id: string) 
             if (href?.startsWith('#cite-')) {
               const id = href.slice(6)
               return (
-                <button
-                  type="button"
-                  onClick={() => onCite?.(id)}
-                  className="cx-cite"
-                  title="View source passage"
+                <Badge
+                  asChild
+                  variant="outline"
+                  className="h-4 min-w-4 mx-px px-1 align-baseline rounded-md border-[var(--cx-accent-line)] bg-[var(--cx-accent-wash)] font-mono text-[10px] font-semibold text-[var(--cx-accent)] cursor-pointer transition-colors hover:bg-[var(--cx-accent)] hover:text-white hover:border-[var(--cx-accent)]"
                 >
-                  {String(children).replace(/^\[|\]$/g, '')}
-                </button>
+                  <button type="button" onClick={() => onCite?.(id)} title="View source passage">
+                    {String(children).replace(/^\[|\]$/g, '')}
+                  </button>
+                </Badge>
               )
             }
             return <a href={href} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2" style={{ color: 'var(--cx-accent)' }} {...rest}>{children}</a>
@@ -726,7 +734,7 @@ export function ChatWindow({
                 </div>
                 <div className="flex flex-wrap items-center justify-center gap-2">
                   <a
-                    href="/settings#google-drive"
+                    href="/analytics#google-drive"
                     className="cx-btn-ink flex items-center gap-2 h-8 px-3.5 rounded-md text-[12.5px] font-medium"
                   >
                     <HardDrive size={14} /> Connect Google Drive
@@ -813,11 +821,11 @@ export function ChatWindow({
                       className="flex flex-col items-end gap-1"
                     >
                       <div
-                        className="max-w-[80%] rounded-lg px-4 py-2.5 text-[14px] leading-[1.65] whitespace-pre-wrap"
+                        className="max-w-[80%] rounded-2xl rounded-br-md px-4 py-2.5 text-[14px] leading-[1.65] whitespace-pre-wrap"
                         style={{
-                          background: 'var(--cx-paper-2)',
+                          background: 'var(--cx-accent-wash)',
                           color: 'var(--cx-ink)',
-                          border: '1px solid var(--cx-line)',
+                          border: '1px solid var(--cx-accent-line)',
                         }}
                       >
                         {msg.content}
@@ -880,10 +888,10 @@ export function ChatWindow({
                             className="flex flex-wrap gap-1.5"
                           >
                             {activeTools.filter(t => t.status === 'done').map(t => (
-                              <div
+                              <Badge
                                 key={t.name}
-                                className="inline-flex items-center gap-1.5 text-[11.5px]"
-                                style={{ color: 'var(--cx-mute-1)' }}
+                                variant="outline"
+                                className="gap-1.5 border-transparent bg-[var(--cx-ok-wash)] text-[11px] font-medium text-[var(--cx-mute-1)]"
                               >
                                 <CheckCircle2 size={11} style={{ color: 'var(--cx-ok)' }} />
                                 {t.name === 'search_documents'
@@ -893,7 +901,7 @@ export function ChatWindow({
                                     : t.name === 'query_rewrite'
                                       ? 'Query refined'
                                       : 'Done'}
-                              </div>
+                              </Badge>
                             ))}
                           </motion.div>
                         )}
@@ -1023,11 +1031,12 @@ export function ChatWindow({
         >
           <div className="max-w-[720px] mx-auto">
             <div
-              className="rounded-lg overflow-hidden transition-all duration-150"
+              className="cx-panel overflow-hidden transition-all duration-150"
               style={{
-                background:  'var(--cx-surface)',
-                border:      `1px solid ${focused ? 'var(--cx-line-2)' : 'var(--cx-line)'}`,
-                boxShadow:   focused ? '0 0 0 3px var(--cx-accent-wash)' : 'none',
+                borderColor: focused ? 'var(--cx-line-2)' : 'var(--cx-line)',
+                boxShadow: focused
+                  ? '0 0 0 3px var(--cx-accent-wash), 0 10px 24px -14px rgba(28,25,23,0.10)'
+                  : undefined,
               }}
             >
               <label htmlFor="cx-composer" className="sr-only">Ask a question about your documents</label>

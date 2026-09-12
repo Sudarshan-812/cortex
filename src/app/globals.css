@@ -44,39 +44,118 @@
   --radius-4xl: calc(var(--radius) + 16px);
 }
 
+/* ── Unified Cortex brand tokens ───────────────────────────────────
+   Single source of truth for both the marketing site and the product.
+   Everything below (shadcn semantic tokens, and the legacy --cx-* and
+   --lp-* aliases kept for existing call-sites) resolves from this one
+   palette. */
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.141 0.005 285.823);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.005 285.823);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.21 0.006 285.885);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.21 0.006 285.885);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.705 0.015 286.067);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.141 0.005 285.823);
-  --sidebar-primary: oklch(0.21 0.006 285.885);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.967 0.001 286.375);
-  --sidebar-accent-foreground: oklch(0.21 0.006 285.885);
-  --sidebar-border: oklch(0.92 0.004 286.32);
-  --sidebar-ring: oklch(0.705 0.015 286.067);
+  --paper:      #fafaf9;
+  --paper-2:    #f0eeec;
+  --surface:    #ffffff;
+  --surface-2:  #f7f6f4;
+  --ink:        #1c1917;
+  --ink-2:      #292524;
+  --mute-1:     #57534e;
+  --mute-2:     #736e67;
+  --line:       rgba(28,25,23,0.09);
+  --line-2:     rgba(28,25,23,0.16);
+  --gold:       #a16207;
+  --gold-2:     #b8790a;
+  --gold-wash:  rgba(161,98,7,0.08);
+  --gold-line:  rgba(161,98,7,0.28);
+  --bronze:     #78350f;
+  --bronze-2:   #92400e;
+  --bronze-wash:rgba(120,53,15,0.08);
+  --ok:         #166534;
+  --ok-wash:    rgba(21,128,61,0.08);
+  --warn:       #a06a1a;
+  --warn-wash:  #f6ecd9;
+  --err:        #b91c1c;
+  --grad:       linear-gradient(100deg, #78350f 0%, #92400e 45%, #a16207 100%);
+}
+
+:root {
+  --radius: 1rem;
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--surface);
+  --card-foreground: var(--ink);
+  --popover: var(--surface);
+  --popover-foreground: var(--ink);
+  --primary: var(--ink);
+  --primary-foreground: var(--paper);
+  --secondary: var(--paper-2);
+  --secondary-foreground: var(--ink);
+  --muted: var(--paper-2);
+  --muted-foreground: var(--mute-1);
+  --accent: var(--gold);
+  --accent-foreground: #ffffff;
+  --destructive: var(--err);
+  --border: var(--line);
+  --input: var(--line);
+  --ring: var(--gold);
+  --chart-1: var(--gold);
+  --chart-2: #44403c;
+  --chart-3: var(--ok);
+  --chart-4: #2f6f76;
+  --chart-5: #7c5cbf;
+  --sidebar: var(--paper);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--ink);
+  --sidebar-primary-foreground: var(--paper);
+  --sidebar-accent: var(--paper-2);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--line);
+  --sidebar-ring: var(--gold);
+}
+
+/* Legacy aliases — every existing `var(--cx-*)` / `var(--lp-*)` call-site
+   (inline styles + the utility classes below) now reads from the single
+   brand palette above, so the marketing site and product can never drift
+   into two different palettes again. */
+:root {
+  --cx-paper: var(--paper);
+  --cx-paper-2: var(--paper-2);
+  --cx-surface: var(--surface);
+  --cx-ink: var(--ink);
+  --cx-ink-2: var(--ink-2);
+  --cx-mute-1: var(--mute-1);
+  --cx-mute-2: var(--mute-2);
+  --cx-line: var(--line);
+  --cx-line-2: var(--line-2);
+  --cx-accent: var(--gold);
+  --cx-accent-2: var(--gold-2);
+  --cx-accent-wash: var(--gold-wash);
+  --cx-accent-line: var(--gold-line);
+  --cx-ok: var(--ok);
+  --cx-ok-wash: var(--ok-wash);
+  --cx-warn: var(--warn);
+  --cx-warn-wash: var(--warn-wash);
+  --cx-err: var(--err);
+  --cx-radius: var(--radius);
+
+  --lp-bg: var(--paper);
+  --lp-bg-2: var(--paper-2);
+  --lp-surface: var(--surface);
+  --lp-surface-2: var(--surface-2);
+  --lp-ink: var(--ink);
+  --lp-ink-2: var(--ink-2);
+  --lp-mute-1: var(--mute-1);
+  --lp-mute-2: var(--mute-2);
+  --lp-border: var(--line);
+  --lp-border-2: var(--line-2);
+  --lp-primary: var(--gold);
+  --lp-primary-2: var(--gold-2);
+  --lp-primary-wash: var(--gold-wash);
+  --lp-primary-line: var(--gold-line);
+  --lp-accent: var(--bronze);
+  --lp-accent-2: var(--bronze-2);
+  --lp-accent-wash: var(--bronze-wash);
+  --lp-ok: var(--ok);
+  --lp-ok-wash: var(--ok-wash);
+  --lp-err: var(--err);
+  --lp-grad: var(--grad);
 }
 
 @layer base {
@@ -88,53 +167,6 @@
   }
 }
 
-
-/* ── Cortex Dashboard Editorial Design System ─────────────────── */
-:root {
-  --cx-paper:        #f6f5f2;
-  --cx-paper-2:      #efede8;
-  --cx-surface:      #ffffff;
-  --cx-ink:          #0a0a0a;
-  --cx-ink-2:        #1a1a1a;
-  --cx-mute-1:       #57534e;  /* AA on paper (~5.5:1) */
-  --cx-mute-2:       #6f6b64;  /* AA-ish for >=12px (~4.6:1) */
-  --cx-line:         #e8e5dd;
-  --cx-line-2:       #d9d5cb;
-  --cx-accent:       #a16207;
-  --cx-accent-2:     #b8790a;
-  --cx-accent-wash:  #f5ecd9;
-  --cx-accent-line:  #e8d5ac;
-  --cx-ok:           #3c6e47;
-  --cx-ok-wash:      #eaf0e7;
-  --cx-warn:         #a06a1a;
-  --cx-warn-wash:    #f6ecd9;
-  --cx-err:          #a6443a;
-}
-
-/* ── Cortex Landing Page v6 - light premium editorial, ink & gold ──── */
-:root {
-  --lp-bg:           #fafaf9;
-  --lp-bg-2:         #f0eeec;
-  --lp-surface:      #ffffff;
-  --lp-surface-2:    #f7f6f4;
-  --lp-ink:          #1c1917;
-  --lp-ink-2:        #292524;
-  --lp-mute-1:       #57534e;
-  --lp-mute-2:       #736e67;
-  --lp-border:       rgba(28,25,23,0.09);
-  --lp-border-2:     rgba(28,25,23,0.16);
-  --lp-primary:      #a16207;
-  --lp-primary-2:    #b8790a;
-  --lp-primary-wash: rgba(161,98,7,0.08);
-  --lp-primary-line: rgba(161,98,7,0.28);
-  --lp-accent:       #78350f;
-  --lp-accent-2:     #92400e;
-  --lp-accent-wash:  rgba(120,53,15,0.08);
-  --lp-ok:           #166534;
-  --lp-ok-wash:      rgba(21,128,61,0.08);
-  --lp-err:          #b91c1c;
-  --lp-grad:         linear-gradient(100deg, #78350f 0%, #92400e 45%, #a16207 100%);
-}
 
 .lp-font {
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
@@ -266,14 +298,21 @@
 }
 .lp-spotlight:hover::before { opacity: 1; }
 
-/* ── Clean functional dashboard: flat surfaces, hairline borders, no shadows,
-   system font. Warm-paper + gold palette retained; gold is reserved for real
-   accents (primary button, active nav, links, key figures). ─────────────── */
-:root { --cx-radius: 8px; }
+/* ── Dashboard, lifted to the same editorial/glass language as the landing
+   page: soft elevation, hairline borders, warm-paper + gold palette. Gold is
+   reserved for real accents (primary button, active nav, links, key figures). */
 
 .cx-num {
   font-family: var(--font-geist-mono), ui-monospace, monospace;
   font-feature-settings: "tnum", "zero";
+  letter-spacing: -0.01em;
+}
+/* Large hero stat figures — the one deliberate serif moment in the product,
+   echoing the editorial voice of the landing page's display type. */
+.cx-hero-num {
+  font-family: var(--font-instrument-serif), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
   letter-spacing: -0.01em;
 }
 .cx-serif { font-style: italic; }
@@ -286,15 +325,34 @@
   color: var(--cx-mute-2);
 }
 
-/* Flat card. No shadow, no lift. */
-.cx-panel,
+/* Soft-elevated card — same glass language as .lp-panel, tuned lighter for
+   dense product surfaces (less blur, a quieter shadow). */
+.cx-panel {
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border: 1px solid var(--cx-line);
+  border-radius: var(--cx-radius);
+  box-shadow:
+    0 1px 2px -1px rgba(28,25,23,0.04),
+    0 10px 24px -14px rgba(28,25,23,0.10);
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+/* Explicitly flat variant for chrome that should stay quiet under a panel
+   (e.g. nested rows) — no blur/shadow. */
 .cx-panel-flat {
   background: var(--cx-surface);
   border: 1px solid var(--cx-line);
   border-radius: var(--cx-radius);
   transition: border-color 0.15s ease, background 0.15s ease;
 }
-.cx-panel-hover:hover { border-color: var(--cx-line-2); }
+.cx-panel-hover:hover {
+  border-color: var(--cx-line-2);
+  box-shadow:
+    0 2px 4px -1px rgba(28,25,23,0.05),
+    0 16px 32px -16px rgba(161,98,7,0.16);
+  transform: translateY(-1px);
+}
 
 /* Small neutral icon holder (gold only when a component opts in). */
 .cx-icon-chip {
@@ -312,21 +370,30 @@
 .cx-icon-chip-lg  { width: 34px; height: 34px; }
 .cx-icon-chip-xl  { width: 44px; height: 44px; }
 
-/* Buttons: flat, 1px, no shadow, no transform. */
+/* Buttons: same soft-lift language as the landing CTAs. */
 .cx-btn-ink {
   background: var(--cx-ink);
   color: #fafafa;
   border: 1px solid var(--cx-ink);
-  transition: background 0.15s ease;
+  box-shadow: 0 6px 18px -8px rgba(10,10,10,0.35);
+  transition: background 0.18s ease, box-shadow 0.18s cubic-bezier(.2,.7,.2,1), transform 0.18s cubic-bezier(.2,.7,.2,1);
 }
-.cx-btn-ink:hover { background: #000; }
+.cx-btn-ink:hover {
+  background: #000;
+  box-shadow: 0 10px 26px -8px rgba(10,10,10,0.45);
+  transform: translateY(-1px);
+}
 .cx-btn-ghost {
   background: var(--cx-surface);
   border: 1px solid var(--cx-line);
   color: var(--cx-ink-2);
-  transition: background 0.15s ease, border-color 0.15s ease;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s cubic-bezier(.2,.7,.2,1);
 }
-.cx-btn-ghost:hover { background: var(--cx-paper-2); border-color: var(--cx-line-2); }
+.cx-btn-ghost:hover {
+  background: var(--cx-paper-2);
+  border-color: var(--cx-line-2);
+  transform: translateY(-1px);
+}
 
 .cx-hdiv { background: var(--cx-line); height: 1px; }
 
@@ -401,25 +468,33 @@
 /* Light-only product; keep OS form controls / scrollbars light. */
 :root { color-scheme: light; }
 
-/* Visible keyboard focus for every interactive element. Pointer users
-   never see it (:focus-visible), so it doesn't disturb the visual design. */
+/* Visible keyboard focus for non-text controls. Pointer users never see it
+   here (:focus-visible), so it doesn't disturb the visual design. */
 a:focus-visible,
 button:focus-visible,
-input:focus-visible,
-textarea:focus-visible,
-select:focus-visible,
 summary:focus-visible,
 [tabindex]:focus-visible,
 [role="button"]:focus-visible,
 [role="menuitem"]:focus-visible,
-[role="option"]:focus-visible {
+[role="option"]:focus-visible,
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible,
+input[type="range"]:focus-visible {
   outline: 2px solid var(--cx-accent);
   outline-offset: 2px;
   border-radius: 6px;
 }
-/* Inputs that draw their own focus ring on the landing/login screens */
-.lp-font input:focus-visible,
-.lp-font textarea:focus-visible { outline-color: var(--lp-primary); }
+/* Text fields get a soft ring instead of a hard outline — browsers treat
+   click-focus on text inputs as focus-visible too, so the rule above would
+   otherwise draw a harsh square outline on every search box / composer on
+   a plain click, not just keyboard nav. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  border-color: var(--cx-accent-line);
+  box-shadow: 0 0 0 3px var(--cx-accent-wash);
+}
 
 /* Firefox scrollbars (WebKit handled by .cx-scroll-thin) */
 * { scrollbar-width: thin; scrollbar-color: var(--cx-line-2) transparent; }

@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Github, Twitter } from "lucide-react";
 
 const LINKS = [
   { label: "Features", href: "#features" },
   { label: "Architecture", href: "#architecture" },
   { label: "Docs", href: "/docs" },
-  { label: "Contact", href: "mailto:sudarshankulkarni812@gmail.com" },
+  // TODO: point at a real support/contact address before launch.
+  { label: "Contact", href: "mailto:hello@cortex.app" },
 ];
 
 export function Footer() {
@@ -40,14 +40,6 @@ export function Footer() {
           <span className="text-[12px] cx-num" style={{ color: "var(--lp-mute-2)" }}>
             &copy; {new Date().getFullYear()} Cortex
           </span>
-          <a href="https://github.com/Sudarshan-812" target="_blank" rel="noopener noreferrer" aria-label="GitHub"
-            className="transition-opacity hover:opacity-60" style={{ color: "var(--lp-ink)" }}>
-            <Github className="size-4" />
-          </a>
-          <a href="https://x.com/Sudarshan_dev8" target="_blank" rel="noopener noreferrer" aria-label="Twitter / X"
-            className="transition-opacity hover:opacity-60" style={{ color: "var(--lp-ink)" }}>
-            <Twitter className="size-4" />
-          </a>
         </div>
       </div>
     </footer>

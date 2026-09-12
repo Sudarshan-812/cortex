@@ -156,14 +156,22 @@ export function GoogleDriveCard({
   const lastSync = timeAgo(status?.last_synced_at)
 
   return (
-    <div id="google-drive" className="cx-panel p-4 mb-5 max-w-2xl scroll-mt-24">
-      <div className="flex items-center gap-2 mb-1">
-        <HardDrive size={15} style={{ color: 'var(--cx-accent)' }} />
-        <h3 className="text-[13px] font-semibold" style={{ color: 'var(--cx-ink)' }}>
-          Google Drive
-        </h3>
+    <div id="google-drive" className="cx-panel p-5 mb-5 scroll-mt-24">
+      <div className="flex items-center gap-3 mb-3.5">
+        <div
+          className="size-9 rounded-xl flex items-center justify-center border flex-shrink-0"
+          style={{ background: 'var(--cx-accent-wash)', borderColor: 'var(--cx-accent-line)' }}
+        >
+          <HardDrive size={16} style={{ color: 'var(--cx-accent)' }} />
+        </div>
+        <div>
+          <p className="cx-rule-label mb-0.5">Connectors</p>
+          <h3 className="text-[14.5px] font-semibold" style={{ color: 'var(--cx-ink)' }}>
+            Google Drive
+          </h3>
+        </div>
       </div>
-      <p className="text-[12.5px] mb-3.5" style={{ color: 'var(--cx-mute-1)' }}>
+      <p className="text-[12.5px] mb-3.5 max-w-2xl" style={{ color: 'var(--cx-mute-1)' }}>
         Give Cortex read-only access to one Drive folder. Every PDF, DOCX and XLSX
         inside it becomes searchable in chat. Edited files are picked up on the next sync.
       </p>
@@ -175,7 +183,7 @@ export function GoogleDriveCard({
           <Link2 size={14} /> Connect Google Drive
         </button>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3 max-w-2xl">
           {/* connected line */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 text-[13px]" style={{ color: 'var(--cx-ok)' }}>

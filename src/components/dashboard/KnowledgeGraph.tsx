@@ -118,12 +118,12 @@ function runLayout(
 }
 
 export function KnowledgeGraph({ documents }: { documents: Doc[] }) {
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(true)
   const [nodes, setNodes] = useState<GraphNode[]>([])
   const [edges, setEdges] = useState<GraphEdge[]>([])
   const [hovered, setHovered] = useState<string | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const W = 400, H = 340
+  const W = 640, H = 420
 
   const docsWithTopics = documents.filter(d => Array.isArray(d.topics) && d.topics!.length > 0)
 
@@ -142,20 +142,27 @@ export function KnowledgeGraph({ documents }: { documents: Doc[] }) {
       {/* Header */}
       <button
         onClick={() => setExpanded(e => !e)}
-        className="w-full flex items-center justify-between px-4 py-3 transition-colors"
+        className="w-full flex items-center justify-between px-4 py-3.5 transition-colors"
         onMouseEnter={e => (e.currentTarget.style.background = 'var(--cx-paper)')}
         onMouseLeave={e => (e.currentTarget.style.background = '')}
       >
-        <div className="flex items-center gap-2.5">
-          <Network size={14} style={{ color: 'var(--cx-mute-2)' }} />
-          <p className="text-[13px] font-semibold" style={{ color: 'var(--cx-ink)' }}>
-            Knowledge graph
-            <span className="font-normal ml-1.5" style={{ color: 'var(--cx-mute-2)' }}>
-              {docsWithTopics.length} doc{docsWithTopics.length !== 1 ? 's' : ''}
-            </span>
-          </p>
+        <div className="flex items-center gap-3">
+          <div
+            className="cx-icon-chip cx-icon-chip-md"
+            style={{ background: 'var(--cx-accent-wash)', borderColor: 'var(--cx-accent-line)', color: 'var(--cx-accent)' }}
+          >
+            <Network size={15} />
+          </div>
+          <div className="text-left">
+            <p className="text-[13.5px] font-semibold" style={{ color: 'var(--cx-ink)' }}>
+              Knowledge graph
+            </p>
+            <p className="text-[11.5px]" style={{ color: 'var(--cx-mute-2)' }}>
+              {docsWithTopics.length} document{docsWithTopics.length !== 1 ? 's' : ''} · how your topics connect
+            </p>
+          </div>
         </div>
-        <span className="text-[12px]" style={{ color: 'var(--cx-mute-1)' }}>
+        <span className="text-[12px] font-medium" style={{ color: 'var(--cx-mute-1)' }}>
           {expanded ? 'Hide' : 'Show'}
         </span>
       </button>
@@ -172,7 +179,7 @@ export function KnowledgeGraph({ documents }: { documents: Doc[] }) {
           >
             <div ref={containerRef} className="relative px-4 py-4">
               {nodes.length === 0 ? (
-                <div className="flex items-center justify-center h-[340px]">
+                <div className="flex items-center justify-center" style={{ height: H }}>
                   <div className="size-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--cx-accent)' }} />
                 </div>
               ) : (

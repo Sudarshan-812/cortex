@@ -59,7 +59,7 @@ export function Architecture() {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-100px" }}
         transition={{ duration: 0.4, ease }}
-        className="lp-panel relative overflow-hidden rounded-[2rem] px-6 py-12 sm:px-10 sm:py-14"
+        className="lp-panel relative overflow-hidden rounded-4xl px-6 py-12 sm:px-10 sm:py-14"
       >
         {/* Faint top glow */}
         <div

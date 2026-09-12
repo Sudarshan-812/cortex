@@ -1,4 +1,7 @@
+"use client"
+
 import Link from "next/link"
+import { motion } from "framer-motion"
 import { FileText, MessageSquare, Zap, HardDrive, ArrowRight } from "lucide-react"
 
 import { DynamicGreeting } from "@/components/DynamicGreeting"
@@ -23,6 +26,15 @@ type Doc = {
 
 type Session = { id: string; title: string; updated_at: string }
 
+const stagger = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.09, delayChildren: 0.03 } },
+}
+const fadeUp = {
+  hidden: { opacity: 0, y: 12 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const } },
+}
+
 export function HomeView({
   workspace,
   documents,
@@ -43,22 +55,44 @@ export function HomeView({
   const hasKnowledgeGraph = documents.some(d => Array.isArray(d.topics) && d.topics.length > 0)
 
   return (
-    <div className="min-h-screen">
-      <div className="max-w-[880px] mx-auto px-6 pt-12 pb-16">
+    <div className="relative min-h-screen overflow-hidden">
+      {/* Ambient background — a quiet, static echo of the landing page's warm
+          ink/gold field. No WebGL here: this page is seen every session, so
+          it stays CSS-only (a couple of soft radial washes + the shared paper
+          grain texture) rather than paying shader cost on every visit. */}
+      <div aria-hidden className="cx-grain pointer-events-none absolute inset-0 -z-10" style={{ background: "var(--paper)" }} />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 -z-10"
+        style={{
+          background:
+            "radial-gradient(60% 45% at 12% -8%, var(--gold-wash), transparent 60%)," +
+            "radial-gradient(55% 45% at 100% 0%, var(--bronze-wash), transparent 65%)",
+        }}
+      />
+
+      <motion.div
+        className="relative z-10 max-w-[880px] mx-auto px-6 pt-12 pb-16"
+        variants={stagger}
+        initial="hidden"
+        animate="show"
+      >
 
         {/* Ask ------------------------------------------------------- */}
-        <DynamicGreeting />
+        <motion.div variants={fadeUp}>
+          <DynamicGreeting />
+        </motion.div>
 
-        <div className="mt-6">
+        <motion.div variants={fadeUp} className="mt-6">
           <HomeComposer
             workspaceId={workspace.id}
             suggestions={recentSessions.length === 0 ? buildSuggestedPrompts(docNames) : []}
           />
-        </div>
+        </motion.div>
 
         {/* Recent chats ------------------------------------------------ */}
         {recentSessions.length > 0 && (
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-1.5">
+          <motion.div variants={fadeUp} className="mt-5 flex flex-wrap items-center justify-center gap-1.5">
             {recentSessions.map(s => (
               <Link
                 key={s.id}
@@ -77,11 +111,11 @@ export function HomeView({
             >
               View all <ArrowRight size={11} />
             </Link>
-          </div>
+          </motion.div>
         )}
 
         {/* Documents ------------------------------------------------- */}
-        <div className="mt-10 pt-8 border-t" style={{ borderColor: "var(--cx-line)" }}>
+        <motion.div variants={fadeUp} className="mt-10 pt-8 border-t" style={{ borderColor: "var(--cx-line)" }}>
           <div className="flex items-center justify-between gap-4 mb-4">
             <div className="min-w-0">
               <h3 className="text-[15px] font-semibold tracking-tight" style={{ color: "var(--cx-ink)" }}>
@@ -93,7 +127,7 @@ export function HomeView({
                 {driveConnected && (
                   <>
                     {" · "}
-                    <Link href="/settings#google-drive" className="inline-flex items-center gap-1 hover:underline">
+                    <Link href="/analytics#google-drive" className="inline-flex items-center gap-1 hover:underline">
                       <HardDrive size={11} style={{ color: "var(--cx-accent)" }} /> Drive connected
                     </Link>
                   </>
@@ -116,7 +150,7 @@ export function HomeView({
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-8 gap-y-4">
                 {[
-                  { icon: <FileText size={14} />, step: "1", title: "Connect Google Drive", desc: "Link a Drive folder in Settings, or upload PDF, DOCX or XLSX files directly." },
+                  { icon: <FileText size={14} />, step: "1", title: "Connect Google Drive", desc: "Link a Drive folder from the Dashboard, or upload PDF, DOCX or XLSX files directly." },
                   { icon: <Zap size={14} />, step: "2", title: "Cortex reads your files", desc: "Each document is parsed, split into passages, and indexed so it can be searched by meaning." },
                   { icon: <MessageSquare size={14} />, step: "3", title: "Ask, get cited answers", desc: "Ask in plain language. Cortex pulls the relevant passages and links every claim to its source." },
                 ].map(({ icon, step, title, desc }) => (
@@ -133,7 +167,7 @@ export function HomeView({
               </div>
               <div className="mt-5 flex flex-wrap items-center gap-2">
                 <Link
-                  href="/settings#google-drive"
+                  href="/analytics#google-drive"
                   className="cx-btn-ink h-8 px-3 rounded-md text-[12.5px] font-medium flex items-center gap-1.5"
                 >
                   <HardDrive size={13} /> Connect Google Drive
@@ -159,8 +193,8 @@ export function HomeView({
               <DocumentTable documents={documents} storageMB={storageMB} />
             </>
           )}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   )
 }

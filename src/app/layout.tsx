@@ -5,6 +5,8 @@ import { Analytics } from "@vercel/analytics/next";
 import { ProgressBar } from "@/components/ProgressBar";
 import { SmoothScrollProvider } from "@/components/SmoothScrollProvider";
 import PostHogProvider from "@/components/PostHogProvider";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -119,10 +121,13 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} ${instrumentSerif.variable} ${bricolage.variable} ${inter.variable} ${jetbrainsMono.variable} antialiased`}>
         <PostHogProvider>
-          <ProgressBar />
-          <SmoothScrollProvider>
-            {children}
-          </SmoothScrollProvider>
+          <TooltipProvider delayDuration={200}>
+            <ProgressBar />
+            <SmoothScrollProvider>
+              {children}
+            </SmoothScrollProvider>
+            <Toaster />
+          </TooltipProvider>
           <Analytics />
         </PostHogProvider>
         {/* JSON-LD structured data - placed in body, valid per spec and Next.js recommendation */}

@@ -19,10 +19,10 @@ export function CTA({ isLoggedIn = false }: CTAProps) {
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-80px" }}
         transition={{ duration: 0.4, ease }}
-        className="lp-panel relative overflow-hidden rounded-[2rem] px-10 py-16 text-center"
+        className="lp-panel relative overflow-hidden rounded-4xl px-10 py-16 text-center"
       >
         {/* Soft inner highlight */}
-        <div className="absolute inset-0 pointer-events-none rounded-[2rem]"
+        <div className="absolute inset-0 pointer-events-none rounded-4xl"
           style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 0%, rgba(161,98,7,0.08), transparent)' }} />
 
         <div className="relative z-10 flex flex-col items-center gap-5">

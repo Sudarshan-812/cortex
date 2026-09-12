@@ -76,8 +76,7 @@ export function HomeComposer({
   return (
     <div className="w-full">
       <div
-        className="flex items-end gap-2 rounded-xl border px-3 py-2.5 transition-colors focus-within:border-[var(--cx-line-2)]"
-        style={{ background: 'var(--cx-surface)', borderColor: 'var(--cx-line)' }}
+        className="cx-panel flex items-end gap-2 overflow-hidden px-3 py-2.5 transition-colors focus-within:shadow-[0_0_0_3px_var(--cx-accent-wash)]"
       >
         <input ref={uploadRef} type="file" className="hidden" accept=".pdf,.docx,.xlsx" onChange={handleUpload} />
         <button

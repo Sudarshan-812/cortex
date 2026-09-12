@@ -39,9 +39,9 @@ function Tile({
       whileInView={{ opacity: 1 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.25, ease }}
-      className={`lp-panel relative overflow-hidden rounded-[1.75rem] group h-full ${className ?? ""}`}
+      className={`lp-panel relative overflow-hidden rounded-3xl group h-full ${className ?? ""}`}
     >
-      <Spotlight className="relative rounded-[1.75rem] p-7 h-full block">
+      <Spotlight className="relative rounded-3xl p-7 h-full block">
         {children}
       </Spotlight>
       <div

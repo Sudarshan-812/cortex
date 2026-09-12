@@ -2,7 +2,6 @@ import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { SettingsContent } from "@/components/dashboard/SettingsContent";
-import { GoogleDriveCard } from "@/components/dashboard/GoogleDriveCard";
 import { EditableSetting } from "@/components/dashboard/EditableSetting";
 import { renameWorkspace, updateDisplayName } from "@/app/actions";
 
@@ -78,7 +77,6 @@ export default async function SettingsPage() {
               onSave={renameWorkspace.bind(null, workspace.id)}
             />
           )}
-          <GoogleDriveCard workspaceId={workspace?.id} workspaceName={workspace?.name} />
         </>
       }
     />

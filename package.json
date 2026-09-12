@@ -33,11 +33,13 @@
     "papaparse": "^5.5.3",
     "pdf2json": "^4.0.2",
     "posthog-js": "^1.376.3",
+    "radix-ui": "^1.6.7",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-markdown": "^9.1.0",
     "recharts": "^3.8.1",
     "remark-gfm": "^4.0.1",
+    "sonner": "^2.0.8",
     "tailwind-merge": "^3.4.0",
     "three": "^0.183.2"
   },

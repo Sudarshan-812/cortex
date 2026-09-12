@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion'
 import {
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
+  AreaChart, Area, BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
 } from 'recharts'
 import { FileText, MessageSquare, BookOpen, TrendingUp } from 'lucide-react'
@@ -22,6 +22,10 @@ const ACCENT_L = 'rgba(161,98,7,0.12)'
 const OK       = '#3c6e47'
 const OK_L     = 'rgba(60,110,71,0.12)'
 
+// Categorical ramp for per-category bars (topics, doc sizes) — richer than a
+// single flat fill once there's more than a couple of bars to tell apart.
+const CHART_RAMP = ['var(--chart-1)', 'var(--chart-4)', 'var(--chart-5)', 'var(--chart-3)', 'var(--chart-2)']
+
 function StatCard({
   icon, label, value, sub, delay = 0
 }: { icon: React.ReactNode; label: string; value: string | number; sub?: string; delay?: number }) {
@@ -40,7 +44,7 @@ function StatCard({
           {icon}
         </div>
       </div>
-      <p className="cx-num text-[32px] font-bold leading-none mb-1.5" style={{ color: 'var(--cx-ink)' }}>
+      <p className="cx-hero-num text-[38px] leading-none mb-1.5" style={{ color: 'var(--cx-ink)' }}>
         {typeof value === 'number' ? value.toLocaleString() : value}
       </p>
       <p className="text-[12.5px] font-medium" style={{ color: 'var(--cx-mute-1)' }}>{label}</p>
@@ -186,7 +190,11 @@ export function AnalyticsDashboard({
                   width={120}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="count" fill={ACCENT} fillOpacity={0.75} radius={[0, 4, 4, 0]} />
+                <Bar dataKey="count" fillOpacity={0.85} radius={[0, 4, 4, 0]}>
+                  {topTopics.map((_, i) => (
+                    <Cell key={i} fill={CHART_RAMP[i % CHART_RAMP.length]} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -218,7 +226,11 @@ export function AnalyticsDashboard({
                   width={120}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="size_mb" fill={OK} fillOpacity={0.75} radius={[0, 4, 4, 0]} />
+                <Bar dataKey="size_mb" fillOpacity={0.85} radius={[0, 4, 4, 0]}>
+                  {docStats.map((_, i) => (
+                    <Cell key={i} fill={CHART_RAMP[i % CHART_RAMP.length]} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           ) : (
