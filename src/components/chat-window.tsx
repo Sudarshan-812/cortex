@@ -164,6 +164,11 @@ function RelevanceBar({ score }: { score: number }) {
 
 function SourceCitations({ sources, onViewChunk }: { sources: Source[]; onViewChunk: (id: string) => void }) {
   const [open, setOpen] = useState(false)
+  const citeNum = citationNumbers(sources)
+  // "N sources" should read as "N documents this answer drew on," not "N
+  // retrieved passages" - a single well-matched document can legitimately
+  // surface several chunks.
+  const docCount = new Set(sources.map(s => s.document_id ?? s.chunk_id)).size
 
   return (
     <motion.div
@@ -178,7 +183,7 @@ function SourceCitations({ sources, onViewChunk }: { sources: Source[]; onViewCh
         style={{ color: open ? 'var(--cx-accent)' : 'var(--cx-mute-1)' }}
       >
         <FileText size={11} />
-        {sources.length} source{sources.length !== 1 ? 's' : ''}
+        {docCount} source{docCount !== 1 ? 's' : ''}
         <ChevronDown size={11} className={`transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
@@ -201,10 +206,16 @@ function SourceCitations({ sources, onViewChunk }: { sources: Source[]; onViewCh
                   onMouseLeave={e => (e.currentTarget.style.background = 'var(--cx-surface)')}
                 >
                   <div
-                    className="size-7 rounded-md flex items-center justify-center flex-shrink-0 border"
+                    className="size-7 rounded-md flex items-center justify-center flex-shrink-0 border relative"
                     style={{ background: 'var(--cx-paper-2)', borderColor: 'var(--cx-line)' }}
                   >
                     <FileText size={12} style={{ color: 'var(--cx-mute-1)' }} />
+                    <span
+                      className="absolute -top-1.5 -right-1.5 size-3.5 rounded-full flex items-center justify-center font-mono text-[8.5px] font-semibold"
+                      style={{ background: 'var(--cx-accent)', color: '#fff' }}
+                    >
+                      {citeNum.get(src.chunk_id) ?? i + 1}
+                    </span>
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 mb-1.5">
@@ -263,11 +274,14 @@ function SourceCitations({ sources, onViewChunk }: { sources: Source[]; onViewCh
 }
 
 /* ── Answer grounding badge ─────────────────────────────────────── */
-function AnsweredFromBadge({ kind }: { kind: NonNullable<Message['answered_from']> }) {
+function AnsweredFromBadge({ kind, docCount }: { kind: NonNullable<Message['answered_from']>; docCount: number }) {
+  const groundedLabel = docCount > 0
+    ? `Grounded in ${docCount} document${docCount === 1 ? '' : 's'}`
+    : 'Grounded in your documents'
   const map = {
-    documents: { label: 'Grounded in your documents', ok: true },
-    web:       { label: 'Grounded in your documents', ok: true },
-    both:      { label: 'Grounded in your documents', ok: true },
+    documents: { label: groundedLabel, ok: true },
+    web:       { label: groundedLabel, ok: true },
+    both:      { label: groundedLabel, ok: true },
     none:      { label: 'Not found in your documents', ok: false },
   } as const
   const { label, ok } = map[kind]
@@ -372,7 +386,22 @@ function PromptCard({
 /* ── Markdown renderer (react-markdown + gfm; clickable [chunk_id] citations) ── */
 const CITE = /\[([0-9a-fA-F][0-9a-fA-F-]{7,})\]/g
 
-function Markdown({ content, onCite }: { content: string; onCite?: (id: string) => void }) {
+// Same document cited via two different chunks shares one number - a chip
+// reads as "which source", not "which chunk". Order = first appearance.
+function citationNumbers(sources?: Source[]): Map<string, number> {
+  const byChunk = new Map<string, number>()
+  if (!sources) return byChunk
+  const docOrder = new Map<string, number>()
+  for (const s of sources) {
+    const docKey = s.document_id ?? s.chunk_id
+    if (!docOrder.has(docKey)) docOrder.set(docKey, docOrder.size + 1)
+    byChunk.set(s.chunk_id, docOrder.get(docKey)!)
+  }
+  return byChunk
+}
+
+function Markdown({ content, sources, onCite }: { content: string; sources?: Source[]; onCite?: (id: string) => void }) {
+  const citeNum = citationNumbers(sources)
   // Turn [<id>] tokens into links the `a` renderer picks up as citation chips.
   const src = content.replace(CITE, (_m, id) => `[[${id}]](#cite-${id})`)
   return (
@@ -394,6 +423,7 @@ function Markdown({ content, onCite }: { content: string; onCite?: (id: string) 
           a: ({ href, children, ...rest }) => {
             if (href?.startsWith('#cite-')) {
               const id = href.slice(6)
+              const n = citeNum.get(id)
               return (
                 <Badge
                   asChild
@@ -401,7 +431,7 @@ function Markdown({ content, onCite }: { content: string; onCite?: (id: string) 
                   className="h-4 min-w-4 mx-px px-1 align-baseline rounded-md border-[var(--cx-accent-line)] bg-[var(--cx-accent-wash)] font-mono text-[10px] font-semibold text-[var(--cx-accent)] cursor-pointer transition-colors hover:bg-[var(--cx-accent)] hover:text-white hover:border-[var(--cx-accent)]"
                 >
                   <button type="button" onClick={() => onCite?.(id)} title="View source passage">
-                    {String(children).replace(/^\[|\]$/g, '')}
+                    {n ? n : String(children).replace(/^\[|\]$/g, '').slice(0, 8)}
                   </button>
                 </Badge>
               )
@@ -921,7 +951,7 @@ export function ChatWindow({
                               />
                             </span>
                           ) : (
-                            <Markdown content={msg.content} onCite={id => setActiveChunkId(id)} />
+                            <Markdown content={msg.content} sources={msg.sources} onCite={id => setActiveChunkId(id)} />
                           )}
                         </div>
                       )}
@@ -945,7 +975,12 @@ export function ChatWindow({
                       {/* Grounding badge + message actions */}
                       {!loading && msg.content && !isLastAssistant && (
                         <div className="flex items-center gap-2 pt-1">
-                          {msg.answered_from && <AnsweredFromBadge kind={msg.answered_from} />}
+                          {msg.answered_from && (
+                            <AnsweredFromBadge
+                              kind={msg.answered_from}
+                              docCount={new Set((msg.sources ?? []).map(s => s.document_id ?? s.chunk_id)).size}
+                            />
+                          )}
                           <MsgActions
                             content={msg.content}
                             onRegenerate={() => handleSubmit(messages[i - 1]?.content)}

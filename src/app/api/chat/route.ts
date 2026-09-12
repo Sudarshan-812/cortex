@@ -21,6 +21,15 @@ function sse(data: object) {
   return enc.encode(`data: ${JSON.stringify(data)}\n\n`)
 }
 
+// Matches the backend's citation contract (services/synthesis.py::_CITE_RE) -
+// the model cites inline as [chunk_id]. Retrieval/rerank returns up to top_k
+// candidates, but only some are actually cited in the answer; the sources
+// panel should reflect what was used, not everything that was retrieved.
+const CITE_RE = /\[([0-9a-fA-F][0-9a-fA-F-]{7,})\]/g
+function citedChunkIds(text: string): Set<string> {
+  return new Set([...text.matchAll(CITE_RE)].map(m => m[1]))
+}
+
 type Citation = { chunk_id: string; source_name: string; page_number: number | null; score: number }
 type DocRel = { name: string; source_type: string | null; external_id: string | null }
 type ChunkRow = {
@@ -214,7 +223,11 @@ export async function POST(req: NextRequest) {
               }
               case "done": {
                 answeredFrom = evt.grounded ? "documents" : "none"
-                sources = await enrichCitations(supabase, citations)
+                const cited = citedChunkIds(fullText)
+                const actuallyUsed = cited.size
+                  ? citations.filter(c => cited.has(c.chunk_id))
+                  : citations // model cited nothing recognizable - show what was retrieved rather than nothing
+                sources = await enrichCitations(supabase, actuallyUsed)
                 await persistAssistant()
 
                 const { count } = await supabase
