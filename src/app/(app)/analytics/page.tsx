@@ -3,7 +3,6 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { BarChart2 } from 'lucide-react'
 import { AnalyticsDashboard } from '@/components/dashboard/AnalyticsDashboard'
-import { GoogleDriveCard } from '@/components/dashboard/GoogleDriveCard'
 import { PageHeader } from '@/components/dashboard/PageHeader'
 import { buildDailyTimeline } from '@/lib/timeline'
 
@@ -85,8 +84,6 @@ export default async function AnalyticsPage() {
           title={workspace.name}
           description="Usage across documents, queries, and chat sessions in this workspace."
         />
-
-        <GoogleDriveCard workspaceId={workspace.id} workspaceName={workspace.name} />
 
         <AnalyticsDashboard
           docTimeline={docTimeline}

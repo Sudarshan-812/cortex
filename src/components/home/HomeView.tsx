@@ -9,6 +9,7 @@ import { HomeComposer } from "@/components/home/HomeComposer"
 import { UploadZoneNew } from "@/components/dashboard/UploadZoneNew"
 import { DocumentTable } from "@/components/dashboard/DocumentTable"
 import { KnowledgeGraph } from "@/components/dashboard/KnowledgeGraph"
+import { GoogleDriveCard } from "@/components/dashboard/GoogleDriveCard"
 import { UploadTriggerButton } from "@/components/dashboard/UploadTriggerButton"
 import { buildSuggestedPrompts } from "@/lib/prompts"
 
@@ -127,9 +128,9 @@ export function HomeView({
                 {driveConnected && (
                   <>
                     {" · "}
-                    <Link href="/analytics#google-drive" className="inline-flex items-center gap-1 hover:underline">
+                    <a href="#google-drive" className="inline-flex items-center gap-1 hover:underline">
                       <HardDrive size={11} style={{ color: "var(--cx-accent)" }} /> Drive connected
-                    </Link>
+                    </a>
                   </>
                 )}
               </p>
@@ -143,6 +144,8 @@ export function HomeView({
             )}
           </div>
 
+          <GoogleDriveCard workspaceId={workspace.id} workspaceName={workspace.name} />
+
           {isEmpty ? (
             <div className="cx-panel p-5">
               <p className="text-[11px] font-medium uppercase tracking-[0.04em] mb-4" style={{ color: "var(--cx-mute-2)" }}>
@@ -150,7 +153,7 @@ export function HomeView({
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-8 gap-y-4">
                 {[
-                  { icon: <FileText size={14} />, step: "1", title: "Connect Google Drive", desc: "Link a Drive folder from the Dashboard, or upload PDF, DOCX or XLSX files directly." },
+                  { icon: <FileText size={14} />, step: "1", title: "Connect Google Drive", desc: "Link a Drive folder above, or upload PDF, DOCX or XLSX files directly." },
                   { icon: <Zap size={14} />, step: "2", title: "Cortex reads your files", desc: "Each document is parsed, split into passages, and indexed so it can be searched by meaning." },
                   { icon: <MessageSquare size={14} />, step: "3", title: "Ask, get cited answers", desc: "Ask in plain language. Cortex pulls the relevant passages and links every claim to its source." },
                 ].map(({ icon, step, title, desc }) => (
@@ -166,15 +169,9 @@ export function HomeView({
                 ))}
               </div>
               <div className="mt-5 flex flex-wrap items-center gap-2">
-                <Link
-                  href="/analytics#google-drive"
-                  className="cx-btn-ink h-8 px-3 rounded-md text-[12.5px] font-medium flex items-center gap-1.5"
-                >
-                  <HardDrive size={13} /> Connect Google Drive
-                </Link>
                 <UploadTriggerButton
                   label="Upload files"
-                  className="cx-btn-ghost h-8 px-3 rounded-md text-[12.5px] font-medium flex items-center gap-1.5"
+                  className="cx-btn-ink h-8 px-3 rounded-md text-[12.5px] font-medium flex items-center gap-1.5"
                 />
               </div>
             </div>

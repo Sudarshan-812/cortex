@@ -729,12 +729,12 @@ export function ChatWindow({
                     Add your first document to start asking
                   </p>
                   <p className="mt-1.5 text-[13px] leading-relaxed" style={{ color: 'var(--cx-mute-1)' }}>
-                    Connect Google Drive in Settings, or upload a file here. Cortex reads it so you can ask questions and get cited answers.
+                    Connect Google Drive from the dashboard, or upload a file here. Cortex reads it so you can ask questions and get cited answers.
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center justify-center gap-2">
                   <a
-                    href="/analytics#google-drive"
+                    href="/#google-drive"
                     className="cx-btn-ink flex items-center gap-2 h-8 px-3.5 rounded-md text-[12.5px] font-medium"
                   >
                     <HardDrive size={14} /> Connect Google Drive
