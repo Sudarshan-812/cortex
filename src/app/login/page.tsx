@@ -136,7 +136,7 @@ export default function LoginPage() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
             >
-              <Image src="/CortexLogoFull.png" alt="Cortex" width={120} height={120} className="object-contain mx-auto mb-6" />
+              <Image src="/ChatGPT Image Sep 10, 2026, 06_42_23 PM.png" alt="Cortex" width={120} height={120} className="object-contain mx-auto mb-6" />
             </motion.div>
             <h2 className="text-3xl font-semibold tracking-tight mb-2" style={{ color: 'var(--cx-ink)' }}>
               {isSignUp ? "Create your account" : "Welcome back"}
