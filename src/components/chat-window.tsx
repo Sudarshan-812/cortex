@@ -6,7 +6,7 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import Image from 'next/image'
 import {
   FileText, ArrowUp, Plus, Square, HardDrive,
-  ChevronDown, Sparkles, CheckCircle2, UploadCloud, Copy, Check, Database, ExternalLink, Download, RotateCcw,
+  ChevronDown, Sparkles, CheckCircle2, UploadCloud, Copy, Check, Database, ExternalLink, Download, RotateCcw, X,
 } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
@@ -479,6 +479,7 @@ export function ChatWindow({
   const [loading,     setLoading]     = useState(false)
   const [activeTools, setActiveTools] = useState<ToolEvent[]>([])
   const [followUps,     setFollowUps]     = useState<string[]>([])
+  const [suggestionsCollapsed, setSuggestionsCollapsed] = useState(false)
   const [activeChunkId, setActiveChunkId] = useState<string | null>(null)
   const [focused,       setFocused]       = useState(false)
   const [uploading,   setUploading]   = useState(false)
@@ -571,6 +572,7 @@ export function ChatWindow({
     setLoading(true)
     setActiveTools([])
     setFollowUps([])
+    setSuggestionsCollapsed(false)
 
     const now = new Date().toISOString()
     const assistantId = `a-${Date.now()}-${Math.random().toString(36).slice(2)}`
@@ -1010,39 +1012,6 @@ export function ChatWindow({
           </div>
         )}
 
-        {/* Follow-up question chips */}
-        <AnimatePresence>
-          {followUps.length > 0 && !loading && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-              className="max-w-[720px] mx-auto px-6 pb-6"
-            >
-              <p className="cx-rule-label mb-2.5">Suggested questions</p>
-              <div className="flex flex-col gap-2">
-                {followUps.map((q, i) => (
-                  <motion.button
-                    key={q}
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.08, duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-                    onClick={() => handleSubmit(q)}
-                    className="group text-left flex items-center gap-2.5 px-3 py-2 rounded-md border text-[13px] transition-colors"
-                    style={{ borderColor: 'var(--cx-line)', background: 'var(--cx-surface)', color: 'var(--cx-ink-2)' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--cx-paper-2)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'var(--cx-surface)')}
-                  >
-                    <Sparkles size={11} className="flex-shrink-0" style={{ color: 'var(--cx-mute-2)' }} />
-                    <span className="flex-1">{q}</span>
-                    <ArrowUp size={11} className="flex-shrink-0 opacity-0 group-hover:opacity-60 transition-opacity -rotate-45" />
-                  </motion.button>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
 
         <div ref={bottomRef} className="h-6" />
       </div>
@@ -1052,6 +1021,73 @@ export function ChatWindow({
         chunkId={activeChunkId}
         onClose={() => setActiveChunkId(null)}
       />
+
+      {/* ── Suggested questions - floating collapsible bubble, right side ── */}
+      <AnimatePresence>
+        {followUps.length > 0 && !loading && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ type: 'spring', stiffness: 340, damping: 30 }}
+            className="fixed right-5 bottom-32 z-30"
+          >
+            {suggestionsCollapsed ? (
+              <motion.button
+                layoutId="suggestions-bubble"
+                onClick={() => setSuggestionsCollapsed(false)}
+                aria-label={`${followUps.length} suggested questions`}
+                title="Suggested questions"
+                className="relative size-11 rounded-full flex items-center justify-center cx-panel"
+                style={{ color: 'var(--cx-accent)' }}
+              >
+                <Sparkles size={16} />
+                <span
+                  className="absolute -top-1 -right-1 size-4 rounded-full flex items-center justify-center font-mono text-[9px] font-bold"
+                  style={{ background: 'var(--cx-accent)', color: '#fff' }}
+                >
+                  {followUps.length}
+                </span>
+              </motion.button>
+            ) : (
+              <motion.div layoutId="suggestions-bubble" className="cx-panel overflow-hidden" style={{ width: 288 }}>
+                <div className="flex items-center justify-between px-3.5 py-2.5 border-b" style={{ borderColor: 'var(--cx-line)' }}>
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles size={12} style={{ color: 'var(--cx-accent)' }} />
+                    <p className="text-[12px] font-semibold" style={{ color: 'var(--cx-ink)' }}>Suggested</p>
+                  </div>
+                  <button
+                    onClick={() => setSuggestionsCollapsed(true)}
+                    aria-label="Collapse suggestions"
+                    className="size-6 rounded-md flex items-center justify-center transition-colors hover:bg-[var(--cx-paper-2)]"
+                    style={{ color: 'var(--cx-mute-2)' }}
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+                <div className="p-2 flex flex-col gap-1.5 max-h-[280px] overflow-y-auto cx-scroll-thin">
+                  {followUps.map((q, i) => (
+                    <motion.button
+                      key={q}
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.06, duration: 0.25 }}
+                      onClick={() => { handleSubmit(q); setSuggestionsCollapsed(true) }}
+                      className="group text-left flex items-start gap-2 px-2.5 py-2 rounded-xl text-[12.5px] leading-snug transition-colors"
+                      style={{ background: 'var(--cx-surface)', color: 'var(--cx-ink-2)' }}
+                      onMouseEnter={e => (e.currentTarget.style.background = 'var(--cx-accent-wash)')}
+                      onMouseLeave={e => (e.currentTarget.style.background = 'var(--cx-surface)')}
+                    >
+                      <span className="flex-1">{q}</span>
+                      <ArrowUp size={11} className="flex-shrink-0 mt-0.5 opacity-0 group-hover:opacity-60 transition-opacity -rotate-45" />
+                    </motion.button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Input bar ─────────────────────────────────────────────── */}
       <div className="flex-shrink-0 relative" style={{ background: 'var(--cx-paper)' }}>

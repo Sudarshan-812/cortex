@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Network } from 'lucide-react'
+import { Network, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
 
 type Doc = { id: string; name: string; topics?: string[] | null }
 
@@ -22,42 +22,67 @@ const DOC_COLOR   = 'var(--cx-accent)'
 const TOPIC_COLOR = 'var(--cx-ok)'
 const LINK_ALPHA  = 0.35
 
-function buildGraph(docs: Doc[]): { nodes: GraphNode[]; edges: GraphEdge[] } {
+// Above this many documents, unlimited per-doc topics would produce a
+// topic-node count that grows faster than the doc count and crowds out the
+// graph. Cap to the most-shared topics so the graph stays legible instead of
+// just getting denser forever.
+const MAX_TOPIC_NODES = 28
+
+function buildGraph(docs: Doc[], seedW: number, seedH: number): { nodes: GraphNode[]; edges: GraphEdge[]; truncatedTopics: number } {
   const nodes: GraphNode[] = []
   const edges: GraphEdge[] = []
-  const topicSet = new Map<string, string>() // label → id
+  const topicCount = new Map<string, number>()
+  const topicDocs = new Map<string, { docId: string; label: string }[]>()
+
+  docs.forEach(doc => {
+    const topics = Array.isArray(doc.topics) ? doc.topics : []
+    topics.slice(0, 5).forEach(topic => {
+      const normalised = topic.toLowerCase().trim()
+      topicCount.set(normalised, (topicCount.get(normalised) ?? 0) + 1)
+      const list = topicDocs.get(normalised) ?? []
+      list.push({ docId: doc.id, label: topic.slice(0, 20) })
+      topicDocs.set(normalised, list)
+    })
+  })
+
+  // Most-shared topics first - these are the ones actually worth showing as
+  // connective tissue between documents.
+  const keptTopics = [...topicCount.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, MAX_TOPIC_NODES)
+    .map(([key]) => key)
+  const truncatedTopics = Math.max(0, topicCount.size - keptTopics.length)
 
   docs.forEach((doc, i) => {
     const angle = (i / docs.length) * Math.PI * 2
-    const r = 120
+    const r = Math.min(seedW, seedH) * 0.28
     nodes.push({
       id: doc.id,
       label: doc.name.replace(/\.(pdf|docx|doc|txt|md|csv)$/i, '').slice(0, 22),
       type: 'doc',
-      x: 200 + Math.cos(angle) * r + (Math.random() - 0.5) * 40,
-      y: 200 + Math.sin(angle) * r + (Math.random() - 0.5) * 40,
+      x: seedW / 2 + Math.cos(angle) * r + (Math.random() - 0.5) * 40,
+      y: seedH / 2 + Math.sin(angle) * r + (Math.random() - 0.5) * 40,
       vx: 0, vy: 0,
-    })
-    const topics = Array.isArray(doc.topics) ? doc.topics : []
-    topics.slice(0, 5).forEach(topic => {
-      const normalised = topic.toLowerCase().trim()
-      if (!topicSet.has(normalised)) {
-        const tid = `topic-${topicSet.size}`
-        topicSet.set(normalised, tid)
-        nodes.push({
-          id: tid,
-          label: topic.slice(0, 20),
-          type: 'topic',
-          x: 200 + (Math.random() - 0.5) * 300,
-          y: 200 + (Math.random() - 0.5) * 300,
-          vx: 0, vy: 0,
-        })
-      }
-      edges.push({ source: doc.id, target: topicSet.get(normalised)! })
     })
   })
 
-  return { nodes, edges }
+  keptTopics.forEach((normalised, i) => {
+    const tid = `topic-${i}`
+    const label = topicDocs.get(normalised)![0].label
+    nodes.push({
+      id: tid,
+      label,
+      type: 'topic',
+      x: seedW / 2 + (Math.random() - 0.5) * seedW * 0.7,
+      y: seedH / 2 + (Math.random() - 0.5) * seedH * 0.7,
+      vx: 0, vy: 0,
+    })
+    for (const { docId } of topicDocs.get(normalised)!) {
+      edges.push({ source: docId, target: tid })
+    }
+  })
+
+  return { nodes, edges, truncatedTopics }
 }
 
 function runLayout(
@@ -117,23 +142,62 @@ function runLayout(
   }
 }
 
+// Fixed size regardless of node count is what made this cramped once a
+// workspace had many documents - the same 640x420 box just got denser.
+// Instead the simulation's coordinate space grows with node count (so nodes
+// keep breathing room), while the on-screen viewport stays a manageable
+// height; zoom/pan lets you navigate the larger space.
+function graphSize(nodeCount: number) {
+  const w = Math.min(1600, Math.max(640, 640 + Math.max(0, nodeCount - 12) * 26))
+  const h = Math.min(1000, Math.max(420, 420 + Math.max(0, nodeCount - 12) * 16))
+  return { w, h }
+}
+
 export function KnowledgeGraph({ documents }: { documents: Doc[] }) {
   const [expanded, setExpanded] = useState(true)
   const [nodes, setNodes] = useState<GraphNode[]>([])
   const [edges, setEdges] = useState<GraphEdge[]>([])
+  const [truncatedTopics, setTruncatedTopics] = useState(0)
   const [hovered, setHovered] = useState<string | null>(null)
+  const [zoom, setZoom] = useState(1)
+  const [pan, setPan] = useState({ x: 0, y: 0 })
+  const dragRef = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null)
   const containerRef = useRef<HTMLDivElement>(null)
-  const W = 640, H = 420
+  const VIEWPORT_H = 420
 
   const docsWithTopics = documents.filter(d => Array.isArray(d.topics) && d.topics!.length > 0)
+  const { w: W, h: H } = graphSize(docsWithTopics.length + Math.min(docsWithTopics.length * 5, MAX_TOPIC_NODES))
+  // Dense graphs read worse with every topic label always drawn - keep doc
+  // labels (fewer, more important) but only reveal topic labels on hover.
+  const isDense = nodes.length > 26
 
   useEffect(() => {
     if (!expanded || docsWithTopics.length === 0) return
-    const { nodes: ns, edges: es } = buildGraph(docsWithTopics)
+    const { nodes: ns, edges: es, truncatedTopics: tt } = buildGraph(docsWithTopics, W, H)
     runLayout(ns, es, W, H, 180)
     setNodes([...ns])
     setEdges(es)
+    setTruncatedTopics(tt)
+    setZoom(1)
+    setPan({ x: 0, y: 0 })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expanded, documents.length])
+
+  function onWheel(e: React.WheelEvent) {
+    e.preventDefault()
+    setZoom(z => Math.min(2.5, Math.max(0.5, z - e.deltaY * 0.001)))
+  }
+  function onPointerDown(e: React.PointerEvent) {
+    dragRef.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y }
+    ;(e.target as Element).setPointerCapture(e.pointerId)
+  }
+  function onPointerMove(e: React.PointerEvent) {
+    if (!dragRef.current) return
+    const dx = e.clientX - dragRef.current.x
+    const dy = e.clientY - dragRef.current.y
+    setPan({ x: dragRef.current.panX + dx, y: dragRef.current.panY + dy })
+  }
+  function onPointerUp() { dragRef.current = null }
 
   if (docsWithTopics.length === 0) return null
 
@@ -179,16 +243,50 @@ export function KnowledgeGraph({ documents }: { documents: Doc[] }) {
           >
             <div ref={containerRef} className="relative px-4 py-4">
               {nodes.length === 0 ? (
-                <div className="flex items-center justify-center" style={{ height: H }}>
+                <div className="flex items-center justify-center" style={{ height: VIEWPORT_H }}>
                   <div className="size-5 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: 'var(--cx-accent)' }} />
                 </div>
               ) : (
+              <div
+                className="relative rounded-lg overflow-hidden"
+                style={{ height: VIEWPORT_H, background: 'var(--cx-paper)', cursor: dragRef.current ? 'grabbing' : 'grab', touchAction: 'none' }}
+                onWheel={onWheel}
+                onPointerDown={onPointerDown}
+                onPointerMove={onPointerMove}
+                onPointerUp={onPointerUp}
+                onPointerLeave={onPointerUp}
+              >
+                {/* Zoom controls */}
+                <div className="absolute top-2 right-2 z-10 flex flex-col gap-1">
+                  {[
+                    { icon: <ZoomIn size={12} />, onClick: () => setZoom(z => Math.min(2.5, z + 0.2)), label: 'Zoom in' },
+                    { icon: <ZoomOut size={12} />, onClick: () => setZoom(z => Math.max(0.5, z - 0.2)), label: 'Zoom out' },
+                    { icon: <RotateCcw size={11} />, onClick: () => { setZoom(1); setPan({ x: 0, y: 0 }) }, label: 'Reset view' },
+                  ].map(({ icon, onClick, label }) => (
+                    <button
+                      key={label}
+                      onClick={e => { e.stopPropagation(); onClick() }}
+                      aria-label={label}
+                      title={label}
+                      className="size-6 rounded-md flex items-center justify-center border transition-colors"
+                      style={{ background: 'var(--cx-surface)', borderColor: 'var(--cx-line)', color: 'var(--cx-mute-1)' }}
+                      onMouseEnter={e => (e.currentTarget.style.color = 'var(--cx-accent)')}
+                      onMouseLeave={e => (e.currentTarget.style.color = 'var(--cx-mute-1)')}
+                    >
+                      {icon}
+                    </button>
+                  ))}
+                </div>
+
                 <svg
                   width={W}
                   height={H}
                   viewBox={`0 0 ${W} ${H}`}
-                  className="w-full"
-                  style={{ maxHeight: H }}
+                  style={{
+                    transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                    transformOrigin: 'center',
+                    transition: dragRef.current ? 'none' : 'transform 0.15s ease-out',
+                  }}
                 >
                   {/* Edges */}
                   {edges.map((e, i) => {
@@ -234,28 +332,31 @@ export function KnowledgeGraph({ documents }: { documents: Doc[] }) {
                           strokeWidth={hover ? 2 : 1.5}
                           style={{ transition: 'r 0.18s, fill-opacity 0.18s' }}
                         />
-                        <text
-                          textAnchor="middle"
-                          dy={r + 11}
-                          className="select-none pointer-events-none"
-                          style={{
-                            fontSize: hover ? 9.5 : 8.5,
-                            fill: hover ? 'var(--cx-ink)' : 'var(--cx-mute-1)',
-                            fontFamily: 'inherit',
-                            fontWeight: hover ? 600 : 400,
-                            transition: 'font-size 0.18s',
-                          }}
-                        >
-                          {node.label}
-                        </text>
+                        {(isDoc || !isDense || hover || connected) && (
+                          <text
+                            textAnchor="middle"
+                            dy={r + 11}
+                            className="select-none pointer-events-none"
+                            style={{
+                              fontSize: hover ? 9.5 : 8.5,
+                              fill: hover ? 'var(--cx-ink)' : 'var(--cx-mute-1)',
+                              fontFamily: 'inherit',
+                              fontWeight: hover ? 600 : 400,
+                              transition: 'font-size 0.18s',
+                            }}
+                          >
+                            {node.label}
+                          </text>
+                        )}
                       </g>
                     )
                   })}
                 </svg>
+              </div>
               )}
 
               {/* Legend */}
-              <div className="flex items-center gap-5 mt-2 px-1">
+              <div className="flex items-center gap-5 mt-2 px-1 flex-wrap">
                 {[
                   { color: DOC_COLOR,   label: 'Document' },
                   { color: TOPIC_COLOR, label: 'Topic' },
@@ -265,7 +366,14 @@ export function KnowledgeGraph({ documents }: { documents: Doc[] }) {
                     <span className="text-[11px] cx-num" style={{ color: 'var(--cx-mute-1)' }}>{label}</span>
                   </div>
                 ))}
-                <span className="text-[10.5px] ml-auto" style={{ color: 'var(--cx-mute-2)' }}>Hover a node to highlight connections</span>
+                {truncatedTopics > 0 && (
+                  <span className="text-[10.5px] cx-num" style={{ color: 'var(--cx-mute-2)' }}>
+                    +{truncatedTopics} more topics not shown (top {MAX_TOPIC_NODES})
+                  </span>
+                )}
+                <span className="text-[10.5px] ml-auto" style={{ color: 'var(--cx-mute-2)' }}>
+                  {isDense ? 'Drag to pan, scroll to zoom, hover to highlight' : 'Hover a node to highlight connections'}
+                </span>
               </div>
             </div>
           </motion.div>
