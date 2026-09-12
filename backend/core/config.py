@@ -46,7 +46,11 @@ class Settings(BaseSettings):
     rerank_model: str = "gemini-3.1-flash-lite"
     crag_model: str = "gemini-3.1-flash-lite"
     crag_threshold: float = 0.65
-    synthesis_model: str = "gemini-2.5-flash"  # free-tier; same model the Next.js chat stream uses
+    # gemini-2.5-flash was deprecated for new Google accounts (404: "no longer
+    # available to new users"). gemini-3.1-flash-lite has a far larger free-tier
+    # daily quota (500 RPD) than Google's suggested replacement gemini-3.6-flash
+    # (20 RPD) - matches rerank/CRAG/summary, which already use flash-lite.
+    synthesis_model: str = "gemini-3.1-flash-lite"
     synthesis_max_tokens: int = 2048
     summary_model: str = "gemini-3.1-flash-lite"  # document auto-summary on ingest
 

@@ -47,7 +47,7 @@ const nodes = [
     step: "STEP 06",
     title: "Streamed Response",
     desc: "The final answer streams back token-by-token over Server-Sent Events, cited to the exact source chunk.",
-    tag: "SSE · gemini-2.5-flash",
+    tag: "SSE · gemini-3.1-flash-lite",
   },
 ];
 
