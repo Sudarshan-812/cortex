@@ -144,6 +144,41 @@ function ThinkingOrb({ tools }: { tools: ToolEvent[] }) {
   )
 }
 
+/* ── Aurora burst - brief colorful glow behind the composer on send ── */
+function AuroraBurst({ active }: { active: boolean }) {
+  const reduce = useReducedMotion()
+  const blobs = [
+    { bg: 'rgba(236,72,153,0.55)', size: 224, x: '22%', anim: { x: [0, 18, -8, 0], y: [0, -8, 10, 0], scale: [0.85, 1.15, 0.9] }, dur: 2.6 },
+    { bg: 'rgba(161,98,7,0.5)',    size: 224, x: '78%', anim: { x: [0, -16, 12, 0], y: [0, 12, -8, 0], scale: [1.1, 0.85, 1.1] }, dur: 3.1 },
+    { bg: 'rgba(168,85,247,0.4)',  size: 256, x: '50%', anim: { x: [0, 10, -18, 0], y: [0, -6, 8, 0],  scale: [0.9, 1.2, 0.95] }, dur: 3.6 },
+  ]
+  return (
+    <AnimatePresence>
+      {active && (
+        <motion.div
+          aria-hidden
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0, transition: { duration: 0.5 } }}
+          transition={{ duration: 0.35 }}
+          className="absolute -inset-x-4 -inset-y-8 overflow-hidden pointer-events-none rounded-[2rem]"
+          style={{ zIndex: 0 }}
+        >
+          {blobs.map((b, i) => (
+            <motion.div
+              key={i}
+              className="absolute top-1/2 rounded-full blur-3xl"
+              style={{ left: b.x, width: b.size, height: b.size, marginLeft: -b.size / 2, marginTop: -b.size / 2, background: `radial-gradient(circle, ${b.bg}, transparent 70%)` }}
+              animate={reduce ? undefined : b.anim}
+              transition={{ duration: b.dur, repeat: Infinity, ease: 'easeInOut' }}
+            />
+          ))}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
 /* ── Source citations ───────────────────────────────────────────── */
 function RelevanceBar({ score }: { score: number }) {
   return (
@@ -479,6 +514,7 @@ export function ChatWindow({
   const [loading,     setLoading]     = useState(false)
   const [activeTools, setActiveTools] = useState<ToolEvent[]>([])
   const [followUps,     setFollowUps]     = useState<string[]>([])
+  const [auroraActive,  setAuroraActive]  = useState(false)
   const [suggestionsCollapsed, setSuggestionsCollapsed] = useState(false)
   const [activeChunkId, setActiveChunkId] = useState<string | null>(null)
   const [focused,       setFocused]       = useState(false)
@@ -573,6 +609,7 @@ export function ChatWindow({
     setActiveTools([])
     setFollowUps([])
     setSuggestionsCollapsed(false)
+    setAuroraActive(true)
 
     const now = new Date().toISOString()
     const assistantId = `a-${Date.now()}-${Math.random().toString(36).slice(2)}`
@@ -626,6 +663,7 @@ export function ChatWindow({
                 return [...prev, { name: event.name, status: event.status, count: event.count }]
               })
             } else if (event.type === 'token') {
+              if (!streamedAny) setAuroraActive(false)
               streamedAny = true
               setMessages(prev => {
                 const msgs = [...prev]
@@ -681,6 +719,7 @@ export function ChatWindow({
       abortRef.current = null
       setLoading(false)
       setActiveTools([])
+      setAuroraActive(false)
     }
   }
 
@@ -1100,9 +1139,10 @@ export function ChatWindow({
           className="relative z-20 px-6 pb-6 pt-3 border-t"
           style={{ borderColor: 'var(--cx-line)' }}
         >
-          <div className="max-w-[720px] mx-auto">
+          <div className="relative max-w-[720px] mx-auto">
+            <AuroraBurst active={auroraActive} />
             <div
-              className="cx-panel overflow-hidden transition-all duration-150"
+              className="relative cx-panel overflow-hidden transition-all duration-150"
               style={{
                 borderColor: focused ? 'var(--cx-line-2)' : 'var(--cx-line)',
                 boxShadow: focused
