@@ -15,6 +15,7 @@ from collections.abc import AsyncIterator, Sequence
 import httpx
 
 from core.config import Settings, get_settings
+from core.retry import ApiError, _retry_after, _safe_error_message
 from models.retrieval import RankedChunk
 
 _URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent"
@@ -113,17 +114,21 @@ class GeminiSynthesizer:
                 async with self._client.stream(
                     "POST", url, params={"key": self._key, "alt": "sse"}, json=body
                 ) as resp:
-                    resp.raise_for_status()
+                    if resp.status_code >= 400:
+                        # Read the body before the context manager closes so
+                        # _safe_error_message can pull Gemini's error detail.
+                        await resp.aread()
+                        retryable = resp.status_code in _RETRYABLE
+                        if not retryable or attempt == self._retries:
+                            raise ApiError(_safe_error_message(resp))
+                        await asyncio.sleep(max(0.5 * (2**attempt), _retry_after(resp)))
+                        continue
                     async for line in resp.aiter_lines():
                         for text in _parse_sse_line(line):
                             started = True
                             yield text
                 return
-            except httpx.HTTPStatusError as exc:
-                retryable = exc.response.status_code in _RETRYABLE
-                if started or not retryable or attempt == self._retries:
-                    raise
             except httpx.TransportError:
                 if started or attempt == self._retries:
                     raise
-            await asyncio.sleep(0.5 * (2**attempt))
+                await asyncio.sleep(0.5 * (2**attempt))
