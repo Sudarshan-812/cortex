@@ -65,10 +65,27 @@ class IngestService:
         data = resp.content
 
         yield {"stage": "processing", "pct": 18, "label": "Extracting structure…"}
+        # Parsing (layout + OCR + table structure) runs synchronously in a worker
+        # thread and can take minutes on a CPU-only host for image/table-heavy
+        # files. Poll it instead of a single blocking await so the SSE stream
+        # keeps emitting - otherwise the UI sits frozen at 18% with no sign the
+        # backend is still alive.
+        parse_task = asyncio.ensure_future(
+            asyncio.to_thread(self._parser.parse_document, data, filename=filename)
+        )
+        elapsed = 0
+        while True:
+            done, _ = await asyncio.wait({parse_task}, timeout=4)
+            if done:
+                break
+            elapsed += 4
+            yield {
+                "stage": "processing",
+                "pct": 18,
+                "label": f"Extracting structure… ({elapsed}s)",
+            }
         try:
-            parsed = await asyncio.to_thread(
-                self._parser.parse_document, data, filename=filename
-            )
+            parsed = parse_task.result()
         except (UnsupportedFormatError, DocumentParseError) as exc:
             yield {"stage": "error", "message": str(exc)}
             return

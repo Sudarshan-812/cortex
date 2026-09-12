@@ -23,8 +23,12 @@ _RETRYABLE = frozenset({429, 500, 502, 503, 504})
 _SYSTEM = (
     "You are Cortex, a document-intelligence assistant. Answer ONLY from the "
     "numbered context blocks below. If they do not contain the answer, say so "
-    "plainly - never use outside knowledge. Cite every factual claim inline with "
-    "the block's id in square brackets, e.g. [a1b2c3d4]. Never invent an id. "
+    "plainly - never use outside knowledge. Each block starts with an id already "
+    "wrapped in brackets, e.g. [a1b2c3d4-...]. To cite a claim, copy that bracketed "
+    "token exactly, character for character - do not add words like 'id' inside "
+    "the brackets, do not shorten or alter the id, and never put more than one id "
+    "in a single bracket. If a claim is supported by several blocks, place their "
+    "bracketed ids one after another, e.g. [id1][id2]. Never invent an id. "
     "Be concise and specific."
 )
 _CITE_RE = re.compile(r"\[([0-9a-fA-F][0-9a-fA-F-]{7,})\]")
@@ -39,8 +43,8 @@ def _format_context(ranked: Sequence[RankedChunk]) -> str:
     for c in ranked:
         page = f", p.{c.metadata.page_number}" if c.metadata.page_number else ""
         hdr = " > ".join(c.metadata.headers) if c.metadata.headers else ""
-        head = f"[id {c.id} | {c.source_name}{page}]"
-        out.append(f"\n{head}{(' ' + hdr) if hdr else ''}\n{c.content}")
+        source = f"Source: {c.source_name}{page}{(' - ' + hdr) if hdr else ''}"
+        out.append(f"\n[{c.id}] {source}\n{c.content}")
     return "\n".join(out)
 
 
