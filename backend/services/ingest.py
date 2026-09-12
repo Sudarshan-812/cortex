@@ -58,67 +58,88 @@ class IngestService:
     async def ingest(
         self, *, document_id: str, source_url: str, filename: str, workspace_id: str
     ) -> AsyncIterator[dict]:
-        yield {"stage": "processing", "pct": 8, "label": "Downloading file…"}
-        resp = await request_with_retry(
-            lambda: self._http.get(source_url), max_retries=self._s.http_max_retries
-        )
-        data = resp.content
-
-        yield {"stage": "processing", "pct": 18, "label": "Extracting structure…"}
-        # Parsing (layout + OCR + table structure) runs synchronously in a worker
-        # thread and can take minutes on a CPU-only host for image/table-heavy
-        # files. Poll it instead of a single blocking await so the SSE stream
-        # keeps emitting - otherwise the UI sits frozen at 18% with no sign the
-        # backend is still alive.
-        parse_task = asyncio.ensure_future(
-            asyncio.to_thread(self._parser.parse_document, data, filename=filename)
-        )
-        elapsed = 0
-        while True:
-            done, _ = await asyncio.wait({parse_task}, timeout=4)
-            if done:
-                break
-            elapsed += 4
-            yield {
-                "stage": "processing",
-                "pct": 18,
-                "label": f"Extracting structure… ({elapsed}s)",
-            }
+        await self._set_status(document_id, "processing")
         try:
-            parsed = parse_task.result()
-        except (UnsupportedFormatError, DocumentParseError) as exc:
-            yield {"stage": "error", "message": str(exc)}
-            return
-        if not parsed.chunks:
-            yield {"stage": "error", "message": "No extractable content in this file."}
-            return
+            yield {"stage": "processing", "pct": 8, "label": "Downloading file…"}
+            resp = await request_with_retry(
+                lambda: self._http.get(source_url), max_retries=self._s.http_max_retries
+            )
+            data = resp.content
 
-        total = len(parsed.chunks)
-        vectors: list[list[float]] = []
-        for group in _batched(parsed.chunks, self._s.embed_batch_size):
-            vectors.extend(await self._embedder.embed([c.text for c in group]))
-            pct = 30 + round(len(vectors) / total * 55)
+            yield {"stage": "processing", "pct": 18, "label": "Extracting structure…"}
+            # Parsing (layout + OCR + table structure) runs synchronously in a
+            # worker thread and can take minutes on a CPU-only host for
+            # image/table-heavy files. Poll it instead of a single blocking
+            # await so the SSE stream keeps emitting - otherwise the UI sits
+            # frozen at 18% with no sign the backend is still alive.
+            parse_task = asyncio.ensure_future(
+                asyncio.to_thread(self._parser.parse_document, data, filename=filename)
+            )
+            elapsed = 0
+            while True:
+                done, _ = await asyncio.wait({parse_task}, timeout=4)
+                if done:
+                    break
+                elapsed += 4
+                yield {
+                    "stage": "processing",
+                    "pct": 18,
+                    "label": f"Extracting structure… ({elapsed}s)",
+                }
+            try:
+                parsed = parse_task.result()
+            except (UnsupportedFormatError, DocumentParseError) as exc:
+                await self._set_status(document_id, "failed", str(exc))
+                yield {"stage": "error", "message": str(exc)}
+                return
+            if not parsed.chunks:
+                await self._set_status(
+                    document_id, "failed", "No extractable content in this file."
+                )
+                yield {"stage": "error", "message": "No extractable content in this file."}
+                return
+
+            total = len(parsed.chunks)
+            vectors: list[list[float]] = []
+            for group in _batched(parsed.chunks, self._s.embed_batch_size):
+                vectors.extend(await self._embedder.embed([c.text for c in group]))
+                pct = 30 + round(len(vectors) / total * 55)
+                yield {
+                    "stage": "embedding",
+                    "pct": pct,
+                    "label": f"Embedding {len(vectors)}/{total}",
+                    "chunk": len(vectors),
+                    "total": total,
+                }
+
+            yield {"stage": "embedding", "pct": 90, "label": "Indexing vectors…"}
+            written = await self._write_chunks(document_id, parsed.chunks, vectors)
+
+            await self._summarize(document_id, parsed.markdown or parsed.chunks[0].text)
+            await self._set_status(document_id, "ready")
+
             yield {
-                "stage": "embedding",
-                "pct": pct,
-                "label": f"Embedding {len(vectors)}/{total}",
-                "chunk": len(vectors),
-                "total": total,
+                "stage": "done",
+                "pct": 100,
+                "label": "Indexed",
+                "document_id": document_id,
+                "chunks": written,
+                "pages": parsed.page_count,
             }
+        except Exception as exc:  # noqa: BLE001 - unexpected failures still mark the row
+            await self._set_status(document_id, "failed", str(exc)[:500])
+            raise
 
-        yield {"stage": "embedding", "pct": 90, "label": "Indexing vectors…"}
-        written = await self._write_chunks(document_id, parsed.chunks, vectors)
-
-        await self._summarize(document_id, parsed.markdown or parsed.chunks[0].text)
-
-        yield {
-            "stage": "done",
-            "pct": 100,
-            "label": "Indexed",
-            "document_id": document_id,
-            "chunks": written,
-            "pages": parsed.page_count,
-        }
+    async def _set_status(
+        self, document_id: str, status: str, message: str | None = None
+    ) -> None:
+        async with self._pool.acquire() as conn:
+            await conn.execute(
+                "UPDATE documents SET status = $2, status_message = $3 WHERE id = $1",
+                document_id,
+                status,
+                message,
+            )
 
     async def _write_chunks(
         self, document_id: str, chunks: Sequence[Chunk], vectors: Sequence[list[float]]

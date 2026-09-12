@@ -102,13 +102,22 @@ class StructuralDocumentParser:
             return self._converter
         try:
             from docling.datamodel.base_models import InputFormat
-            from docling.document_converter import DocumentConverter
+            from docling.datamodel.pipeline_options import PdfPipelineOptions, TableFormerMode
+            from docling.document_converter import DocumentConverter, PdfFormatOption
         except Exception as exc:  # noqa: BLE001
             raise DocumentParseError(
                 "docling not installed. `pip install -e 'backend[dev]'` or `pip install docling`."
             ) from exc
+        # TableFormer defaults to "accurate" mode, which on CPU-only hosts can
+        # take several minutes per document on table-heavy PDFs (observed:
+        # 6-9+ min on real decks). "fast" trades some table-structure precision
+        # for a large, necessary speedup - ingestion must stay well under a
+        # serverless function's timeout.
+        pdf_options = PdfPipelineOptions()
+        pdf_options.table_structure_options.mode = TableFormerMode.FAST
         self._converter = DocumentConverter(
-            allowed_formats=[InputFormat.PDF, InputFormat.DOCX, InputFormat.XLSX]
+            allowed_formats=[InputFormat.PDF, InputFormat.DOCX, InputFormat.XLSX],
+            format_options={InputFormat.PDF: PdfFormatOption(pipeline_options=pdf_options)},
         )
         return self._converter
 

@@ -111,9 +111,42 @@ export function UploadZoneNew({ workspaceId }: { workspaceId: string }) {
     setQueue(q => q.map(f => f.id === id ? { ...f, ...patch } : f))
   }
 
+  async function pollStatus(id: string, documentId: string) {
+    // Ingestion runs in the background (see /api/upload) - parsing alone can
+    // take minutes on table-heavy PDFs on a CPU-only host, so this polls
+    // rather than holding a request open. ~10 min ceiling before giving up.
+    const MAX_POLLS = 200
+    for (let i = 0; i < MAX_POLLS; i++) {
+      await new Promise(r => setTimeout(r, 3000))
+      try {
+        const res = await fetch(`/api/documents/${documentId}/status`)
+        if (!res.ok) continue
+        const { status, statusMessage, chunkCount } = await res.json()
+
+        if (status === 'ready') {
+          updateItem(id, { stage: 'embedded', pct: 100, label: `Indexed - ${chunkCount} chunks` })
+          setTimeout(() => router.refresh(), 400)
+          return
+        }
+        if (status === 'failed') {
+          updateItem(id, { error: statusMessage || 'Processing failed' })
+          return
+        }
+        if (status === 'processing') {
+          updateItem(id, { stage: 'processing', pct: 45, label: 'Extracting & embedding… (can take a few minutes)' })
+        } else {
+          updateItem(id, { stage: 'processing', pct: 12, label: 'Queued…' })
+        }
+      } catch {
+        // transient network hiccup - keep polling
+      }
+    }
+    updateItem(id, { error: 'Taking longer than expected - check the documents list shortly.' })
+  }
+
   async function processFile(file: File) {
     const id = `q-${Date.now()}-${Math.random().toString(36).slice(2)}`
-    const newItem: QueueItem = { id, name: file.name, stage: 'processing', pct: 2, label: 'Starting…' }
+    const newItem: QueueItem = { id, name: file.name, stage: 'processing', pct: 5, label: 'Uploading…' }
     setQueue(q => [newItem, ...q].slice(0, 8))
 
     try {
@@ -122,44 +155,14 @@ export function UploadZoneNew({ workspaceId }: { workspaceId: string }) {
       fd.append('workspaceId', workspaceId)
 
       const res = await fetch('/api/upload', { method: 'POST', body: fd })
-      if (!res.ok || !res.body) {
-        updateItem(id, { error: `Upload failed (${res.status})` })
+      const body = await res.json().catch(() => ({}))
+      if (!res.ok || !body.documentId) {
+        updateItem(id, { error: body.error || `Upload failed (${res.status})` })
         return
       }
 
-      const reader  = res.body.getReader()
-      const decoder = new TextDecoder()
-      let buffer    = ''
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        buffer += decoder.decode(value, { stream: true })
-
-        const lines = buffer.split('\n\n')
-        buffer = lines.pop() ?? ''
-
-        for (const line of lines) {
-          const dataLine = line.trim()
-          if (!dataLine.startsWith('data:')) continue
-          try {
-            const event = JSON.parse(dataLine.slice(5).trim())
-            if (event.error) {
-              updateItem(id, { error: event.error })
-            } else if (event.stage) {
-              updateItem(id, {
-                stage: event.stage as StageName,
-                pct:   event.pct ?? 0,
-                label: event.label ?? '',
-              })
-              if (event.stage === 'embedded') {
-                // Refresh dashboard after a tick so Supabase has the row
-                setTimeout(() => router.refresh(), 400)
-              }
-            }
-          } catch {}
-        }
-      }
+      updateItem(id, { stage: 'processing', pct: 12, label: 'Queued…' })
+      await pollStatus(id, body.documentId)
     } catch (err: any) {
       updateItem(id, { error: err.message ?? 'Network error' })
     }
