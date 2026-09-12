@@ -75,7 +75,6 @@ export default function LoginPage() {
       <div className="relative hidden h-full flex-col border-r p-10 lg:flex" style={{ background: 'var(--cx-paper-2)', borderColor: 'var(--cx-line)' }}>
         <div className="flex flex-col h-full">
           <div className="flex items-center gap-3 mb-20">
-            <Image src="/CortexLogo.png" alt="Cortex Logo" width={30} height={30} className="object-contain" />
             <span className="text-[17px] font-semibold tracking-tight" style={{ color: 'var(--cx-ink)' }}>Cortex</span>
           </div>
 
@@ -131,13 +130,6 @@ export default function LoginPage() {
           className="w-full max-w-[400px]"
         >
           <div className="text-center mb-10">
-            <motion.div
-              initial={{ opacity: 0, scale: reduce ? 1 : 0.92 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <Image src="/ChatGPT Image Sep 10, 2026, 06_42_23 PM.png" alt="Cortex" width={120} height={120} className="object-contain mx-auto mb-6" />
-            </motion.div>
             <h2 className="text-3xl font-semibold tracking-tight mb-2" style={{ color: 'var(--cx-ink)' }}>
               {isSignUp ? "Create your account" : "Welcome back"}
             </h2>
